@@ -21,17 +21,17 @@ class QuantumEngineTest {
     ) = GameState(cells = cells, mode = GameMode.QUANTUM, quantumEnergy = energy, nextTileId = 100)
 
     @Test
-    fun quantum_spawn_creates_one_stable_particle() {
-        val engine = GameEngine(ScriptedRandom(doubles = ArrayDeque(listOf(0.0))), balance)
+    fun quantum_spawn_can_create_unresolved_particle_tile() {
+        val engine = GameEngine(ScriptedRandom(doubles = ArrayDeque(listOf(0.0, 0.0))), QuantumBalance(quantumSpawnChance = 1.0, autoCollapseChance = 0.0))
         val tile = engine.spawn(quantumState()).cells.filterNotNull().single()
 
         assertEquals(QuantumSpecies.ELECTRON, tile.species)
-        assertFalse(tile.isUnstable)
+        assertEquals(listOf(QuantumSpecies.ELECTRON, QuantumSpecies.PROTON), tile.speciesOptions())
     }
 
     @Test
     fun quantum_spawn_can_create_proton() {
-        val engine = GameEngine(ScriptedRandom(doubles = ArrayDeque(listOf(0.99))), balance)
+        val engine = GameEngine(ScriptedRandom(doubles = ArrayDeque(listOf(0.99, 0.99))), balance)
         val tile = engine.spawn(quantumState()).cells.filterNotNull().single()
 
         assertEquals(QuantumSpecies.PROTON, tile.species)
@@ -94,5 +94,24 @@ class QuantumEngineTest {
         val b = GameEngine(SeededRandomProvider(2048), balance).newGame(GameMode.QUANTUM)
 
         assertEquals(a, b)
+    }
+
+    @Test
+    fun unresolved_particle_tiles_do_not_merge_until_collapsed() {
+        val cells = MutableList<Tile?>(16) { null }.apply {
+            this[0] = Tile(
+                id = 1,
+                value = QuantumSpecies.ELECTRON.scoreValue,
+                quantumAlternative = QuantumSpecies.PROTON.scoreValue,
+                species = QuantumSpecies.ELECTRON,
+                quantumAlternativeSpecies = QuantumSpecies.PROTON,
+            )
+            this[1] = Tile(2, QuantumSpecies.PROTON.scoreValue, species = QuantumSpecies.PROTON)
+        }
+
+        val result = GameEngine(ScriptedRandom(), balance).move(quantumState(cells), Direction.LEFT)
+
+        assertEquals(0, result.mergeCount)
+        assertEquals(2, result.state.cells.count { it != null })
     }
 }

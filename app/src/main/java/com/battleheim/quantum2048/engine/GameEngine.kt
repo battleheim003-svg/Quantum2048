@@ -5,8 +5,22 @@ class GameEngine(
     val balance: QuantumBalance = QuantumBalance(),
 ) {
     fun newGame(mode: GameMode = GameMode.CLASSIC, size: Int = 4): GameState {
-        val energy = if (mode == GameMode.QUANTUM) balance.startingEnergy else 0
-        return spawn(spawn(GameState(size = size, cells = List(size * size) { null }, mode = mode, quantumEnergy = energy)))
+        return newGame(Difficulty.fromMode(mode), size)
+    }
+
+    fun newGame(difficulty: Difficulty, size: Int = 4): GameState {
+        val rules = balance.rulesFor(difficulty)
+        return spawn(
+            spawn(
+                GameState(
+                    size = size,
+                    cells = List(size * size) { null },
+                    mode = difficulty.mode,
+                    difficulty = difficulty,
+                    quantumEnergy = rules.startingEnergy,
+                ),
+            ),
+        )
     }
 
     fun move(state: GameState, direction: Direction): MoveResult {
@@ -22,7 +36,7 @@ class GameEngine(
             while (i < tiles.size) {
                 val first = tiles[i]
                 val second = tiles.getOrNull(i + 1)
-                val fusion = second?.let { mergeProduct(first, it, state.mode) }
+                val fusion = second?.let { mergeProduct(first, it, state.difficulty) }
                 if (fusion != null) {
                     merged += fusion.copy(id = nextId++)
                     val value = fusion.value
@@ -40,7 +54,8 @@ class GameEngine(
         val changed = state.cells != output
         if (!changed) return MoveResult(state.copy(status = evaluate(state)), false)
 
-        val energyGain = if (state.mode == GameMode.QUANTUM) balance.energyFor(mergeCount) else 0
+        val rules = balance.rulesFor(state.difficulty)
+        val energyGain = if (rules.energyEnabled) balance.energyFor(mergeCount) else 0
         var next = state.copy(
             cells = output,
             score = state.score + gainedScore,
@@ -50,12 +65,15 @@ class GameEngine(
             quantumEnergy = minOf(balance.maxEnergy, state.quantumEnergy + energyGain),
         )
         next = spawn(next)
+        val auto = maybeAutoCollapse(next)
+        next = auto.first
         next = next.copy(status = evaluate(next))
-        return MoveResult(next, true, gainedScore, mergeCount, energyGain)
+        return MoveResult(next, true, gainedScore, mergeCount, energyGain, auto.second)
     }
 
     fun collapse(state: GameState, tileId: Long, chosenValue: Int): CollapseResult {
         if (state.status != GameStatus.PLAYING) return CollapseResult.Failure(state, CollapseFailure.GAME_NOT_ACTIVE)
+        if (!balance.rulesFor(state.difficulty).collapseEnabled) return CollapseResult.Failure(state, CollapseFailure.NOT_QUANTUM)
         val index = state.cells.indexOfFirst { it?.id == tileId }
         if (index < 0) return CollapseResult.Failure(state, CollapseFailure.TILE_NOT_FOUND)
         val tile = state.cells[index] ?: return CollapseResult.Failure(state, CollapseFailure.TILE_NOT_FOUND)
@@ -70,22 +88,71 @@ class GameEngine(
         return CollapseResult.Success(state.copy(cells = cells, quantumEnergy = state.quantumEnergy - cost), event, cost)
     }
 
+    fun combineCompound(state: GameState, tileIds: List<Long>): CompoundResult {
+        if (state.status != GameStatus.PLAYING) return CompoundResult.Failure(state, CompoundFailure.GAME_NOT_ACTIVE)
+        val rules = balance.rulesFor(state.difficulty)
+        if (!rules.compoundLabEnabled) return CompoundResult.Failure(state, CompoundFailure.LAB_DISABLED)
+        if (tileIds.distinct().size != tileIds.size || tileIds.size < 2) {
+            return CompoundResult.Failure(state, CompoundFailure.INVALID_TILE)
+        }
+
+        val indexedTiles = tileIds.map { id ->
+            val index = state.cells.indexOfFirst { it?.id == id }
+            if (index < 0) return CompoundResult.Failure(state, CompoundFailure.TILE_NOT_FOUND)
+            index to state.cells[index]!!
+        }
+        val elements = indexedTiles.map { (_, tile) ->
+            val species = tile.species ?: return CompoundResult.Failure(state, CompoundFailure.INVALID_TILE)
+            if (tile.isUnstable) return CompoundResult.Failure(state, CompoundFailure.INVALID_TILE)
+            ElementTile(species = species, sourceTileId = tile.id)
+        }
+        val recipe = Chemistry.findRecipe(elements, balance.compoundRecipes, rules.allowedRecipeLevel)
+            ?: return CompoundResult.Failure(state, CompoundFailure.NO_RECIPE)
+        val cost = if (rules.energyEnabled) rules.compoundEnergyCost else 0
+        if (state.quantumEnergy < cost) return CompoundResult.Failure(state, CompoundFailure.INSUFFICIENT_ENERGY)
+
+        val cells = state.cells.toMutableList()
+        indexedTiles.forEach { (index, _) -> cells[index] = null }
+        val nextEnergy = if (rules.energyEnabled) {
+            minOf(balance.maxEnergy, state.quantumEnergy - cost + recipe.output.energyReward)
+        } else {
+            state.quantumEnergy
+        }
+        val nextScore = state.score + recipe.output.scoreValue
+        return CompoundResult.Success(
+            state = state.copy(
+                cells = cells,
+                score = nextScore,
+                bestScore = maxOf(state.bestScore, nextScore),
+                quantumEnergy = nextEnergy,
+                status = evaluate(state.copy(cells = cells, score = nextScore, bestScore = maxOf(state.bestScore, nextScore), quantumEnergy = nextEnergy)),
+            ),
+            recipe = recipe,
+            energySpent = cost,
+        )
+    }
+
     fun continueAfterWin(state: GameState) = state.copy(status = GameStatus.PLAYING, hasAcknowledgedWin = true)
 
     fun spawn(state: GameState): GameState {
         val empty = state.cells.indices.filter { state.cells[it] == null }
         if (empty.isEmpty()) return state
         val at = empty[random.nextInt(empty.size)]
-        val base = if (state.mode == GameMode.QUANTUM) {
+        val rules = balance.rulesFor(state.difficulty)
+        val base = if (rules.particleMode) {
             if (random.nextDouble() < 0.52) QuantumSpecies.ELECTRON.scoreValue else QuantumSpecies.PROTON.scoreValue
         } else if (random.nextDouble() < 0.9) 2 else 4
+        val quantum = rules.collapseEnabled && random.nextDouble() < rules.quantumSpawnChance
         val cells = state.cells.toMutableList()
-        cells[at] = if (state.mode == GameMode.QUANTUM) {
+        cells[at] = if (rules.particleMode) {
             val species = if (base == QuantumSpecies.ELECTRON.scoreValue) QuantumSpecies.ELECTRON else QuantumSpecies.PROTON
+            val alternative = if (species == QuantumSpecies.ELECTRON) QuantumSpecies.PROTON else QuantumSpecies.HYDROGEN
             Tile(
                 id = state.nextTileId,
                 value = species.scoreValue,
+                quantumAlternative = if (quantum) alternative.scoreValue else null,
                 species = species,
+                quantumAlternativeSpecies = if (quantum) alternative else null,
             )
         } else {
             Tile(state.nextTileId, base)
@@ -93,10 +160,24 @@ class GameEngine(
         return state.copy(cells = cells, nextTileId = state.nextTileId + 1)
     }
 
-    private fun canMerge(a: Tile, b: Tile): Boolean = mergeProduct(a, b, GameMode.CLASSIC) != null
+    private fun maybeAutoCollapse(state: GameState): Pair<GameState, CollapseEvent?> {
+        val rules = balance.rulesFor(state.difficulty)
+        if (!rules.collapseEnabled || random.nextDouble() >= rules.autoCollapseChance) return state to null
+        val quantumIndices = state.cells.indices.filter { state.cells[it]?.isUnstable == true }
+        if (quantumIndices.isEmpty()) return state to null
+        val index = quantumIndices[random.nextInt(quantumIndices.size)]
+        val tile = state.cells[index]!!
+        val chosen = if (random.nextDouble() < balance.autoCollapseLowWeight) tile.value else tile.quantumAlternative!!
+        val cells = state.cells.toMutableList()
+        val chosenSpecies = tile.speciesOptions().firstOrNull { it.scoreValue == chosen }
+        cells[index] = Tile(tile.id, chosen, species = chosenSpecies)
+        return state.copy(cells = cells) to CollapseEvent(tile.id, chosen, automatic = true)
+    }
 
-    private fun mergeProduct(a: Tile, b: Tile, mode: GameMode): Tile? {
-        if (mode == GameMode.CLASSIC) return if (a.value == b.value) Tile(0, a.value * 2) else null
+    private fun canMerge(a: Tile, b: Tile): Boolean = mergeProduct(a, b, Difficulty.EASY) != null
+
+    private fun mergeProduct(a: Tile, b: Tile, difficulty: Difficulty): Tile? {
+        if (difficulty == Difficulty.EASY) return if (a.value == b.value) Tile(0, a.value * 2) else null
         if (a.isUnstable || b.isUnstable) return null
 
         val left = a.species
@@ -107,6 +188,7 @@ class GameEngine(
 
         if (left != null && left == right) {
             val product = left.nextFusion() ?: return null
+            if (!isFusionAllowed(product, balance.rulesFor(difficulty).maxFusionSpecies)) return null
             return Tile(0, product.scoreValue, species = product)
         }
         return if (a.value == b.value) Tile(0, a.value * 2) else null
@@ -117,10 +199,18 @@ class GameEngine(
         if (state.cells.any { it == null }) return GameStatus.PLAYING
         for (r in 0 until state.size) for (c in 0 until state.size) {
             val tile = state.cells[r * state.size + c] ?: continue
-            if (c + 1 < state.size && mergeProduct(tile, state.cells[r * state.size + c + 1]!!, state.mode) != null) return GameStatus.PLAYING
-            if (r + 1 < state.size && mergeProduct(tile, state.cells[(r + 1) * state.size + c]!!, state.mode) != null) return GameStatus.PLAYING
+            if (c + 1 < state.size && mergeProduct(tile, state.cells[r * state.size + c + 1]!!, state.difficulty) != null) return GameStatus.PLAYING
+            if (r + 1 < state.size && mergeProduct(tile, state.cells[(r + 1) * state.size + c]!!, state.difficulty) != null) return GameStatus.PLAYING
         }
         return GameStatus.LOST
+    }
+
+    private fun isFusionAllowed(product: QuantumSpecies, maxSpecies: QuantumSpecies?): Boolean {
+        if (maxSpecies == null) return true
+        val chain = QuantumSpecies.fusionChain
+        val productIndex = chain.indexOf(product)
+        val maxIndex = chain.indexOf(maxSpecies)
+        return productIndex >= 0 && maxIndex >= 0 && productIndex <= maxIndex
     }
 
     private fun index(size: Int, d: Direction, line: Int, p: Int) = when (d) {

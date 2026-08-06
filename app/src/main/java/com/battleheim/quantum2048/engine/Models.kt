@@ -3,6 +3,20 @@ package com.battleheim.quantum2048.engine
 import kotlinx.serialization.Serializable
 
 @Serializable enum class GameMode { CLASSIC, QUANTUM }
+@Serializable
+enum class Difficulty(val mode: GameMode) {
+    EASY(GameMode.CLASSIC),
+    MEDIUM(GameMode.QUANTUM),
+    HARD(GameMode.QUANTUM),
+    QUANTUM(GameMode.QUANTUM);
+
+    companion object {
+        fun fromMode(mode: GameMode): Difficulty = when (mode) {
+            GameMode.CLASSIC -> EASY
+            GameMode.QUANTUM -> QUANTUM
+        }
+    }
+}
 @Serializable enum class Direction { UP, DOWN, LEFT, RIGHT }
 @Serializable enum class GameStatus { PLAYING, WON, LOST }
 
@@ -23,7 +37,11 @@ enum class QuantumSpecies(
     CARBON("C", "Carbon", 12, 128),
     NITROGEN("N", "Nitrogen", 14, 256),
     OXYGEN("O", "Oxygen", 16, 512),
+    SODIUM("Na", "Sodium", 23, 768),
+    MAGNESIUM("Mg", "Magnesium", 24, 896),
+    CHLORINE("Cl", "Chlorine", 35, 960),
     NEON("Ne", "Neon", 20, 1024),
+    CALCIUM("Ca", "Calcium", 40, 1536),
     SILICON("Si", "Silicon", 28, 2048),
     IRON("Fe", "Iron", 56, 4096),
     GOLD("Au", "Gold", 197, 8192);
@@ -35,7 +53,24 @@ enum class QuantumSpecies(
     }
 
     companion object {
-        val fusionChain = listOf(HYDROGEN, HELIUM, LITHIUM, BERYLLIUM, BORON, CARBON, NITROGEN, OXYGEN, NEON, SILICON, IRON, GOLD)
+        val fusionChain = listOf(
+            HYDROGEN,
+            HELIUM,
+            LITHIUM,
+            BERYLLIUM,
+            BORON,
+            CARBON,
+            NITROGEN,
+            OXYGEN,
+            NEON,
+            SODIUM,
+            MAGNESIUM,
+            SILICON,
+            CHLORINE,
+            CALCIUM,
+            IRON,
+            GOLD,
+        )
     }
 }
 
@@ -48,7 +83,7 @@ data class Tile(
     val quantumAlternativeSpecies: QuantumSpecies? = null,
 ) {
     init { require(value > 0 && quantumAlternative?.let { it > value } != false) }
-    val isQuantum: Boolean get() = species != null
+    val isQuantum: Boolean get() = quantumAlternative != null || quantumAlternativeSpecies != null
     val isUnstable: Boolean get() = quantumAlternative != null || quantumAlternativeSpecies != null
     fun options(): List<Int> = quantumAlternative?.let { listOf(value, it) } ?: listOf(value)
     fun speciesOptions(): List<QuantumSpecies> = quantumAlternativeSpecies?.let { high ->
@@ -64,6 +99,7 @@ data class GameState(
     val bestScore: Long = 0,
     val status: GameStatus = GameStatus.PLAYING,
     val mode: GameMode = GameMode.CLASSIC,
+    val difficulty: Difficulty = Difficulty.fromMode(mode),
     val hasAcknowledgedWin: Boolean = false,
     val moveCount: Int = 0,
     val nextTileId: Long = 1,
@@ -87,6 +123,12 @@ enum class CollapseFailure { TILE_NOT_FOUND, NOT_QUANTUM, INVALID_CHOICE, INSUFF
 sealed interface CollapseResult {
     data class Success(val state: GameState, val event: CollapseEvent, val energySpent: Int) : CollapseResult
     data class Failure(val state: GameState, val reason: CollapseFailure) : CollapseResult
+}
+
+enum class CompoundFailure { LAB_DISABLED, GAME_NOT_ACTIVE, TILE_NOT_FOUND, INVALID_TILE, NO_RECIPE, INSUFFICIENT_ENERGY }
+sealed interface CompoundResult {
+    data class Success(val state: GameState, val recipe: CompoundRecipe, val energySpent: Int) : CompoundResult
+    data class Failure(val state: GameState, val reason: CompoundFailure) : CompoundResult
 }
 
 interface RandomProvider { fun nextInt(bound: Int): Int; fun nextDouble(): Double }

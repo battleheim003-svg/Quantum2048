@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.battleheim.quantum2048.domain.GameRepository
+import com.battleheim.quantum2048.engine.Difficulty
 import com.battleheim.quantum2048.engine.GameMode
 import com.battleheim.quantum2048.engine.GameState
 import kotlinx.coroutines.flow.Flow
@@ -16,9 +17,40 @@ private val Context.gameDataStore by preferencesDataStore("game_state_v1")
 class DataStoreGameRepository(private val context: Context) : GameRepository {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
     private fun key(mode: GameMode) = stringPreferencesKey("snapshot_${mode.name.lowercase()}")
+    private fun key(difficulty: Difficulty) = stringPreferencesKey("snapshot_v3_${difficulty.name.lowercase()}")
+
     override fun observe(mode: GameMode): Flow<GameState?> = context.gameDataStore.data.map { prefs ->
-        prefs[key(mode)]?.let { runCatching { json.decodeFromString<Snapshot>(it).state }.getOrNull() }
+        val difficulty = Difficulty.fromMode(mode)
+        prefs[key(difficulty)]?.decodeState() ?: prefs[key(mode)]?.decodeState()?.copy(difficulty = difficulty, mode = difficulty.mode)
     }
-    override suspend fun save(state: GameState) { context.gameDataStore.edit { it[key(state.mode)] = json.encodeToString(Snapshot(state = state)) } }
-    override suspend fun clear(mode: GameMode) { context.gameDataStore.edit { it.remove(key(mode)) } }
+
+    override fun observe(difficulty: Difficulty): Flow<GameState?> = context.gameDataStore.data.map { prefs ->
+        prefs[key(difficulty)]?.decodeState()
+            ?: legacyModeFor(difficulty)?.let { mode ->
+                prefs[key(mode)]?.decodeState()?.copy(difficulty = difficulty, mode = difficulty.mode)
+            }
+    }
+
+    override suspend fun save(state: GameState) {
+        context.gameDataStore.edit {
+            it[key(state.difficulty)] = json.encodeToString(Snapshot(state = state.copy(mode = state.difficulty.mode)))
+        }
+    }
+
+    override suspend fun clear(mode: GameMode) {
+        clear(Difficulty.fromMode(mode))
+    }
+
+    override suspend fun clear(difficulty: Difficulty) {
+        context.gameDataStore.edit { it.remove(key(difficulty)) }
+    }
+
+    private fun String.decodeState(): GameState? =
+        runCatching { json.decodeFromString<Snapshot>(this).state }.getOrNull()
+
+    private fun legacyModeFor(difficulty: Difficulty): GameMode? = when (difficulty) {
+        Difficulty.EASY -> GameMode.CLASSIC
+        Difficulty.QUANTUM -> GameMode.QUANTUM
+        Difficulty.MEDIUM, Difficulty.HARD -> null
+    }
 }
