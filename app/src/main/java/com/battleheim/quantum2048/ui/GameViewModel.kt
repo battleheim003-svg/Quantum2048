@@ -5,35 +5,45 @@ import androidx.lifecycle.viewModelScope
 import com.battleheim.quantum2048.domain.CollectionRepository
 import com.battleheim.quantum2048.domain.GameRepository
 import com.battleheim.quantum2048.domain.UndoBuffer
-import com.battleheim.quantum2048.engine.CollapseFailure
-import com.battleheim.quantum2048.engine.CollapseResult
 import com.battleheim.quantum2048.engine.CompoundFailure
 import com.battleheim.quantum2048.engine.CompoundResult
 import com.battleheim.quantum2048.engine.Difficulty
 import com.battleheim.quantum2048.engine.Direction
+import com.battleheim.quantum2048.engine.BotDifficulty
+import com.battleheim.quantum2048.engine.DuelConfig
+import com.battleheim.quantum2048.engine.DuelEngine
+import com.battleheim.quantum2048.engine.DuelOpponent
+import com.battleheim.quantum2048.engine.DuelPlayer
+import com.battleheim.quantum2048.engine.DuelState
 import com.battleheim.quantum2048.engine.GameEngine
 import com.battleheim.quantum2048.engine.GameMode
 import com.battleheim.quantum2048.engine.GameState
 import com.battleheim.quantum2048.engine.GameStatus
-import com.battleheim.quantum2048.engine.QuantumBalance
+import com.battleheim.quantum2048.engine.FusionRules
+import com.battleheim.quantum2048.engine.MoveAnimation
+import com.battleheim.quantum2048.engine.SeededRandomProvider
+import com.battleheim.quantum2048.engine.TileKind
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 data class GameUiState(
     val game: GameState = GameState(mode = GameMode.QUANTUM),
     val canUndo: Boolean = false,
     val loading: Boolean = true,
-    val selectedTileId: Long? = null,
     val labTileIds: List<Long> = emptyList(),
-    val collapsePulseId: Long? = null,
     val message: String? = null,
     val feedback: GameFeedback? = null,
+    val animations: List<MoveAnimation> = emptyList(),
+    val duel: DuelState? = null,
 )
 
-enum class GameFeedback { MOVE, MERGE, COLLAPSE, COMPOUND, GAME_OVER }
+enum class GameFeedback { MOVE, MERGE, REACTION, COMPOUND, GAME_OVER }
+
+data class SavedGameKey(val difficulty: Difficulty, val size: Int)
 
 class GameViewModel(
     private val repository: GameRepository,
@@ -42,97 +52,86 @@ class GameViewModel(
 ) : ViewModel() {
     private val _ui = MutableStateFlow(GameUiState())
     val ui: StateFlow<GameUiState> = _ui.asStateFlow()
-    val balance: QuantumBalance get() = engine.balance
     private val undo = UndoBuffer()
+    private val duelEngine = DuelEngine(SeededRandomProvider(404))
     private var inputLocked = false
     private var undoCompoundSymbol: String? = null
+    private var requestedSize: Int = 4
 
-    init { load(Difficulty.QUANTUM) }
+    init { load(Difficulty.QUANTUM, requestedSize) }
 
     fun swipe(direction: Direction) {
-        if (inputLocked || _ui.value.loading || _ui.value.selectedTileId != null) return
+        if (inputLocked || _ui.value.loading) return
         inputLocked = true
         val before = _ui.value.game
-        val result = engine.move(before, direction)
+        val duel = _ui.value.duel
+        val result = if (duel != null) {
+            val (nextDuel, moveResult) = duelEngine.move(duel, direction)
+            _ui.value = _ui.value.copy(duel = nextDuel)
+            moveResult
+        } else {
+            engine.move(before, direction)
+        }
         if (result.changed) {
             undo.remember(before)
             undoCompoundSymbol = null
             _ui.value = _ui.value.copy(
-                game = result.state,
+                game = _ui.value.duel?.activeBoard ?: result.state,
                 canUndo = undo.canUndo,
-                message = result.autoCollapse?.let { "Auto collapse: ${it.chosenValue}" },
+                message = if (result.reactionCount > 0) "Particle reaction complete" else null,
                 feedback = when {
                     result.state.status == GameStatus.LOST -> GameFeedback.GAME_OVER
+                    result.reactionCount > 0 -> GameFeedback.REACTION
                     result.mergeCount > 0 -> GameFeedback.MERGE
                     else -> GameFeedback.MOVE
                 },
+                animations = result.animations,
             )
             persist()
+            viewModelScope.launch {
+                delay(MOVE_LOCK_MS)
+                runBotTurnIfNeeded()
+                inputLocked = false
+            }
         } else {
             _ui.value = _ui.value.copy(game = result.state)
-        }
-        inputLocked = false
-    }
-
-    fun selectTile(tileId: Long) {
-        if (_ui.value.game.cells.any { it?.id == tileId && it.isUnstable }) {
-            _ui.value = _ui.value.copy(selectedTileId = tileId)
+            inputLocked = false
         }
     }
 
-    fun dismissCollapse() {
-        _ui.value = _ui.value.copy(selectedTileId = null)
-    }
-
-    fun collapse(chosenValue: Int) {
-        if (inputLocked) return
-        val tileId = _ui.value.selectedTileId ?: return
-        inputLocked = true
-        val before = _ui.value.game
-        when (val result = engine.collapse(before, tileId, chosenValue)) {
-            is CollapseResult.Success -> {
-                undo.remember(before)
-                _ui.value = _ui.value.copy(
-                    game = result.state,
-                    selectedTileId = null,
-                    collapsePulseId = result.event.tileId,
-                    canUndo = true,
-                    message = "Collapse complete - ${result.energySpent} energy spent",
-                feedback = GameFeedback.COLLAPSE,
-                )
-                persist()
-            }
-            is CollapseResult.Failure -> _ui.value = _ui.value.copy(
-                selectedTileId = null,
-                message = when (result.reason) {
-                    CollapseFailure.INSUFFICIENT_ENERGY -> "Not enough quantum energy"
-                    CollapseFailure.GAME_NOT_ACTIVE -> "The game is not active"
-                    else -> "This tile cannot collapse"
-                },
-            )
-        }
-        inputLocked = false
+    private fun runBotTurnIfNeeded() {
+        val duel = _ui.value.duel ?: return
+        val (nextDuel, result) = duelEngine.botMoveIfNeeded(duel)
+        _ui.value = _ui.value.copy(
+            duel = nextDuel,
+            game = nextDuel.activeBoard,
+            animations = result?.animations ?: emptyList(),
+            message = nextDuel.winner?.let { "${it.label()} wins" },
+            feedback = result?.let {
+                when {
+                    it.reactionCount > 0 -> GameFeedback.REACTION
+                    it.mergeCount > 0 -> GameFeedback.MERGE
+                    else -> GameFeedback.MOVE
+                }
+            },
+        )
     }
 
     fun sendToCompoundLab(tileId: Long) {
         if (inputLocked || _ui.value.loading) return
         val state = _ui.value.game
         val tile = state.cells.firstOrNull { it?.id == tileId } ?: return
-        if (tile.species == null || tile.isUnstable) {
-            _ui.value = _ui.value.copy(message = "Only stable elements can enter the lab")
+        if (tile.kind != TileKind.ELEMENT || tile.element == null) {
+            _ui.value = _ui.value.copy(message = "Only elements can enter the lab")
             return
         }
-        if (!engine.balance.rulesFor(state.difficulty).compoundLabEnabled) {
+        if (state.mode != GameMode.QUANTUM) {
             _ui.value = _ui.value.copy(message = "Compound Lab is locked on this level")
             return
         }
 
         val selected = (_ui.value.labTileIds + tileId).distinct()
-        val maxInputs = engine.balance.compoundRecipes
-            .filter { recipe ->
-                val level = engine.balance.rulesFor(state.difficulty).allowedRecipeLevel
-                level == null || recipe.unlockLevel.ordinal <= level.ordinal
-            }
+        val maxInputs = FusionRules.compoundRecipes
             .maxOfOrNull { it.inputs.size } ?: 2
         _ui.value = _ui.value.copy(labTileIds = selected.takeLast(maxInputs), message = "Lab sample ${selected.size}/$maxInputs")
         tryCompleteLab()
@@ -163,7 +162,6 @@ class GameViewModel(
             is CompoundResult.Failure -> {
                 val reason = when (result.reason) {
                     CompoundFailure.NO_RECIPE -> "No compound recipe matched"
-                    CompoundFailure.INSUFFICIENT_ENERGY -> "Not enough energy for lab synthesis"
                     CompoundFailure.LAB_DISABLED -> "Compound Lab is disabled here"
                     else -> "This lab sample is invalid"
                 }
@@ -175,13 +173,13 @@ class GameViewModel(
     fun switchMode(mode: GameMode) {
         if (mode == _ui.value.game.mode || inputLocked) return
         undo.clear()
-        load(Difficulty.fromMode(mode))
+        load(Difficulty.fromMode(mode), _ui.value.game.size)
     }
 
     fun switchDifficulty(difficulty: Difficulty) {
         if (difficulty == _ui.value.game.difficulty || inputLocked) return
         undo.clear()
-        load(difficulty)
+        load(difficulty, _ui.value.game.size)
     }
 
     fun undo() {
@@ -191,7 +189,7 @@ class GameViewModel(
         if (compoundSymbol != null) {
             viewModelScope.launch { collectionRepository.unrecord(compoundSymbol) }
         }
-        _ui.value = _ui.value.copy(game = prior, canUndo = false, selectedTileId = null, labTileIds = emptyList(), message = "Move undone")
+        _ui.value = _ui.value.copy(game = prior, canUndo = false, labTileIds = emptyList(), message = "Move undone")
         persist()
     }
 
@@ -199,37 +197,69 @@ class GameViewModel(
         undo.clear()
         val previous = _ui.value.game
         _ui.value = _ui.value.copy(
-            game = engine.newGame(previous.difficulty).copy(bestScore = previous.bestScore),
+            game = engine.newGame(previous.difficulty, previous.size).copy(bestScore = previous.bestScore),
             canUndo = false,
-            selectedTileId = null,
             labTileIds = emptyList(),
-            collapsePulseId = null,
+            animations = emptyList(),
         )
         persist()
     }
 
-    fun newGame(difficulty: Difficulty) {
+    fun newGame(difficulty: Difficulty, size: Int = requestedSize) {
         undo.clear()
+        requestedSize = size
         _ui.value = _ui.value.copy(
-            game = engine.newGame(difficulty),
+            game = engine.newGame(difficulty, size),
             canUndo = false,
-            selectedTileId = null,
             labTileIds = emptyList(),
-            collapsePulseId = null,
+            animations = emptyList(),
             loading = false,
         )
         persist()
     }
 
-    fun loadDifficulty(difficulty: Difficulty) {
+    fun newDuel(difficulty: Difficulty, opponent: DuelOpponent, botDifficulty: BotDifficulty, turnSeconds: Int = 12) {
         undo.clear()
-        load(difficulty)
+        val duel = duelEngine.newDuel(
+            DuelConfig(
+                difficulty = difficulty,
+                opponent = opponent,
+                botDifficulty = botDifficulty,
+                boardSize = 4,
+                turnSeconds = turnSeconds,
+            ),
+        )
+        _ui.value = GameUiState(game = duel.activeBoard, loading = false, duel = duel)
+    }
+
+    fun passDuelTurn() {
+        val duel = _ui.value.duel ?: return
+        val next = duelEngine.passTimedOutTurn(duel)
+        _ui.value = _ui.value.copy(
+            duel = next,
+            game = next.activeBoard,
+            message = next.winner?.let { "${it.label()} wins" } ?: "Turn passed",
+        )
+        if (next.winner == null) runBotTurnIfNeeded()
+    }
+
+    fun loadDifficulty(difficulty: Difficulty, size: Int = requestedSize) {
+        undo.clear()
+        load(difficulty, size)
     }
 
     suspend fun hasSave(difficulty: Difficulty): Boolean = repository.observe(difficulty).first() != null
+    suspend fun hasSave(difficulty: Difficulty, size: Int): Boolean = repository.observe(difficulty, size).first() != null
 
     suspend fun savedDifficulties(): Set<Difficulty> =
         Difficulty.entries.filter { hasSave(it) }.toSet()
+
+    suspend fun savedGames(): Set<SavedGameKey> =
+        Difficulty.entries.flatMap { difficulty ->
+            FusionRules.supportedBoardSizes.mapNotNull { size ->
+                if (hasSave(difficulty, size)) SavedGameKey(difficulty, size) else null
+            }
+        }.toSet()
 
     fun resetDifficulty(difficulty: Difficulty) {
         viewModelScope.launch {
@@ -237,11 +267,10 @@ class GameViewModel(
             if (_ui.value.game.difficulty == difficulty) {
                 undo.clear()
                 _ui.value = _ui.value.copy(
-                    game = engine.newGame(difficulty),
+                    game = engine.newGame(difficulty, _ui.value.game.size),
                     canUndo = false,
-                    selectedTileId = null,
                     labTileIds = emptyList(),
-                    collapsePulseId = null,
+                    animations = emptyList(),
                     loading = false,
                 )
                 persist()
@@ -258,29 +287,35 @@ class GameViewModel(
         _ui.value = _ui.value.copy(message = null)
     }
 
-    fun consumeCollapsePulse() {
-        _ui.value = _ui.value.copy(collapsePulseId = null)
-    }
-
     fun consumeFeedback() {
         _ui.value = _ui.value.copy(feedback = null)
     }
 
     private fun load(mode: GameMode) {
-        load(Difficulty.fromMode(mode))
+        load(Difficulty.fromMode(mode), requestedSize)
     }
 
-    private fun load(difficulty: Difficulty) {
+    private fun load(difficulty: Difficulty, size: Int) {
         inputLocked = true
-        _ui.value = _ui.value.copy(loading = true, selectedTileId = null)
+        requestedSize = size
+        _ui.value = _ui.value.copy(loading = true)
         viewModelScope.launch {
-            val restored = repository.observe(difficulty).first()
-            val game = restored ?: engine.newGame(difficulty)
-            _ui.value = GameUiState(game = game, loading = false)
+            val restored = repository.observe(difficulty, size).first()
+            val game = restored ?: engine.newGame(difficulty, size)
+            _ui.value = GameUiState(game = game, loading = false, duel = null)
             repository.save(game)
             inputLocked = false
         }
     }
 
     private fun persist() = viewModelScope.launch { repository.save(_ui.value.game) }
+
+    private companion object {
+        const val MOVE_LOCK_MS = 190L
+    }
+}
+
+private fun DuelPlayer.label(): String = when (this) {
+    DuelPlayer.PLAYER_ONE -> "Player 1"
+    DuelPlayer.PLAYER_TWO -> "Player 2"
 }

@@ -4,10 +4,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ElementTile(
-    val species: QuantumSpecies,
+    val element: QuantumElement,
     val sourceTileId: Long? = null,
 ) {
-    val symbol: String get() = species.symbol
+    val symbol: String get() = element.symbol
 }
 
 @Serializable
@@ -16,13 +16,12 @@ data class Compound(
     val englishName: String,
     val persianName: String,
     val scoreValue: Int,
-    val energyReward: Int,
 )
 
 @Serializable
 data class CompoundRecipe(
     val id: String,
-    val inputs: List<QuantumSpecies>,
+    val inputs: List<QuantumElement>,
     val output: Compound,
     val unlockLevel: CompoundRecipeLevel,
 ) {
@@ -33,12 +32,11 @@ data class CompoundRecipe(
         require(output.englishName.isNotBlank())
         require(output.persianName.isNotBlank())
         require(output.scoreValue > 0)
-        require(output.energyReward >= 0)
     }
 
     fun matches(elements: List<ElementTile>): Boolean {
         if (elements.size != inputs.size) return false
-        return elements.map { it.species }.sortedBy { it.name } == inputs.sortedBy { it.name }
+        return elements.map { it.element }.sortedBy { it.name } == inputs.sortedBy { it.name }
     }
 }
 

@@ -18,6 +18,7 @@ class DataStoreGameRepository(private val context: Context) : GameRepository {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
     private fun key(mode: GameMode) = stringPreferencesKey("snapshot_${mode.name.lowercase()}")
     private fun key(difficulty: Difficulty) = stringPreferencesKey("snapshot_v3_${difficulty.name.lowercase()}")
+    private fun key(difficulty: Difficulty, size: Int) = stringPreferencesKey("snapshot_v3_${difficulty.name.lowercase()}_${size}x$size")
 
     override fun observe(mode: GameMode): Flow<GameState?> = context.gameDataStore.data.map { prefs ->
         val difficulty = Difficulty.fromMode(mode)
@@ -25,15 +26,28 @@ class DataStoreGameRepository(private val context: Context) : GameRepository {
     }
 
     override fun observe(difficulty: Difficulty): Flow<GameState?> = context.gameDataStore.data.map { prefs ->
-        prefs[key(difficulty)]?.decodeState()
+        prefs[key(difficulty, DEFAULT_SIZE)]?.decodeState()
+            ?: prefs[key(difficulty)]?.decodeState()
             ?: legacyModeFor(difficulty)?.let { mode ->
                 prefs[key(mode)]?.decodeState()?.copy(difficulty = difficulty, mode = difficulty.mode)
             }
     }
 
+    override fun observe(difficulty: Difficulty, size: Int): Flow<GameState?> = context.gameDataStore.data.map { prefs ->
+        prefs[key(difficulty, size)]?.decodeState()
+            ?: if (size == DEFAULT_SIZE) {
+                prefs[key(difficulty)]?.decodeState()
+                    ?: legacyModeFor(difficulty)?.let { mode ->
+                        prefs[key(mode)]?.decodeState()?.copy(difficulty = difficulty, mode = difficulty.mode)
+                    }
+            } else {
+                null
+            }
+    }
+
     override suspend fun save(state: GameState) {
         context.gameDataStore.edit {
-            it[key(state.difficulty)] = json.encodeToString(Snapshot(state = state.copy(mode = state.difficulty.mode)))
+            it[key(state.difficulty, state.size)] = json.encodeToString(Snapshot(state = state.copy(mode = state.difficulty.mode)))
         }
     }
 
@@ -42,7 +56,14 @@ class DataStoreGameRepository(private val context: Context) : GameRepository {
     }
 
     override suspend fun clear(difficulty: Difficulty) {
-        context.gameDataStore.edit { it.remove(key(difficulty)) }
+        context.gameDataStore.edit {
+            it.remove(key(difficulty))
+            BOARD_SIZES.forEach { size -> it.remove(key(difficulty, size)) }
+        }
+    }
+
+    override suspend fun clear(difficulty: Difficulty, size: Int) {
+        context.gameDataStore.edit { it.remove(key(difficulty, size)) }
     }
 
     private fun String.decodeState(): GameState? =
@@ -52,5 +73,10 @@ class DataStoreGameRepository(private val context: Context) : GameRepository {
         Difficulty.EASY -> GameMode.CLASSIC
         Difficulty.QUANTUM -> GameMode.QUANTUM
         Difficulty.MEDIUM, Difficulty.HARD -> null
+    }
+
+    private companion object {
+        const val DEFAULT_SIZE = 4
+        val BOARD_SIZES = listOf(4, 6, 8)
     }
 }

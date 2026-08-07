@@ -19,76 +19,41 @@ enum class Difficulty(val mode: GameMode) {
 }
 @Serializable enum class Direction { UP, DOWN, LEFT, RIGHT }
 @Serializable enum class GameStatus { PLAYING, WON, LOST }
+@Serializable enum class DuelOpponent { PASS_AND_PLAY, BOT }
+@Serializable enum class BotDifficulty { EASY, NORMAL, QUANTUM_HARD }
+@Serializable enum class DuelPlayer { PLAYER_ONE, PLAYER_TWO }
 
 @Serializable
-enum class QuantumSpecies(
+enum class TileKind { CLASSIC, ELECTRON, PROTON, ELEMENT }
+
+@Serializable
+enum class QuantumElement(
     val symbol: String,
     val title: String,
-    val massNumber: Int,
-    val scoreValue: Int,
+    val atomicNumber: Int,
+    val rank: Int,
 ) {
-    ELECTRON("e-", "Electron", 0, 1),
-    PROTON("p+", "Proton", 1, 2),
-    HYDROGEN("H", "Hydrogen", 1, 4),
-    HELIUM("He", "Helium", 4, 8),
-    LITHIUM("Li", "Lithium", 7, 16),
-    BERYLLIUM("Be", "Beryllium", 9, 32),
-    BORON("B", "Boron", 11, 64),
-    CARBON("C", "Carbon", 12, 128),
-    NITROGEN("N", "Nitrogen", 14, 256),
-    OXYGEN("O", "Oxygen", 16, 512),
-    SODIUM("Na", "Sodium", 23, 768),
-    MAGNESIUM("Mg", "Magnesium", 24, 896),
-    CHLORINE("Cl", "Chlorine", 35, 960),
-    NEON("Ne", "Neon", 20, 1024),
-    CALCIUM("Ca", "Calcium", 40, 1536),
-    SILICON("Si", "Silicon", 28, 2048),
-    IRON("Fe", "Iron", 56, 4096),
-    GOLD("Au", "Gold", 197, 8192);
-
-    fun nextFusion(): QuantumSpecies? {
-        val chain = fusionChain
-        val index = chain.indexOf(this)
-        return if (index >= 0 && index + 1 < chain.size) chain[index + 1] else null
-    }
-
-    companion object {
-        val fusionChain = listOf(
-            HYDROGEN,
-            HELIUM,
-            LITHIUM,
-            BERYLLIUM,
-            BORON,
-            CARBON,
-            NITROGEN,
-            OXYGEN,
-            NEON,
-            SODIUM,
-            MAGNESIUM,
-            SILICON,
-            CHLORINE,
-            CALCIUM,
-            IRON,
-            GOLD,
-        )
-    }
+    HYDROGEN("H", "Hydrogen", 1, 1),
+    HELIUM("He", "Helium", 2, 2),
+    BERYLLIUM("Be", "Beryllium", 4, 3),
+    OXYGEN("O", "Oxygen", 8, 4),
+    NEON("Ne", "Neon", 10, 5),
+    SILICON("Si", "Silicon", 14, 6),
+    IRON("Fe", "Iron", 26, 7),
+    GOLD("Au", "Gold", 79, 8);
 }
 
 @Serializable
 data class Tile(
     val id: Long,
     val value: Int,
-    val quantumAlternative: Int? = null,
-    val species: QuantumSpecies? = null,
-    val quantumAlternativeSpecies: QuantumSpecies? = null,
+    val kind: TileKind = TileKind.CLASSIC,
+    val element: QuantumElement? = null,
 ) {
-    init { require(value > 0 && quantumAlternative?.let { it > value } != false) }
-    val isQuantum: Boolean get() = quantumAlternative != null || quantumAlternativeSpecies != null
-    val isUnstable: Boolean get() = quantumAlternative != null || quantumAlternativeSpecies != null
-    fun options(): List<Int> = quantumAlternative?.let { listOf(value, it) } ?: listOf(value)
-    fun speciesOptions(): List<QuantumSpecies> = quantumAlternativeSpecies?.let { high ->
-        listOfNotNull(species, high)
-    } ?: listOfNotNull(species)
+    init {
+        require(value > 0)
+        require(kind != TileKind.ELEMENT || element != null)
+    }
 }
 
 @Serializable
@@ -103,7 +68,6 @@ data class GameState(
     val hasAcknowledgedWin: Boolean = false,
     val moveCount: Int = 0,
     val nextTileId: Long = 1,
-    val quantumEnergy: Int = 0,
 ) {
     init { require(size >= 2 && cells.size == size * size) }
     operator fun get(row: Int, column: Int): Tile? = cells[row * size + column]
@@ -114,20 +78,22 @@ data class MoveResult(
     val changed: Boolean,
     val gainedScore: Int = 0,
     val mergeCount: Int = 0,
-    val energyGained: Int = 0,
-    val autoCollapse: CollapseEvent? = null,
+    val reactionCount: Int = 0,
+    val animations: List<MoveAnimation> = emptyList(),
 )
 
-@Serializable data class CollapseEvent(val tileId: Long, val chosenValue: Int, val automatic: Boolean)
-enum class CollapseFailure { TILE_NOT_FOUND, NOT_QUANTUM, INVALID_CHOICE, INSUFFICIENT_ENERGY, GAME_NOT_ACTIVE }
-sealed interface CollapseResult {
-    data class Success(val state: GameState, val event: CollapseEvent, val energySpent: Int) : CollapseResult
-    data class Failure(val state: GameState, val reason: CollapseFailure) : CollapseResult
-}
+data class MoveAnimation(
+    val tileId: Long,
+    val fromIndex: Int,
+    val toIndex: Int,
+    val kind: MoveAnimationKind,
+)
 
-enum class CompoundFailure { LAB_DISABLED, GAME_NOT_ACTIVE, TILE_NOT_FOUND, INVALID_TILE, NO_RECIPE, INSUFFICIENT_ENERGY }
+enum class MoveAnimationKind { SLIDE, MERGE, REACTION, SPAWN }
+
+enum class CompoundFailure { LAB_DISABLED, GAME_NOT_ACTIVE, TILE_NOT_FOUND, INVALID_TILE, NO_RECIPE }
 sealed interface CompoundResult {
-    data class Success(val state: GameState, val recipe: CompoundRecipe, val energySpent: Int) : CompoundResult
+    data class Success(val state: GameState, val recipe: CompoundRecipe) : CompoundResult
     data class Failure(val state: GameState, val reason: CompoundFailure) : CompoundResult
 }
 
@@ -140,4 +106,24 @@ class SeededRandomProvider(seed: Long) : RandomProvider {
     private val delegate = kotlin.random.Random(seed)
     override fun nextInt(bound: Int) = delegate.nextInt(bound)
     override fun nextDouble() = delegate.nextDouble()
+}
+
+data class DuelConfig(
+    val difficulty: Difficulty = Difficulty.QUANTUM,
+    val opponent: DuelOpponent = DuelOpponent.BOT,
+    val botDifficulty: BotDifficulty = BotDifficulty.NORMAL,
+    val boardSize: Int = 4,
+    val turnSeconds: Int = 12,
+)
+
+data class DuelState(
+    val playerOne: GameState,
+    val playerTwo: GameState,
+    val currentPlayer: DuelPlayer = DuelPlayer.PLAYER_ONE,
+    val config: DuelConfig = DuelConfig(),
+    val winner: DuelPlayer? = null,
+    val turnNumber: Int = 1,
+) {
+    val activeBoard: GameState get() = if (currentPlayer == DuelPlayer.PLAYER_ONE) playerOne else playerTwo
+    val inactiveBoard: GameState get() = if (currentPlayer == DuelPlayer.PLAYER_ONE) playerTwo else playerOne
 }

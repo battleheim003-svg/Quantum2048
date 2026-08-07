@@ -6,7 +6,7 @@ import android.media.ToneGenerator
 interface GameAudio {
     fun move()
     fun merge()
-    fun collapse()
+    fun reaction()
     fun gameOver()
     fun release()
 }
@@ -14,7 +14,7 @@ interface GameAudio {
 object SilentGameAudio : GameAudio {
     override fun move() = Unit
     override fun merge() = Unit
-    override fun collapse() = Unit
+    override fun reaction() = Unit
     override fun gameOver() = Unit
     override fun release() = Unit
 }
@@ -30,7 +30,7 @@ class ToneGameAudio : GameAudio {
         tone?.startTone(ToneGenerator.TONE_PROP_ACK, 70)
     }
 
-    override fun collapse() {
+    override fun reaction() {
         tone?.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 90)
     }
 

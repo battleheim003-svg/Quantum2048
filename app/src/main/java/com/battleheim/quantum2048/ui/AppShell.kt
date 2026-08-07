@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,6 +45,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.battleheim.quantum2048.R
 import com.battleheim.quantum2048.audio.ToneGameAudio
 import com.battleheim.quantum2048.designsystem.Cyan
 import com.battleheim.quantum2048.designsystem.PanelRaised
@@ -57,8 +59,10 @@ import com.battleheim.quantum2048.domain.CollectionRepository
 import com.battleheim.quantum2048.domain.GameRepository
 import com.battleheim.quantum2048.domain.SettingsRepository
 import com.battleheim.quantum2048.engine.Difficulty
+import com.battleheim.quantum2048.engine.FusionRules
 import com.battleheim.quantum2048.engine.GameEngine
-import com.battleheim.quantum2048.engine.QuantumBalance
+import com.battleheim.quantum2048.engine.BotDifficulty
+import com.battleheim.quantum2048.engine.DuelOpponent
 import kotlinx.coroutines.launch
 
 private object Routes {
@@ -66,10 +70,12 @@ private object Routes {
     const val LevelSelect = "level_select"
     const val Collection = "collection"
     const val Settings = "settings"
-    const val Game = "game/{difficulty}"
+    const val Game = "game/{difficulty}/{size}"
+    const val DuelGame = "duel/{difficulty}"
     const val Pause = "pause"
 
-    fun game(difficulty: Difficulty) = "game/${difficulty.name}"
+    fun game(difficulty: Difficulty, size: Int) = "game/${difficulty.name}/$size"
+    fun duel(difficulty: Difficulty) = "duel/${difficulty.name}"
 }
 
 @Composable
@@ -89,7 +95,7 @@ fun QuantumAppShell(
         composable(Routes.MainMenu) {
             MainMenuScreen(
                 vm = gameViewModel,
-                onContinue = { difficulty -> nav.navigate(Routes.game(difficulty)) },
+                onContinue = { saved -> nav.navigate(Routes.game(saved.difficulty, saved.size)) },
                 onNewGame = { nav.navigate(Routes.LevelSelect) },
                 onCollection = { nav.navigate(Routes.Collection) },
                 onSettings = { nav.navigate(Routes.Settings) },
@@ -98,20 +104,34 @@ fun QuantumAppShell(
         composable(Routes.LevelSelect) {
             LevelSelectScreen(
                 vm = gameViewModel,
-                balance = engine.balance,
                 onBack = { nav.popBackStack() },
-                onSelect = { difficulty ->
-                    gameViewModel.newGame(difficulty)
-                    nav.navigate(Routes.game(difficulty))
+                onSelect = { difficulty, size, duel, opponent, botDifficulty ->
+                    if (duel) {
+                        gameViewModel.newDuel(difficulty, opponent, botDifficulty)
+                        nav.navigate(Routes.duel(difficulty))
+                    } else {
+                        gameViewModel.newGame(difficulty, size)
+                        nav.navigate(Routes.game(difficulty, size))
+                    }
                 },
             )
         }
         composable(
-            route = Routes.Game,
+            route = Routes.DuelGame,
             arguments = listOf(navArgument("difficulty") { type = NavType.StringType }),
+        ) {
+            GameScreen(vm = gameViewModel, settings = settings, audio = audio, onPause = { nav.navigate(Routes.Pause) })
+        }
+        composable(
+            route = Routes.Game,
+            arguments = listOf(
+                navArgument("difficulty") { type = NavType.StringType },
+                navArgument("size") { type = NavType.IntType },
+            ),
         ) { backStack ->
             val difficulty = Difficulty.valueOf(backStack.arguments?.getString("difficulty") ?: Difficulty.QUANTUM.name)
-            LaunchedEffect(difficulty) { gameViewModel.loadDifficulty(difficulty) }
+            val size = backStack.arguments?.getInt("size") ?: 4
+            LaunchedEffect(difficulty, size) { gameViewModel.loadDifficulty(difficulty, size) }
             GameScreen(vm = gameViewModel, settings = settings, audio = audio, onPause = { nav.navigate(Routes.Pause) })
         }
         composable(Routes.Pause) {
@@ -124,7 +144,7 @@ fun QuantumAppShell(
             )
         }
         composable(Routes.Collection) {
-            CollectionScreen(collectionRepository, engine.balance, onBack = { nav.popBackStack() })
+            CollectionScreen(collectionRepository, onBack = { nav.popBackStack() })
         }
         composable(Routes.Settings) {
             SettingsScreen(
@@ -140,50 +160,110 @@ fun QuantumAppShell(
 @Composable
 private fun MainMenuScreen(
     vm: GameViewModel,
-    onContinue: (Difficulty) -> Unit,
+    onContinue: (SavedGameKey) -> Unit,
     onNewGame: () -> Unit,
     onCollection: () -> Unit,
     onSettings: () -> Unit,
 ) {
-    var saves by remember { mutableStateOf(emptySet<Difficulty>()) }
+    var saves by remember { mutableStateOf(emptySet<SavedGameKey>()) }
     val scope = rememberCoroutineScope()
-    LaunchedEffect(Unit) { saves = vm.savedDifficulties() }
-    val continueDifficulty = saves.lastOrNull() ?: Difficulty.QUANTUM
+    LaunchedEffect(Unit) { saves = vm.savedGames() }
+    val continueSave = saves.lastOrNull() ?: SavedGameKey(Difficulty.QUANTUM, 4)
 
     MenuScaffold {
-        SectionTitle("Quantum 2048", "Collapse Lab")
+        SectionTitle(stringResource(R.string.app_title), stringResource(R.string.fusion_lab))
         Button(
-            onClick = { onContinue(continueDifficulty) },
+            onClick = { onContinue(continueSave) },
             enabled = saves.isNotEmpty(),
             modifier = Modifier.fillMaxWidth().testTag("continue_button"),
-        ) { Text("Continue") }
-        Button(onClick = onNewGame, modifier = Modifier.fillMaxWidth().testTag("new_game_button")) { Text("New game") }
-        OutlinedButton(onClick = onCollection, modifier = Modifier.fillMaxWidth()) { Text("Collection") }
-        OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) { Text("Settings") }
-        TextButton(onClick = { scope.launch { saves = vm.savedDifficulties() } }) { Text("Refresh saves") }
+        ) { Text(stringResource(R.string.continue_game)) }
+        Button(onClick = onNewGame, modifier = Modifier.fillMaxWidth().testTag("new_game_button")) { Text(stringResource(R.string.new_game)) }
+        OutlinedButton(onClick = onCollection, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.collection)) }
+        OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings)) }
+        TextButton(onClick = { scope.launch { saves = vm.savedGames() } }) { Text(stringResource(R.string.refresh_saves)) }
     }
 }
 
 @Composable
-private fun LevelSelectScreen(vm: GameViewModel, balance: QuantumBalance, onBack: () -> Unit, onSelect: (Difficulty) -> Unit) {
-    var saves by remember { mutableStateOf(emptySet<Difficulty>()) }
-    LaunchedEffect(Unit) { saves = vm.savedDifficulties() }
+private fun LevelSelectScreen(vm: GameViewModel, onBack: () -> Unit, onSelect: (Difficulty, Int, Boolean, DuelOpponent, BotDifficulty) -> Unit) {
+    var saves by remember { mutableStateOf(emptySet<SavedGameKey>()) }
+    var selectedSize by remember { mutableStateOf(4) }
+    var duel by remember { mutableStateOf(false) }
+    var opponent by remember { mutableStateOf(DuelOpponent.BOT) }
+    var botDifficulty by remember { mutableStateOf(BotDifficulty.NORMAL) }
+    LaunchedEffect(Unit) { saves = vm.savedGames() }
     MenuScaffold {
-        SectionTitle("Select level", "Choose the lab rules for this run")
+        SectionTitle(stringResource(R.string.new_game), stringResource(R.string.choose_rules_size))
+        ModeSelector(duel, onSelect = { duel = it; if (it) selectedSize = 4 })
+        BoardSizeSelector(selectedSize, enabled = !duel, onSelect = { selectedSize = it })
+        if (duel) {
+            DuelSelector(opponent, botDifficulty, onOpponent = { opponent = it }, onBot = { botDifficulty = it })
+        }
         Difficulty.entries.forEach { difficulty ->
             DifficultyCard(
                 difficulty = difficulty,
-                hasSave = difficulty in saves,
-                description = difficultyDescription(difficulty, balance),
-                onClick = { onSelect(difficulty) },
+                size = selectedSize,
+                hasSave = SavedGameKey(difficulty, selectedSize) in saves,
+                description = difficultyDescription(difficulty),
+                onClick = { onSelect(difficulty, selectedSize, duel, opponent, botDifficulty) },
             )
         }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }
     }
 }
 
 @Composable
-private fun DifficultyCard(difficulty: Difficulty, hasSave: Boolean, description: String, onClick: () -> Unit) {
+private fun ModeSelector(duel: Boolean, onSelect: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Button(onClick = { onSelect(false) }, modifier = Modifier.weight(1f)) { Text(stringResource(if (!duel) R.string.solo_selected else R.string.solo)) }
+        Button(onClick = { onSelect(true) }, modifier = Modifier.weight(1f).testTag("mode_duel")) { Text(stringResource(if (duel) R.string.duel_selected else R.string.duel)) }
+    }
+}
+
+@Composable
+private fun BoardSizeSelector(selected: Int, enabled: Boolean, onSelect: (Int) -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FusionRules.supportedBoardSizes.forEach { size ->
+            val active = size == selected
+            Button(
+                onClick = { onSelect(size) },
+                enabled = enabled || active,
+                modifier = Modifier.weight(1f).testTag("board_size_${size}x$size"),
+            ) {
+                Text(stringResource(if (active) R.string.board_size_selected else R.string.board_size, size), fontSize = 12.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DuelSelector(opponent: DuelOpponent, botDifficulty: BotDifficulty, onOpponent: (DuelOpponent) -> Unit, onBot: (BotDifficulty) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { onOpponent(DuelOpponent.BOT) }, modifier = Modifier.weight(1f).testTag("duel_bot")) { Text(stringResource(if (opponent == DuelOpponent.BOT) R.string.bot_selected else R.string.bot)) }
+            Button(onClick = { onOpponent(DuelOpponent.PASS_AND_PLAY) }, modifier = Modifier.weight(1f).testTag("duel_pass")) { Text(stringResource(if (opponent == DuelOpponent.PASS_AND_PLAY) R.string.pass_play_selected else R.string.pass_play)) }
+        }
+        if (opponent == DuelOpponent.BOT) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BotDifficulty.entries.forEach { level ->
+                    Button(onClick = { onBot(level) }, modifier = Modifier.weight(1f).testTag("bot_${level.name.lowercase()}")) {
+                        Text(level.label(), fontSize = 11.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BotDifficulty.label(): String = when (this) {
+    BotDifficulty.EASY -> stringResource(R.string.easy)
+    BotDifficulty.NORMAL -> stringResource(R.string.normal)
+    BotDifficulty.QUANTUM_HARD -> stringResource(R.string.quantum)
+}
+
+@Composable
+private fun DifficultyCard(difficulty: Difficulty, size: Int, hasSave: Boolean, description: String, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = difficultySurface(difficulty)),
@@ -199,7 +279,7 @@ private fun DifficultyCard(difficulty: Difficulty, hasSave: Boolean, description
                     Box(Modifier.size(14.dp).background(difficultyAccent(difficulty), RoundedCornerShape(3.dp)))
                     Text(difficulty.name.lowercase().replaceFirstChar { it.uppercase() }, fontWeight = FontWeight.Black)
                 }
-                Text(if (hasSave) "Saved" else "New", color = difficultyAccent(difficulty), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(if (hasSave) stringResource(R.string.saved_size, size) else stringResource(R.string.board_size, size), color = difficultyAccent(difficulty), fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
             Text(description, color = TextSecondary, fontSize = 13.sp)
         }
@@ -207,24 +287,24 @@ private fun DifficultyCard(difficulty: Difficulty, hasSave: Boolean, description
 }
 
 @Composable
-private fun CollectionScreen(repository: CollectionRepository, balance: QuantumBalance, onBack: () -> Unit) {
+private fun CollectionScreen(repository: CollectionRepository, onBack: () -> Unit) {
     val state by repository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.CollectionState())
-    val codex = state.codex(balance.compoundRecipes)
+    val codex = state.codex(FusionRules.compoundRecipes)
     MenuScaffold {
-        SectionTitle("Collection", "Discovered compounds and locked silhouettes")
+        SectionTitle(stringResource(R.string.collection), stringResource(R.string.fusion_lab))
         codex.forEach { entry ->
             Card(colors = CardDefaults.cardColors(containerColor = if (entry.discovered) PanelRaised else Panel), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp)) {
                     Text(entry.symbol, fontWeight = FontWeight.Black, color = if (entry.discovered) Color.White else TextMuted)
                     Text(
-                        if (entry.discovered) "${entry.englishName} / ${entry.persianName} x${entry.discoveryCount}" else "Locked compound",
+                        if (entry.discovered) "${entry.englishName} / ${entry.persianName} x${entry.discoveryCount}" else stringResource(R.string.none),
                         color = if (entry.discovered) TextSecondary else TextMuted,
                         fontSize = 12.sp,
                     )
                 }
             }
         }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }
     }
 }
 
@@ -241,17 +321,17 @@ private fun SettingsScreen(
     var confirmResetDifficulty by remember { mutableStateOf<Difficulty?>(null) }
 
     MenuScaffold {
-        SectionTitle("Settings", "Audio, feedback, and progress controls")
-        SettingsToggle("Sound", settings.soundEnabled) { scope.launch { settingsRepository.save(settings.copy(soundEnabled = it)) } }
-        SettingsToggle("Music", settings.musicEnabled) { scope.launch { settingsRepository.save(settings.copy(musicEnabled = it)) } }
-        SettingsToggle("Haptics", settings.hapticsEnabled) { scope.launch { settingsRepository.save(settings.copy(hapticsEnabled = it)) } }
-        SettingsToggle("Reduced motion", settings.reducedMotion) { scope.launch { settingsRepository.save(settings.copy(reducedMotion = it)) } }
-        Text("Language switching is deferred because localized string resources need repair.", color = TextSecondary, fontSize = 12.sp)
-        OutlinedButton(onClick = { confirmResetCollection = true }, modifier = Modifier.fillMaxWidth()) { Text("Reset collection") }
+        SectionTitle(stringResource(R.string.settings), stringResource(R.string.fusion_lab))
+        SettingsToggle(stringResource(R.string.sound), settings.soundEnabled) { scope.launch { settingsRepository.save(settings.copy(soundEnabled = it)) } }
+        SettingsToggle(stringResource(R.string.music), settings.musicEnabled) { scope.launch { settingsRepository.save(settings.copy(musicEnabled = it)) } }
+        SettingsToggle(stringResource(R.string.haptics), settings.hapticsEnabled) { scope.launch { settingsRepository.save(settings.copy(hapticsEnabled = it)) } }
+        SettingsToggle(stringResource(R.string.reduced_motion), settings.reducedMotion) { scope.launch { settingsRepository.save(settings.copy(reducedMotion = it)) } }
+        Text(stringResource(R.string.language_note), color = TextSecondary, fontSize = 12.sp)
+        OutlinedButton(onClick = { confirmResetCollection = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.reset_collection)) }
         Difficulty.entries.forEach { difficulty ->
-            OutlinedButton(onClick = { confirmResetDifficulty = difficulty }, modifier = Modifier.fillMaxWidth()) { Text("Reset ${difficulty.name.lowercase()} progress") }
+            OutlinedButton(onClick = { confirmResetDifficulty = difficulty }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.reset_progress, difficulty.name.lowercase())) }
         }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }
     }
 
     if (confirmResetCollection) {
@@ -283,10 +363,10 @@ private fun PauseScreen(vm: GameViewModel, onResume: () -> Unit, onMainMenu: () 
     val ui by vm.ui.collectAsState()
     var confirmRestart by remember { mutableStateOf(false) }
     MenuScaffold(modifier = Modifier.testTag("pause_screen")) {
-        SectionTitle("Paused", ui.game.difficulty.name.lowercase().replaceFirstChar { it.uppercase() })
-        Button(onClick = onResume, modifier = Modifier.fillMaxWidth()) { Text("Resume") }
-        OutlinedButton(onClick = { confirmRestart = true }, modifier = Modifier.fillMaxWidth()) { Text("Restart ${ui.game.difficulty.name.lowercase()}") }
-        OutlinedButton(onClick = onMainMenu, modifier = Modifier.fillMaxWidth().testTag("pause_main_menu")) { Text("Main menu") }
+        SectionTitle(stringResource(R.string.pause), ui.game.difficulty.name.lowercase().replaceFirstChar { it.uppercase() })
+        Button(onClick = onResume, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.resume)) }
+        OutlinedButton(onClick = { confirmRestart = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.new_game)) }
+        OutlinedButton(onClick = onMainMenu, modifier = Modifier.fillMaxWidth().testTag("pause_main_menu")) { Text(stringResource(R.string.main_menu)) }
     }
     if (confirmRestart) {
         ConfirmDialog(
@@ -316,8 +396,8 @@ private fun ConfirmDialog(title: String, body: String, onDismiss: () -> Unit, on
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { Text(body) },
-        confirmButton = { Button(onClick = onConfirm) { Text("Confirm") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { Button(onClick = onConfirm) { Text(stringResource(R.string.confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
 
@@ -346,12 +426,10 @@ private fun SectionTitle(title: String, subtitle: String) {
     }
 }
 
-private fun difficultyDescription(difficulty: Difficulty, balance: QuantumBalance): String {
-    val rules = balance.rulesFor(difficulty)
-    return when (difficulty) {
-        Difficulty.EASY -> "Classic 2048. No lab, energy, particles, or collapse."
-        Difficulty.MEDIUM -> "Particles and light fusion to ${rules.maxFusionSpecies?.symbol}; simple compounds."
-        Difficulty.HARD -> "Full element chain, full Compound Lab, energy cost ${rules.compoundEnergyCost}, no collapse."
-        Difficulty.QUANTUM -> "Full synthesis with unresolved tiles, collapse, energy, and all compounds."
-    }
+@Composable
+private fun difficultyDescription(difficulty: Difficulty): String = when (difficulty) {
+    Difficulty.EASY -> stringResource(R.string.classic_description)
+    Difficulty.MEDIUM -> stringResource(R.string.medium_description)
+    Difficulty.HARD -> stringResource(R.string.hard_description)
+    Difficulty.QUANTUM -> stringResource(R.string.quantum_description)
 }

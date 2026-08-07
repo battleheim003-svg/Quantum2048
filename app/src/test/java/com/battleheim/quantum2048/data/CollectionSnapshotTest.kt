@@ -2,7 +2,7 @@ package com.battleheim.quantum2048.data
 
 import com.battleheim.quantum2048.domain.CollectionState
 import com.battleheim.quantum2048.engine.Difficulty
-import com.battleheim.quantum2048.engine.QuantumBalance
+import com.battleheim.quantum2048.engine.FusionRules
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -11,8 +11,8 @@ import org.junit.Test
 
 class CollectionSnapshotTest {
     private val json = Json { encodeDefaults = true; ignoreUnknownKeys = true }
-    private val water = QuantumBalance.defaultCompoundRecipes.first { it.output.symbol == "H2O" }.output
-    private val salt = QuantumBalance.defaultCompoundRecipes.first { it.output.symbol == "NaCl" }.output
+    private val water = FusionRules.compoundRecipes.first { it.output.symbol == "H2O" }.output
+    private val silica = FusionRules.compoundRecipes.first { it.output.symbol == "SiO2" }.output
 
     @Test
     fun repeatedCompoundIncrementsCounterWithoutAddingDuplicateEntry() {
@@ -32,7 +32,7 @@ class CollectionSnapshotTest {
     fun collectionSnapshotPersistsBetweenJsonSessions() {
         val saved = CollectionState()
             .record(water, Difficulty.MEDIUM, discoveredAtMillis = 1000)
-            .record(salt, Difficulty.MEDIUM, discoveredAtMillis = 2000)
+            .record(silica, Difficulty.MEDIUM, discoveredAtMillis = 2000)
             .record(water, Difficulty.QUANTUM, discoveredAtMillis = 3000)
 
         val encoded = json.encodeToString(CollectionSnapshot(state = saved))
@@ -46,16 +46,16 @@ class CollectionSnapshotTest {
     @Test
     fun codexIncludesLockedEntriesForUndiscoveredRecipes() {
         val state = CollectionState().record(water, Difficulty.MEDIUM, discoveredAtMillis = 1000)
-        val codex = state.codex(QuantumBalance.defaultCompoundRecipes)
+        val codex = state.codex(FusionRules.compoundRecipes)
 
         val waterEntry = codex.first { it.symbol == "H2O" }
-        val saltEntry = codex.first { it.symbol == "NaCl" }
+        val silicaEntry = codex.first { it.symbol == "SiO2" }
 
         assertTrue(waterEntry.discovered)
         assertEquals("Water", waterEntry.englishName)
-        assertFalse(saltEntry.discovered)
-        assertEquals(null, saltEntry.englishName)
-        assertEquals(0, saltEntry.discoveryCount)
+        assertFalse(silicaEntry.discovered)
+        assertEquals(null, silicaEntry.englishName)
+        assertEquals(0, silicaEntry.discoveryCount)
     }
 
     @Test

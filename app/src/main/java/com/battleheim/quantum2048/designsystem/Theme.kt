@@ -6,7 +6,8 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import com.battleheim.quantum2048.engine.Difficulty
-import com.battleheim.quantum2048.engine.QuantumSpecies
+import com.battleheim.quantum2048.engine.QuantumElement
+import com.battleheim.quantum2048.engine.TileKind
 
 val Void = Color(0xFF070A14)
 val Panel = Color(0xFF101626)
@@ -60,28 +61,28 @@ fun difficultySurface(difficulty: Difficulty): Color = when (difficulty) {
     Difficulty.QUANTUM -> Color(0xFF241B3D)
 }
 
-fun elementColor(species: QuantumSpecies?): Color = when (species) {
-    QuantumSpecies.ELECTRON -> Color(0xFF2563A7)
-    QuantumSpecies.PROTON -> Color(0xFFA53F61)
-    QuantumSpecies.HYDROGEN -> Color(0xFF2BAF8A)
-    QuantumSpecies.HELIUM, QuantumSpecies.NEON -> Color(0xFF7F6CE1)
-    QuantumSpecies.LITHIUM, QuantumSpecies.SODIUM -> Color(0xFFC0A236)
-    QuantumSpecies.BERYLLIUM, QuantumSpecies.MAGNESIUM, QuantumSpecies.CALCIUM -> Color(0xFF88A747)
-    QuantumSpecies.BORON, QuantumSpecies.SILICON -> Color(0xFFB87949)
-    QuantumSpecies.CARBON -> Color(0xFF597084)
-    QuantumSpecies.NITROGEN, QuantumSpecies.OXYGEN, QuantumSpecies.CHLORINE -> Color(0xFF2E98A6)
-    QuantumSpecies.IRON -> Color(0xFF9E7464)
-    QuantumSpecies.GOLD -> Color(0xFFD7AE3E)
+fun tileKindColor(kind: TileKind): Color = when (kind) {
+    TileKind.ELECTRON -> Color(0xFF2563A7)
+    TileKind.PROTON -> Color(0xFFA53F61)
+    TileKind.ELEMENT -> Color(0xFF2BAF8A)
+    TileKind.CLASSIC -> PanelSoft
+}
+
+fun elementColor(element: QuantumElement?): Color = when (element) {
+    QuantumElement.HYDROGEN -> Color(0xFF2BAF8A)
+    QuantumElement.HELIUM, QuantumElement.NEON -> Color(0xFF7F6CE1)
+    QuantumElement.BERYLLIUM -> Color(0xFF88A747)
+    QuantumElement.OXYGEN -> Color(0xFF2E98A6)
+    QuantumElement.SILICON -> Color(0xFFB87949)
+    QuantumElement.IRON -> Color(0xFF9E7464)
+    QuantumElement.GOLD -> Color(0xFFD7AE3E)
     null -> PanelSoft
 }
 
-fun elementFamily(species: QuantumSpecies): String = when (species) {
-    QuantumSpecies.ELECTRON, QuantumSpecies.PROTON -> "Particle"
-    QuantumSpecies.HELIUM, QuantumSpecies.NEON -> "Noble gas"
-    QuantumSpecies.LITHIUM, QuantumSpecies.SODIUM -> "Alkali metal"
-    QuantumSpecies.BERYLLIUM, QuantumSpecies.MAGNESIUM, QuantumSpecies.CALCIUM -> "Alkaline earth"
-    QuantumSpecies.CHLORINE -> "Halogen"
-    QuantumSpecies.IRON, QuantumSpecies.GOLD -> "Metal"
-    QuantumSpecies.BORON, QuantumSpecies.SILICON -> "Metalloid"
-    QuantumSpecies.CARBON, QuantumSpecies.NITROGEN, QuantumSpecies.OXYGEN, QuantumSpecies.HYDROGEN -> "Nonmetal"
+fun elementFamily(element: QuantumElement): String = when (element) {
+    QuantumElement.HELIUM, QuantumElement.NEON -> "Noble gas"
+    QuantumElement.BERYLLIUM -> "Alkaline earth"
+    QuantumElement.SILICON -> "Metalloid"
+    QuantumElement.IRON, QuantumElement.GOLD -> "Metal"
+    QuantumElement.HYDROGEN, QuantumElement.OXYGEN -> "Nonmetal"
 }

@@ -16,7 +16,8 @@ class AppShellNavigationTest {
     @Test
     fun mainMenuLevelSelectGamePauseMainMenu() {
         compose.onNodeWithTag("new_game_button").performClick()
-        compose.onNodeWithText("Select level").assertIsDisplayed()
+        compose.onNodeWithText("New game").assertIsDisplayed()
+        compose.onNodeWithTag("board_size_6x6").performClick()
         compose.onNodeWithTag("level_easy").performClick()
         compose.onNodeWithText("Pause").performClick()
         compose.onNodeWithTag("pause_screen").assertIsDisplayed()
