@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.battleheim.quantum2048.domain.CollectionRepository
 import com.battleheim.quantum2048.domain.GameRepository
+import com.battleheim.quantum2048.domain.ProfileRepository
 import com.battleheim.quantum2048.domain.UndoBuffer
 import com.battleheim.quantum2048.engine.CompoundFailure
 import com.battleheim.quantum2048.engine.CompoundResult
@@ -23,12 +24,19 @@ import com.battleheim.quantum2048.engine.FusionRules
 import com.battleheim.quantum2048.engine.MoveAnimation
 import com.battleheim.quantum2048.engine.SeededRandomProvider
 import com.battleheim.quantum2048.engine.TileKind
+import com.battleheim.quantum2048.engine.TunnelFailure
+import com.battleheim.quantum2048.engine.TunnelResult
+import com.battleheim.quantum2048.engine.SuperpositionFailure
+import com.battleheim.quantum2048.engine.SuperpositionResult
+import com.battleheim.quantum2048.engine.ObserverFailure
+import com.battleheim.quantum2048.engine.ObserverResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 data class GameUiState(
     val game: GameState = GameState(mode = GameMode.QUANTUM),
@@ -39,15 +47,20 @@ data class GameUiState(
     val feedback: GameFeedback? = null,
     val animations: List<MoveAnimation> = emptyList(),
     val duel: DuelState? = null,
+    val tunnelingTileId: Long? = null,
+    val superpositionTileId: Long? = null,
+    val observerPreview: ObserverPreview? = null,
 )
 
-enum class GameFeedback { MOVE, MERGE, REACTION, COMPOUND, GAME_OVER }
+enum class GameFeedback { MOVE, MERGE, REACTION, COMPOUND, TUNNEL, COLLAPSE_LOW, COLLAPSE_HIGH, GAME_OVER }
+data class ObserverPreview(val tileId: Long, val value: Int)
 
 data class SavedGameKey(val difficulty: Difficulty, val size: Int)
 
 class GameViewModel(
     private val repository: GameRepository,
     private val collectionRepository: CollectionRepository,
+    private val profileRepository: ProfileRepository,
     private val engine: GameEngine,
 ) : ViewModel() {
     private val _ui = MutableStateFlow(GameUiState())
@@ -73,14 +86,19 @@ class GameViewModel(
             engine.move(before, direction)
         }
         if (result.changed) {
-            undo.remember(before)
+            rememberUndoIfAllowed(before)
             undoCompoundSymbol = null
             _ui.value = _ui.value.copy(
                 game = _ui.value.duel?.activeBoard ?: result.state,
-                canUndo = undo.canUndo,
-                message = if (result.reactionCount > 0) "Particle reaction complete" else null,
+                canUndo = undo.canUndo && FusionRules.isUndoEnabled(before.difficulty),
+                message = when {
+                    result.energyOverflowBonus > 0 -> "Energy overflow +${result.energyOverflowBonus}"
+                    result.reactionCount > 0 -> "Particle reaction complete"
+                    else -> null
+                },
                 feedback = when {
                     result.state.status == GameStatus.LOST -> GameFeedback.GAME_OVER
+                    result.entanglementCollapseCount > 0 -> GameFeedback.REACTION
                     result.reactionCount > 0 -> GameFeedback.REACTION
                     result.mergeCount > 0 -> GameFeedback.MERGE
                     else -> GameFeedback.MOVE
@@ -141,17 +159,145 @@ class GameViewModel(
         _ui.value = _ui.value.copy(labTileIds = emptyList())
     }
 
+    fun toggleTunneling() {
+        if (inputLocked || _ui.value.loading) return
+        val selected = _ui.value.tunnelingTileId
+        _ui.value = _ui.value.copy(
+            tunnelingTileId = if (selected == null) -1L else null,
+            labTileIds = emptyList(),
+            message = if (selected == null) "Select a tile, then an empty cell" else "Tunneling cancelled",
+        )
+    }
+
+    fun tapBoardCell(index: Int) {
+        if (inputLocked || _ui.value.loading || _ui.value.duel != null) return
+        val state = _ui.value.game
+        val tile = state.cells.getOrNull(index)
+        val tunneling = _ui.value.tunnelingTileId
+        if (tunneling == null) {
+            if (tile?.superpositionValues?.isNotEmpty() == true) {
+                _ui.value = _ui.value.copy(superpositionTileId = tile.id, labTileIds = emptyList())
+            }
+            return
+        }
+        if (tunneling < 0L) {
+            _ui.value = if (tile == null) {
+                _ui.value.copy(message = "Select a tile first")
+            } else {
+                _ui.value.copy(tunnelingTileId = tile.id, message = "Select an empty destination")
+            }
+            return
+        }
+        if (tile != null) {
+            _ui.value = _ui.value.copy(tunnelingTileId = tile.id, message = "Tunnel source changed")
+            return
+        }
+        val before = state
+        when (val result = engine.tunnel(before, tunneling, index)) {
+            is TunnelResult.Success -> {
+                rememberUndoIfAllowed(before)
+                undoCompoundSymbol = null
+                _ui.value = _ui.value.copy(
+                    game = result.state,
+                    canUndo = undo.canUndo,
+                    tunnelingTileId = null,
+                    message = "Tile tunneled",
+                    feedback = GameFeedback.TUNNEL,
+                    animations = listOf(result.animation),
+                )
+                persist()
+            }
+            is TunnelResult.Failure -> {
+                val message = when (result.reason) {
+                    TunnelFailure.INSUFFICIENT_SCORE -> "Not enough energy for tunneling"
+                    TunnelFailure.DESTINATION_OCCUPIED -> "Choose an empty destination"
+                    TunnelFailure.LAB_DISABLED -> "Tunneling is quantum-only"
+                    TunnelFailure.GAME_NOT_ACTIVE -> "The game is not active"
+                    TunnelFailure.TILE_NOT_FOUND -> "Tunnel source is gone"
+                }
+                _ui.value = _ui.value.copy(message = message)
+            }
+        }
+    }
+
+    fun collapseSuperposition(choiceIndex: Int) {
+        if (inputLocked || _ui.value.loading) return
+        val tileId = _ui.value.superpositionTileId ?: return
+        val before = _ui.value.game
+        when (val result = engine.collapseSuperposition(before, tileId, choiceIndex)) {
+            is SuperpositionResult.Success -> {
+                rememberUndoIfAllowed(before)
+                undoCompoundSymbol = null
+                _ui.value = _ui.value.copy(
+                    game = result.state,
+                    canUndo = undo.canUndo,
+                    superpositionTileId = null,
+                    message = if (choiceIndex == 0) "Low collapse stabilized" else "High collapse stabilized",
+                    feedback = if (choiceIndex == 0) GameFeedback.COLLAPSE_LOW else GameFeedback.COLLAPSE_HIGH,
+                    animations = listOf(result.animation),
+                )
+                persist()
+            }
+            is SuperpositionResult.Failure -> {
+                val message = when (result.reason) {
+                    SuperpositionFailure.INSUFFICIENT_SCORE -> "Not enough energy to collapse"
+                    SuperpositionFailure.INVALID_CHOICE -> "Collapse choice is invalid"
+                    SuperpositionFailure.NOT_SUPERPOSITION -> "Tile is already stable"
+                    SuperpositionFailure.LAB_DISABLED -> "Superposition is quantum-only"
+                    SuperpositionFailure.GAME_NOT_ACTIVE -> "The game is not active"
+                    SuperpositionFailure.TILE_NOT_FOUND -> "Superposition tile is gone"
+                }
+                _ui.value = _ui.value.copy(message = message)
+            }
+        }
+    }
+
+    fun dismissSuperposition() {
+        _ui.value = _ui.value.copy(superpositionTileId = null)
+    }
+
+    fun observeTile(tileId: Long) {
+        if (inputLocked || _ui.value.loading || _ui.value.duel != null) return
+        val before = _ui.value.game
+        when (val result = engine.observeSuperposition(before, tileId)) {
+            is ObserverResult.Success -> {
+                _ui.value = _ui.value.copy(
+                    game = result.state,
+                    observerPreview = ObserverPreview(tileId, result.previewValue),
+                    message = "Observer preview: ${result.previewValue}",
+                )
+                persist()
+                viewModelScope.launch {
+                    delay(OBSERVER_PREVIEW_MS)
+                    if (_ui.value.observerPreview?.tileId == tileId) {
+                        _ui.value = _ui.value.copy(observerPreview = null)
+                    }
+                }
+            }
+            is ObserverResult.Failure -> {
+                val message = when (result.reason) {
+                    ObserverFailure.INSUFFICIENT_SCORE -> "Not enough energy to observe"
+                    ObserverFailure.NOT_SUPERPOSITION -> "Only superposition tiles can be observed"
+                    ObserverFailure.LAB_DISABLED -> "Observer effect is quantum-only"
+                    ObserverFailure.GAME_NOT_ACTIVE -> "The game is not active"
+                    ObserverFailure.TILE_NOT_FOUND -> "Observer target is gone"
+                }
+                _ui.value = _ui.value.copy(message = message)
+            }
+        }
+    }
+
     private fun tryCompleteLab() {
         val selected = _ui.value.labTileIds
         if (selected.size < 2) return
         val before = _ui.value.game
         when (val result = engine.combineCompound(before, selected)) {
             is CompoundResult.Success -> {
-                undo.remember(before)
+                rememberUndoIfAllowed(before)
                 undoCompoundSymbol = result.recipe.output.symbol
                 _ui.value = _ui.value.copy(
                     game = result.state,
-                    canUndo = true,
+                    canUndo = undo.canUndo,
                     labTileIds = emptyList(),
                     message = "Discovered ${result.recipe.output.symbol}",
                     feedback = GameFeedback.COMPOUND,
@@ -189,7 +335,7 @@ class GameViewModel(
         if (compoundSymbol != null) {
             viewModelScope.launch { collectionRepository.unrecord(compoundSymbol) }
         }
-        _ui.value = _ui.value.copy(game = prior, canUndo = false, labTileIds = emptyList(), message = "Move undone")
+        _ui.value = _ui.value.copy(game = prior.copy(usedUndo = true), canUndo = false, labTileIds = emptyList(), tunnelingTileId = null, superpositionTileId = null, observerPreview = null, message = "Move undone")
         persist()
     }
 
@@ -200,6 +346,9 @@ class GameViewModel(
             game = engine.newGame(previous.difficulty, previous.size).copy(bestScore = previous.bestScore),
             canUndo = false,
             labTileIds = emptyList(),
+            tunnelingTileId = null,
+            superpositionTileId = null,
+            observerPreview = null,
             animations = emptyList(),
         )
         persist()
@@ -212,6 +361,9 @@ class GameViewModel(
             game = engine.newGame(difficulty, size),
             canUndo = false,
             labTileIds = emptyList(),
+            tunnelingTileId = null,
+            superpositionTileId = null,
+            observerPreview = null,
             animations = emptyList(),
             loading = false,
         )
@@ -270,6 +422,9 @@ class GameViewModel(
                     game = engine.newGame(difficulty, _ui.value.game.size),
                     canUndo = false,
                     labTileIds = emptyList(),
+                    tunnelingTileId = null,
+                    superpositionTileId = null,
+                    observerPreview = null,
                     animations = emptyList(),
                     loading = false,
                 )
@@ -291,6 +446,11 @@ class GameViewModel(
         _ui.value = _ui.value.copy(feedback = null)
     }
 
+    fun completeTutorial() {
+        _ui.value = _ui.value.copy(game = _ui.value.game.copy(tutorialCompleted = true))
+        persist()
+    }
+
     private fun load(mode: GameMode) {
         load(Difficulty.fromMode(mode), requestedSize)
     }
@@ -300,18 +460,42 @@ class GameViewModel(
         requestedSize = size
         _ui.value = _ui.value.copy(loading = true)
         viewModelScope.launch {
+            val today = LocalDate.now().toString()
             val restored = repository.observe(difficulty, size).first()
-            val game = restored ?: engine.newGame(difficulty, size)
-            _ui.value = GameUiState(game = game, loading = false, duel = null)
-            repository.save(game)
+            val game = if (difficulty == Difficulty.DAILY && restored?.dailyChallengeDate != today) {
+                engine.newGame(difficulty, size)
+            } else {
+                restored ?: engine.newGame(difficulty, size)
+            }
+            val loadedGame = if (difficulty == Difficulty.DAILY) {
+                val profile = profileRepository.observe().first()
+                val dailyBest = maxOf(game.dailyBestScore, profile.dailyBestScore(game.dailyChallengeDate))
+                game.copy(dailyBestScore = dailyBest)
+            } else {
+                game
+            }
+            _ui.value = GameUiState(game = loadedGame, loading = false, duel = null)
+            repository.save(loadedGame)
             inputLocked = false
         }
     }
 
-    private fun persist() = viewModelScope.launch { repository.save(_ui.value.game) }
+    private fun persist() = viewModelScope.launch {
+        repository.save(_ui.value.game)
+        profileRepository.record(_ui.value.game)
+    }
+
+    private fun rememberUndoIfAllowed(state: GameState) {
+        if (FusionRules.isUndoEnabled(state.difficulty)) {
+            undo.remember(state)
+        } else {
+            undo.clear()
+        }
+    }
 
     private companion object {
-        const val MOVE_LOCK_MS = 190L
+        const val MOVE_LOCK_MS = 390L
+        const val OBSERVER_PREVIEW_MS = 2400L
     }
 }
 

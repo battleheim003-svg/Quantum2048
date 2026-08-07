@@ -3,8 +3,11 @@ package com.battleheim.quantum2048.designsystem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.graphics.Color
+import com.battleheim.quantum2048.domain.AppThemeMode
 import com.battleheim.quantum2048.engine.Difficulty
 import com.battleheim.quantum2048.engine.QuantumElement
 import com.battleheim.quantum2048.engine.TileKind
@@ -43,22 +46,41 @@ private val scheme = darkColorScheme(
 )
 
 @Composable
-fun QuantumTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = scheme, typography = Typography(), content = content)
+fun QuantumTheme(themeMode: AppThemeMode = AppThemeMode.SYSTEM, content: @Composable () -> Unit) {
+    val dark = when (themeMode) {
+        AppThemeMode.SYSTEM -> isSystemInDarkTheme()
+        AppThemeMode.DARK -> true
+        AppThemeMode.LIGHT -> false
+    }
+    val lightScheme = lightColorScheme(
+        primary = Color(0xFF006B72),
+        secondary = Color(0xFF6650A4),
+        tertiary = Color(0xFF0061A4),
+        background = Color(0xFFFFFBFF),
+        surface = Color(0xFFFFFBFF),
+        surfaceVariant = Color(0xFFE6E0EC),
+        error = Color(0xFFBA1A1A),
+        onPrimary = Color.White,
+        onSecondary = Color.White,
+        onBackground = Color(0xFF1C1B1F),
+        onSurface = Color(0xFF1C1B1F),
+        onSurfaceVariant = Color(0xFF49454F),
+    )
+    MaterialTheme(colorScheme = if (dark) scheme else lightScheme, typography = Typography(), content = content)
 }
 
 fun difficultyAccent(difficulty: Difficulty): Color = when (difficulty) {
     Difficulty.EASY -> EasyAccent
     Difficulty.MEDIUM -> MediumAccent
     Difficulty.HARD -> HardAccent
-    Difficulty.QUANTUM -> QuantumAccent
+    Difficulty.QUANTUM, Difficulty.ZEN, Difficulty.HARDCORE, Difficulty.PUZZLE, Difficulty.DAILY -> QuantumAccent
 }
 
 fun difficultySurface(difficulty: Difficulty): Color = when (difficulty) {
     Difficulty.EASY -> Color(0xFF152238)
     Difficulty.MEDIUM -> Color(0xFF123026)
     Difficulty.HARD -> Color(0xFF332716)
-    Difficulty.QUANTUM -> Color(0xFF241B3D)
+    Difficulty.QUANTUM, Difficulty.ZEN, Difficulty.HARDCORE, Difficulty.PUZZLE, Difficulty.DAILY -> Color(0xFF241B3D)
 }
 
 fun tileKindColor(kind: TileKind): Color = when (kind) {

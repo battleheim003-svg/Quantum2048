@@ -2,6 +2,7 @@ package com.battleheim.quantum2048.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -32,9 +34,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -57,6 +62,10 @@ import com.battleheim.quantum2048.designsystem.difficultyAccent
 import com.battleheim.quantum2048.designsystem.difficultySurface
 import com.battleheim.quantum2048.domain.CollectionRepository
 import com.battleheim.quantum2048.domain.GameRepository
+import com.battleheim.quantum2048.domain.AppLanguage
+import com.battleheim.quantum2048.domain.AppSettings
+import com.battleheim.quantum2048.domain.AppThemeMode
+import com.battleheim.quantum2048.domain.ProfileRepository
 import com.battleheim.quantum2048.domain.SettingsRepository
 import com.battleheim.quantum2048.engine.Difficulty
 import com.battleheim.quantum2048.engine.FusionRules
@@ -64,11 +73,15 @@ import com.battleheim.quantum2048.engine.GameEngine
 import com.battleheim.quantum2048.engine.BotDifficulty
 import com.battleheim.quantum2048.engine.DuelOpponent
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import java.time.LocalDate
 
 private object Routes {
     const val MainMenu = "main_menu"
     const val LevelSelect = "level_select"
     const val Collection = "collection"
+    const val Statistics = "statistics"
+    const val Tutorial = "tutorial"
     const val Settings = "settings"
     const val Game = "game/{difficulty}/{size}"
     const val DuelGame = "duel/{difficulty}"
@@ -82,23 +95,47 @@ private object Routes {
 fun QuantumAppShell(
     gameRepository: GameRepository,
     collectionRepository: CollectionRepository,
+    profileRepository: ProfileRepository,
     settingsRepository: SettingsRepository,
     engine: GameEngine,
 ) {
     val nav = rememberNavController()
-    val gameViewModel: GameViewModel = viewModel { GameViewModel(gameRepository, collectionRepository, engine) }
+    val gameViewModel: GameViewModel = viewModel { GameViewModel(gameRepository, collectionRepository, profileRepository, engine) }
+    val ui by gameViewModel.ui.collectAsState()
     val settings by settingsRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.AppSettings())
     val audio = remember { ToneGameAudio() }
+    var tutorialPrompted by remember { mutableStateOf(false) }
+    var showSplash by remember { mutableStateOf(true) }
     DisposableEffect(Unit) { onDispose { audio.release() } }
+    LaunchedEffect(Unit) {
+        delay(SPLASH_MS)
+        showSplash = false
+    }
+    LaunchedEffect(ui.loading, ui.game.tutorialCompleted) {
+        if (!showSplash && !ui.loading && !ui.game.tutorialCompleted && !tutorialPrompted) {
+            tutorialPrompted = true
+            nav.navigate(Routes.Tutorial)
+        }
+    }
+
+    if (showSplash) {
+        SplashScreen()
+        return
+    }
 
     NavHost(navController = nav, startDestination = Routes.MainMenu) {
         composable(Routes.MainMenu) {
             MainMenuScreen(
                 vm = gameViewModel,
-                onContinue = { saved -> nav.navigate(Routes.game(saved.difficulty, saved.size)) },
-                onNewGame = { nav.navigate(Routes.LevelSelect) },
-                onCollection = { nav.navigate(Routes.Collection) },
-                onSettings = { nav.navigate(Routes.Settings) },
+                settings = settings,
+                settingsRepository = settingsRepository,
+                audio = audio,
+                onContinue = { saved -> playSelect(audio, settings); nav.navigate(Routes.game(saved.difficulty, saved.size)) },
+                onNewGame = { playSelect(audio, settings); nav.navigate(Routes.LevelSelect) },
+                onCollection = { playMenu(audio, settings); nav.navigate(Routes.Collection) },
+                onStatistics = { playMenu(audio, settings); nav.navigate(Routes.Statistics) },
+                onTutorial = { playMenu(audio, settings); nav.navigate(Routes.Tutorial) },
+                onSettings = { playMenu(audio, settings); nav.navigate(Routes.Settings) },
             )
         }
         composable(Routes.LevelSelect) {
@@ -144,12 +181,27 @@ fun QuantumAppShell(
             )
         }
         composable(Routes.Collection) {
-            CollectionScreen(collectionRepository, onBack = { nav.popBackStack() })
+            CollectionScreen(collectionRepository, profileRepository, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.Statistics) {
+            StatisticsScreen(profileRepository, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.Tutorial) {
+            TutorialScreen(
+                vm = gameViewModel,
+                onDone = {
+                    gameViewModel.completeTutorial()
+                    nav.popBackStack()
+                },
+            )
         }
         composable(Routes.Settings) {
             SettingsScreen(
                 settingsRepository = settingsRepository,
                 collectionRepository = collectionRepository,
+                profileRepository = profileRepository,
+                settings = settings,
+                audio = audio,
                 vm = gameViewModel,
                 onBack = { nav.popBackStack() },
             )
@@ -160,9 +212,14 @@ fun QuantumAppShell(
 @Composable
 private fun MainMenuScreen(
     vm: GameViewModel,
+    settings: AppSettings,
+    settingsRepository: SettingsRepository,
+    audio: ToneGameAudio,
     onContinue: (SavedGameKey) -> Unit,
     onNewGame: () -> Unit,
     onCollection: () -> Unit,
+    onStatistics: () -> Unit,
+    onTutorial: () -> Unit,
     onSettings: () -> Unit,
 ) {
     var saves by remember { mutableStateOf(emptySet<SavedGameKey>()) }
@@ -171,6 +228,17 @@ private fun MainMenuScreen(
     val continueSave = saves.lastOrNull() ?: SavedGameKey(Difficulty.QUANTUM, 4)
 
     MenuScaffold {
+        QuickSettingsRow(
+            settings = settings,
+            onLanguage = {
+                playMenu(audio, settings)
+                scope.launch { settingsRepository.save(settings.copy(language = settings.language.next())) }
+            },
+            onTheme = {
+                playMenu(audio, settings)
+                scope.launch { settingsRepository.save(settings.copy(themeMode = settings.themeMode.next())) }
+            },
+        )
         SectionTitle(stringResource(R.string.app_title), stringResource(R.string.fusion_lab))
         Button(
             onClick = { onContinue(continueSave) },
@@ -179,8 +247,120 @@ private fun MainMenuScreen(
         ) { Text(stringResource(R.string.continue_game)) }
         Button(onClick = onNewGame, modifier = Modifier.fillMaxWidth().testTag("new_game_button")) { Text(stringResource(R.string.new_game)) }
         OutlinedButton(onClick = onCollection, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.collection)) }
+        OutlinedButton(onClick = onStatistics, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.statistics)) }
+        OutlinedButton(onClick = onTutorial, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.tutorial)) }
         OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings)) }
-        TextButton(onClick = { scope.launch { saves = vm.savedGames() } }) { Text(stringResource(R.string.refresh_saves)) }
+        TextButton(onClick = { playMenu(audio, settings); scope.launch { saves = vm.savedGames() } }) { Text(stringResource(R.string.refresh_saves)) }
+    }
+}
+
+@Composable
+private fun SplashScreen() {
+    Box(Modifier.fillMaxSize().background(Color(0xFFFF9800)), contentAlignment = Alignment.Center) {
+        Image(
+            painter = painterResource(R.drawable.splash_logo),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+@Composable
+private fun QuickSettingsRow(settings: AppSettings, onLanguage: () -> Unit, onTheme: () -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+        OutlinedButton(onClick = onLanguage, modifier = Modifier.testTag("quick_language")) {
+            Text(settings.language.shortLabel(), fontSize = 12.sp)
+        }
+        OutlinedButton(onClick = onTheme, modifier = Modifier.padding(start = 8.dp).testTag("quick_theme")) {
+            Text(settings.themeMode.iconLabel(), fontSize = 14.sp)
+        }
+    }
+}
+
+@Composable
+private fun TutorialScreen(vm: GameViewModel, onDone: () -> Unit) {
+    var step by remember { mutableStateOf(0) }
+    var completedAction by remember(step) { mutableStateOf(false) }
+    val titles = listOf(
+        R.string.tutorial_step_move,
+        R.string.tutorial_step_quantum,
+        R.string.tutorial_step_collapse,
+        R.string.tutorial_step_energy,
+        R.string.tutorial_step_auto,
+        R.string.tutorial_step_undo,
+        R.string.tutorial_step_new_features,
+    )
+    val boards = listOf(
+        listOf("2", "2", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
+        listOf("e-", "p+", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
+        listOf("1 | 2 | 4", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
+        listOf("2e-", "2e-", "p+", "p+", "", "", "", "", "", "", "", "", "", "", "", ""),
+        listOf("?", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
+        listOf("4", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
+        listOf("E", "T", "D", "", "", "", "", "", "", "", "", "", "", "", "", ""),
+    )
+    MenuScaffold {
+        SectionTitle(stringResource(R.string.tutorial), stringResource(titles[step]))
+        TutorialBoard(boards[step])
+        Text(stringResource(R.string.tutorial_body), color = TextSecondary, fontSize = 13.sp)
+        Button(onClick = { completedAction = true }, modifier = Modifier.fillMaxWidth().testTag("tutorial_action")) {
+            Text(stringResource(R.string.tutorial_action))
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = onDone, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.skip)) }
+            Button(
+                onClick = {
+                    if (step == titles.lastIndex) onDone() else {
+                        step++
+                        completedAction = false
+                    }
+                },
+                enabled = completedAction,
+                modifier = Modifier.weight(1f).testTag("tutorial_next"),
+            ) { Text(stringResource(if (step == titles.lastIndex) R.string.finish else R.string.next)) }
+        }
+    }
+}
+
+@Composable
+private fun TutorialBoard(cells: List<String>) {
+    Column(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(8.dp)).padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        repeat(4) { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                repeat(4) { column ->
+                    val label = cells[row * 4 + column]
+                    Box(
+                        Modifier.weight(1f).size(56.dp).background(if (label.isEmpty()) Color(0xFF171D38) else PanelRaised, RoundedCornerShape(8.dp)).border(1.dp, Cyan.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
+                    ) {
+                        if (label.isNotEmpty()) Text(label, modifier = Modifier.padding(8.dp), color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatisticsScreen(profileRepository: ProfileRepository, onBack: () -> Unit) {
+    val profile by profileRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.ProfileState())
+    MenuScaffold {
+        SectionTitle(stringResource(R.string.statistics), stringResource(R.string.profile))
+        StatRow(stringResource(R.string.stat_daily_best_today), profile.dailyBestScore(LocalDate.now().toString()).toString())
+        StatRow(stringResource(R.string.stat_best_daily_score), profile.bestDailyScore.toString())
+        StatRow(stringResource(R.string.stat_daily_challenge_count), profile.dailyChallengeCount.toString())
+        StatRow(stringResource(R.string.stat_collapse_ratio), "${(profile.collapseLowRatio * 100).toInt()}%")
+        StatRow(stringResource(R.string.stat_average_win_energy), "%.1f".format(profile.averageWinEnergy))
+        StatRow(stringResource(R.string.stat_chain_merges), profile.totalChainMergeCount.toString())
+        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }
+    }
+}
+
+@Composable
+private fun StatRow(label: String, value: String) {
+    Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)).padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, color = TextSecondary, fontSize = 13.sp)
+        Text(value, color = Cyan, fontWeight = FontWeight.Black)
     }
 }
 
@@ -287,11 +467,13 @@ private fun DifficultyCard(difficulty: Difficulty, size: Int, hasSave: Boolean, 
 }
 
 @Composable
-private fun CollectionScreen(repository: CollectionRepository, onBack: () -> Unit) {
+private fun CollectionScreen(repository: CollectionRepository, profileRepository: ProfileRepository, onBack: () -> Unit) {
     val state by repository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.CollectionState())
+    val profile by profileRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.ProfileState())
     val codex = state.codex(FusionRules.compoundRecipes)
     MenuScaffold {
         SectionTitle(stringResource(R.string.collection), stringResource(R.string.fusion_lab))
+        AchievementList(profile.unlockedAchievements)
         codex.forEach { entry ->
             Card(colors = CardDefaults.cardColors(containerColor = if (entry.discovered) PanelRaised else Panel), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp)) {
@@ -309,29 +491,69 @@ private fun CollectionScreen(repository: CollectionRepository, onBack: () -> Uni
 }
 
 @Composable
+private fun AchievementList(unlocked: Set<String>) {
+    Card(colors = CardDefaults.cardColors(containerColor = PanelRaised), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(stringResource(R.string.achievements), fontWeight = FontWeight.Black)
+            AchievementRow(stringResource(R.string.achievement_collapse_century), FusionRules.achievementCollapseCentury in unlocked)
+            AchievementRow(stringResource(R.string.achievement_resolved_2048), FusionRules.achievementResolved2048 in unlocked)
+            AchievementRow(stringResource(R.string.achievement_no_undo_win), FusionRules.achievementNoUndoWin in unlocked)
+            Text(stringResource(R.string.achievements_local_note), color = TextMuted, fontSize = 11.sp)
+        }
+    }
+}
+
+@Composable
+private fun AchievementRow(label: String, unlocked: Boolean) {
+    Text(
+        "${if (unlocked) "[x]" else "[ ]"} $label",
+        color = if (unlocked) Cyan else TextSecondary,
+        fontSize = 12.sp,
+    )
+}
+
+@Composable
 private fun SettingsScreen(
     settingsRepository: SettingsRepository,
     collectionRepository: CollectionRepository,
+    profileRepository: ProfileRepository,
+    settings: AppSettings,
+    audio: ToneGameAudio,
     vm: GameViewModel,
     onBack: () -> Unit,
 ) {
-    val settings by settingsRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.AppSettings())
     val scope = rememberCoroutineScope()
     var confirmResetCollection by remember { mutableStateOf(false) }
+    var confirmResetProfile by remember { mutableStateOf(false) }
     var confirmResetDifficulty by remember { mutableStateOf<Difficulty?>(null) }
 
     MenuScaffold {
         SectionTitle(stringResource(R.string.settings), stringResource(R.string.fusion_lab))
-        SettingsToggle(stringResource(R.string.sound), settings.soundEnabled) { scope.launch { settingsRepository.save(settings.copy(soundEnabled = it)) } }
-        SettingsToggle(stringResource(R.string.music), settings.musicEnabled) { scope.launch { settingsRepository.save(settings.copy(musicEnabled = it)) } }
-        SettingsToggle(stringResource(R.string.haptics), settings.hapticsEnabled) { scope.launch { settingsRepository.save(settings.copy(hapticsEnabled = it)) } }
-        SettingsToggle(stringResource(R.string.reduced_motion), settings.reducedMotion) { scope.launch { settingsRepository.save(settings.copy(reducedMotion = it)) } }
+        SettingsToggle(stringResource(R.string.sound), settings.soundEnabled) { playMenu(audio, settings); scope.launch { settingsRepository.save(settings.copy(soundEnabled = it)) } }
+        SettingsToggle(stringResource(R.string.music), settings.musicEnabled) { playMenu(audio, settings); scope.launch { settingsRepository.save(settings.copy(musicEnabled = it)) } }
+        SettingsToggle(stringResource(R.string.haptics), settings.hapticsEnabled) { playMenu(audio, settings); scope.launch { settingsRepository.save(settings.copy(hapticsEnabled = it)) } }
+        SettingsToggle(stringResource(R.string.reduced_motion), settings.reducedMotion) { playMenu(audio, settings); scope.launch { settingsRepository.save(settings.copy(reducedMotion = it)) } }
+        OutlinedButton(
+            onClick = {
+                playMenu(audio, settings)
+                scope.launch { settingsRepository.save(settings.copy(language = settings.language.next())) }
+            },
+            modifier = Modifier.fillMaxWidth().testTag("settings_language"),
+        ) { Text(stringResource(R.string.language_button, settings.language.displayLabel())) }
+        OutlinedButton(
+            onClick = {
+                playMenu(audio, settings)
+                scope.launch { settingsRepository.save(settings.copy(themeMode = settings.themeMode.next())) }
+            },
+            modifier = Modifier.fillMaxWidth().testTag("settings_theme"),
+        ) { Text(stringResource(R.string.theme_button, settings.themeMode.displayLabel())) }
         Text(stringResource(R.string.language_note), color = TextSecondary, fontSize = 12.sp)
-        OutlinedButton(onClick = { confirmResetCollection = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.reset_collection)) }
+        OutlinedButton(onClick = { playMenu(audio, settings); confirmResetCollection = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.reset_collection)) }
+        OutlinedButton(onClick = { playMenu(audio, settings); confirmResetProfile = true }, modifier = Modifier.fillMaxWidth().testTag("reset_profile")) { Text(stringResource(R.string.reset_profile)) }
         Difficulty.entries.forEach { difficulty ->
-            OutlinedButton(onClick = { confirmResetDifficulty = difficulty }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.reset_progress, difficulty.name.lowercase())) }
+            OutlinedButton(onClick = { playMenu(audio, settings); confirmResetDifficulty = difficulty }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.reset_progress, difficulty.name.lowercase())) }
         }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }
+        OutlinedButton(onClick = { playMenu(audio, settings); onBack() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }
     }
 
     if (confirmResetCollection) {
@@ -342,6 +564,17 @@ private fun SettingsScreen(
             onConfirm = {
                 scope.launch { collectionRepository.clear() }
                 confirmResetCollection = false
+            },
+        )
+    }
+    if (confirmResetProfile) {
+        ConfirmDialog(
+            title = stringResource(R.string.reset_profile_title),
+            body = stringResource(R.string.reset_profile_body),
+            onDismiss = { confirmResetProfile = false },
+            onConfirm = {
+                scope.launch { profileRepository.clear() }
+                confirmResetProfile = false
             },
         )
     }
@@ -356,6 +589,50 @@ private fun SettingsScreen(
             },
         )
     }
+}
+
+private fun playMenu(audio: ToneGameAudio, settings: AppSettings) {
+    if (settings.soundEnabled) audio.menu()
+}
+
+private fun playSelect(audio: ToneGameAudio, settings: AppSettings) {
+    if (settings.soundEnabled) audio.select()
+}
+
+private fun AppLanguage.next(): AppLanguage = when (this) {
+    AppLanguage.SYSTEM -> AppLanguage.ENGLISH
+    AppLanguage.ENGLISH -> AppLanguage.PERSIAN
+    AppLanguage.PERSIAN -> AppLanguage.SYSTEM
+}
+
+private fun AppThemeMode.next(): AppThemeMode = when (this) {
+    AppThemeMode.SYSTEM -> AppThemeMode.DARK
+    AppThemeMode.DARK -> AppThemeMode.LIGHT
+    AppThemeMode.LIGHT -> AppThemeMode.SYSTEM
+}
+
+private fun AppLanguage.shortLabel(): String = when (this) {
+    AppLanguage.SYSTEM -> "Auto"
+    AppLanguage.ENGLISH -> "EN"
+    AppLanguage.PERSIAN -> "FA"
+}
+
+private fun AppLanguage.displayLabel(): String = when (this) {
+    AppLanguage.SYSTEM -> "System"
+    AppLanguage.ENGLISH -> "English"
+    AppLanguage.PERSIAN -> "فارسی"
+}
+
+private fun AppThemeMode.iconLabel(): String = when (this) {
+    AppThemeMode.SYSTEM -> "☾☀"
+    AppThemeMode.DARK -> "☾"
+    AppThemeMode.LIGHT -> "☀"
+}
+
+private fun AppThemeMode.displayLabel(): String = when (this) {
+    AppThemeMode.SYSTEM -> "System"
+    AppThemeMode.DARK -> "Dark"
+    AppThemeMode.LIGHT -> "Light"
 }
 
 @Composable
@@ -384,7 +661,7 @@ private fun PauseScreen(vm: GameViewModel, onResume: () -> Unit, onMainMenu: () 
 
 @Composable
 private fun SettingsToggle(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().background(PanelRaised, RoundedCornerShape(8.dp)).padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+    Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)).padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(label, fontWeight = FontWeight.Bold)
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
@@ -403,11 +680,11 @@ private fun ConfirmDialog(title: String, body: String, onDismiss: () -> Unit, on
 
 @Composable
 private fun MenuScaffold(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Scaffold(containerColor = Void) { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
             modifier
                 .fillMaxSize()
-                .background(Void)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp),
@@ -432,4 +709,10 @@ private fun difficultyDescription(difficulty: Difficulty): String = when (diffic
     Difficulty.MEDIUM -> stringResource(R.string.medium_description)
     Difficulty.HARD -> stringResource(R.string.hard_description)
     Difficulty.QUANTUM -> stringResource(R.string.quantum_description)
+    Difficulty.ZEN -> stringResource(R.string.zen_description)
+    Difficulty.HARDCORE -> stringResource(R.string.hardcore_description)
+    Difficulty.PUZZLE -> stringResource(R.string.puzzle_description)
+    Difficulty.DAILY -> stringResource(R.string.daily_description)
 }
+
+private const val SPLASH_MS = 2600L

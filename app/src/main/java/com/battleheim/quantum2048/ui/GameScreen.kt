@@ -8,6 +8,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -124,6 +125,18 @@ fun GameScreen(
                 if (settings.soundEnabled) audio.merge()
                 if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             }
+            GameFeedback.TUNNEL -> {
+                if (settings.soundEnabled) audio.move()
+                if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            }
+            GameFeedback.COLLAPSE_LOW -> {
+                if (settings.soundEnabled) audio.collapseLow()
+                if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            }
+            GameFeedback.COLLAPSE_HIGH -> {
+                if (settings.soundEnabled) audio.collapseHigh()
+                if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            }
             GameFeedback.GAME_OVER -> {
                 if (settings.soundEnabled) audio.gameOver()
                 if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -159,11 +172,16 @@ fun GameScreen(
                 FusionGuide(ui.game.difficulty)
                 CompoundLab(ui.game, ui.labTileIds, vm::clearCompoundLab)
             }
-            Board(ui.game, ui.labTileIds, ui.animations, settings.reducedMotion, vm::swipe, vm::sendToCompoundLab)
+            Board(ui.game, ui.labTileIds, ui.tunnelingTileId, ui.observerPreview, ui.animations, settings.reducedMotion, vm::swipe, vm::sendToCompoundLab, vm::tapBoardCell, vm::observeTile)
             duel?.let { OpponentBoardSummary(it.inactiveBoard, it.currentPlayer) }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Button(onClick = vm::newGame, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.new_game)) }
                 OutlinedButton(onClick = vm::undo, enabled = ui.canUndo, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.undo)) }
+            }
+            if (ui.game.mode == GameMode.QUANTUM && duel == null) {
+                OutlinedButton(onClick = vm::toggleTunneling, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(if (ui.tunnelingTileId == null) R.string.tunnel else R.string.cancel_tunnel))
+                }
             }
             Text(
                 if (ui.game.mode == GameMode.QUANTUM) {
@@ -178,6 +196,12 @@ fun GameScreen(
 
         if (ui.game.status != GameStatus.PLAYING) {
             EndDialog(ui.game, vm::continueGame, vm::newGame)
+        }
+        ui.superpositionTileId?.let { tileId ->
+            val tile = ui.game.cells.firstOrNull { it?.id == tileId }
+            if (tile != null) {
+                SuperpositionDialog(tile, vm::dismissSuperposition, vm::collapseSuperposition)
+            }
         }
     }
 }
@@ -224,6 +248,8 @@ private fun Header(game: GameState, onPause: () -> Unit) {
                 Column(Modifier.padding(horizontal = 14.dp, vertical = 9.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(game.score.toString(), fontWeight = FontWeight.Black)
                     Text(stringResource(R.string.best_score, game.bestScore.toString()), color = TextSecondary, fontSize = 11.sp)
+                    if (game.mode == GameMode.QUANTUM) Text(stringResource(R.string.energy_line, game.energy), color = Cyan, fontSize = 11.sp)
+                    if (game.difficulty == Difficulty.DAILY) Text(stringResource(R.string.daily_best_line, game.dailyBestScore), color = TextSecondary, fontSize = 11.sp)
                 }
             }
         }
@@ -262,10 +288,14 @@ private fun CompoundLab(game: GameState, labTileIds: List<Long>, clear: () -> Un
 private fun Board(
     game: GameState,
     labTileIds: List<Long>,
+    tunnelingTileId: Long?,
+    observerPreview: ObserverPreview?,
     animations: List<MoveAnimation>,
     reducedMotion: Boolean,
     onSwipe: (Direction) -> Unit,
     onTileDragToLab: (Long) -> Unit,
+    onCellTap: (Int) -> Unit,
+    onObserveTile: (Long) -> Unit,
 ) {
     var dx by remember { mutableFloatStateOf(0f) }
     var dy by remember { mutableFloatStateOf(0f) }
@@ -315,7 +345,8 @@ private fun Board(
                     Modifier
                         .offset { IntOffset((column * stepPx).roundToInt(), (row * stepPx).roundToInt()) }
                         .size(cellDp)
-                        .background(Color(0xFF171D38), RoundedCornerShape(8.dp)),
+                        .background(Color(0xFF171D38), RoundedCornerShape(8.dp))
+                        .clickable(enabled = tunnelingTileId != null) { onCellTap(row * game.size + column) },
                 )
             }
         }
@@ -329,6 +360,9 @@ private fun Board(
                     tile = tile,
                     animation = animation,
                     selectedForLab = tile.id in labTileIds,
+                    selectedForTunnel = tile.id == tunnelingTileId,
+                    tunnelingActive = tunnelingTileId != null,
+                    observerValue = observerPreview?.takeIf { it.tileId == tile.id }?.value,
                     reducedMotion = reducedMotion,
                     mode = game.mode,
                     boardSize = game.size,
@@ -336,6 +370,8 @@ private fun Board(
                     stepPx = stepPx,
                     modifier = Modifier.offset { IntOffset((column * stepPx).roundToInt(), (row * stepPx).roundToInt()) },
                     onDragToLab = onTileDragToLab,
+                    onTap = { onCellTap(index) },
+                    onLongPress = { onObserveTile(tile.id) },
                 )
             }
         }
@@ -347,6 +383,9 @@ private fun TileCell(
     tile: Tile?,
     animation: MoveAnimation?,
     selectedForLab: Boolean,
+    selectedForTunnel: Boolean,
+    tunnelingActive: Boolean,
+    observerValue: Int?,
     reducedMotion: Boolean,
     mode: GameMode,
     boardSize: Int,
@@ -354,6 +393,8 @@ private fun TileCell(
     stepPx: Float,
     modifier: Modifier,
     onDragToLab: (Long) -> Unit,
+    onTap: () -> Unit,
+    onLongPress: () -> Unit,
 ) {
     val scale = remember(tile?.id) { Animatable(1f) }
     val alpha = remember(tile?.id) { Animatable(1f) }
@@ -394,6 +435,34 @@ private fun TileCell(
                 alpha.animateTo(1f, tween(120, easing = FastOutSlowInEasing))
                 scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
             }
+            MoveAnimationKind.ENTANGLEMENT -> {
+                scale.snapTo(0.76f)
+                alpha.snapTo(0.66f)
+                scale.animateTo(1.18f, tween(120, easing = FastOutSlowInEasing))
+                alpha.animateTo(1f, tween(130, easing = FastOutSlowInEasing))
+                scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+            }
+            MoveAnimationKind.TUNNEL -> {
+                scale.snapTo(0.7f)
+                alpha.snapTo(0.5f)
+                alpha.animateTo(1f, tween(130, easing = FastOutSlowInEasing))
+                scale.animateTo(1.08f, tween(120, easing = FastOutSlowInEasing))
+                scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+            }
+            MoveAnimationKind.COLLAPSE_LOW -> {
+                scale.snapTo(0.86f)
+                alpha.snapTo(0.76f)
+                alpha.animateTo(1f, tween(90, easing = FastOutSlowInEasing))
+                scale.animateTo(1.06f, tween(90, easing = FastOutSlowInEasing))
+                scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioLowBouncy))
+            }
+            MoveAnimationKind.COLLAPSE_HIGH -> {
+                scale.snapTo(0.72f)
+                alpha.snapTo(0.55f)
+                alpha.animateTo(1f, tween(150, easing = FastOutSlowInEasing))
+                scale.animateTo(1.2f, tween(130, easing = FastOutSlowInEasing))
+                scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+            }
             MoveAnimationKind.SPAWN -> {
                 scale.snapTo(0.55f)
                 alpha.snapTo(0f)
@@ -426,14 +495,26 @@ private fun TileCell(
                 this.alpha = alpha.value
                 this.translationX = translationX.value
                 this.translationY = translationY.value
-                shadowElevation = if (animation?.kind == MoveAnimationKind.REACTION) 18f else 0f
+                shadowElevation = if (
+                    animation?.kind == MoveAnimationKind.REACTION ||
+                    animation?.kind == MoveAnimationKind.TUNNEL ||
+                    animation?.kind == MoveAnimationKind.COLLAPSE_HIGH
+                ) 18f else 0f
             }
             .background(color, RoundedCornerShape(8.dp))
-            .then(if (tile?.kind == TileKind.ELEMENT) Modifier.border(if (selectedForLab) 2.dp else 1.dp, if (selectedForLab) Cyan else Color.White.copy(alpha = 0.18f), RoundedCornerShape(8.dp)) else Modifier)
+            .then(
+                when {
+                    animation?.kind == MoveAnimationKind.COLLAPSE_LOW -> Modifier.border(2.dp, Color(0xFF56E0B5), RoundedCornerShape(8.dp))
+                    animation?.kind == MoveAnimationKind.COLLAPSE_HIGH -> Modifier.border(3.dp, Color(0xFFFFD166), RoundedCornerShape(8.dp))
+                    selectedForTunnel -> Modifier.border(3.dp, Color(0xFFFFD166), RoundedCornerShape(8.dp))
+                    tile?.entanglementGroupId != null -> Modifier.border(2.dp, Color(0xFFFF7CE5), RoundedCornerShape(8.dp))
+                    tile?.kind == TileKind.ELEMENT -> Modifier.border(if (selectedForLab) 2.dp else 1.dp, if (selectedForLab) Cyan else Color.White.copy(alpha = 0.18f), RoundedCornerShape(8.dp))
+                    else -> Modifier
+                },
+            )
             .then(
                 when {
                     tile?.kind == TileKind.ELEMENT -> Modifier
-                        .clickable { onDragToLab(tile.id) }
                         .pointerInput(tile.id) {
                             var dragY = 0f
                             detectDragGestures(
@@ -445,6 +526,18 @@ private fun TileCell(
                                 onDragEnd = { if (dragY > 18f) onDragToLab(tile.id) },
                             )
                         }
+                        .pointerInput(tile.id, tunnelingActive) {
+                            detectTapGestures(
+                                onTap = { if (tunnelingActive || mode == GameMode.CLASSIC) onTap() else onDragToLab(tile.id) },
+                                onLongPress = { onLongPress() },
+                            )
+                        }
+                    tile != null -> Modifier.pointerInput(tile.id) {
+                        detectTapGestures(
+                            onTap = { onTap() },
+                            onLongPress = { onLongPress() },
+                        )
+                    }
                     else -> Modifier
                 },
             ),
@@ -452,26 +545,48 @@ private fun TileCell(
     ) {
         when {
             tile == null -> Unit
-            mode == GameMode.QUANTUM -> QuantumTileLabel(tile, boardSize)
+            mode == GameMode.QUANTUM -> QuantumTileLabel(tile, boardSize, observerValue)
             else -> Text(tile.value.toString(), fontSize = if (tile.value < 1000) 26.sp else 20.sp, fontWeight = FontWeight.Black, color = Color.White)
         }
     }
 }
 
-private const val MOVE_ANIMATION_MS = 180
+private const val MOVE_ANIMATION_MS = 360
 
 @Composable
-private fun QuantumTileLabel(tile: Tile, boardSize: Int) {
-    val symbolSize = if (boardSize >= 8) 13.sp else if (boardSize >= 6) 17.sp else 21.sp
+private fun QuantumTileLabel(tile: Tile, boardSize: Int, observerValue: Int?) {
+    val symbolSize = if (tile.superpositionValues.isNotEmpty()) {
+        if (boardSize >= 8) 8.sp else if (boardSize >= 6) 10.sp else 12.sp
+    } else if (boardSize >= 8) 13.sp else if (boardSize >= 6) 17.sp else 21.sp
     val valueSize = if (boardSize >= 8) 10.sp else if (boardSize >= 6) 12.sp else 15.sp
     val rankSize = if (boardSize >= 8) 7.sp else 9.sp
     val familySize = if (boardSize >= 8) 0.sp else 7.sp
     Column(Modifier.fillMaxWidth().padding(if (boardSize >= 8) 2.dp else 5.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         Text(FusionRules.rankOf(tile).toString(), modifier = Modifier.align(Alignment.Start), color = TextSecondary, fontSize = rankSize, fontWeight = FontWeight.Bold)
-        Text(FusionRules.displaySymbol(tile), fontSize = symbolSize, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center)
+        Text(observerValue?.toString() ?: FusionRules.displaySymbol(tile), fontSize = symbolSize, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center)
         Text(FusionRules.gameValueOf(tile).toString(), color = Cyan, fontSize = valueSize, fontWeight = FontWeight.Black)
         if (boardSize < 8) tile.element?.let { Text(elementFamily(it), color = TextSecondary, fontSize = familySize, textAlign = TextAlign.Center) }
     }
+}
+
+@Composable
+private fun SuperpositionDialog(tile: Tile, onDismiss: () -> Unit, onCollapse: (Int) -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.superposition_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.superposition_body), color = TextSecondary)
+                tile.superpositionValues.forEachIndexed { index, value ->
+                    OutlinedButton(onClick = { onCollapse(index) }, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.superposition_choice, value, FusionRules.superpositionCollapseEnergyCosts[index]))
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
 }
 
 private fun Difficulty.label(): String = name.lowercase().replaceFirstChar { it.uppercase() }
@@ -499,6 +614,7 @@ private fun EndDialog(game: GameState, continueGame: () -> Unit, newGame: () -> 
                 Text(if (status == GameStatus.WON) stringResource(R.string.win_body) else stringResource(R.string.lose_body))
                 Text(stringResource(R.string.difficulty_line, game.difficulty.label()), color = TextSecondary)
                 Text(stringResource(R.string.score_line, game.score.toString()), color = TextSecondary)
+                if (game.difficulty == Difficulty.DAILY) Text(stringResource(R.string.daily_best_line, game.dailyBestScore), color = TextSecondary)
                 Text(stringResource(R.string.moves_line, game.moveCount), color = TextSecondary)
                 Text(stringResource(R.string.best_element_line, bestElement?.symbol ?: stringResource(R.string.none)), color = TextSecondary)
             }

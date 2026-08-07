@@ -8,7 +8,11 @@ enum class Difficulty(val mode: GameMode) {
     EASY(GameMode.CLASSIC),
     MEDIUM(GameMode.QUANTUM),
     HARD(GameMode.QUANTUM),
-    QUANTUM(GameMode.QUANTUM);
+    QUANTUM(GameMode.QUANTUM),
+    ZEN(GameMode.QUANTUM),
+    HARDCORE(GameMode.QUANTUM),
+    PUZZLE(GameMode.QUANTUM),
+    DAILY(GameMode.QUANTUM);
 
     companion object {
         fun fromMode(mode: GameMode): Difficulty = when (mode) {
@@ -49,10 +53,13 @@ data class Tile(
     val value: Int,
     val kind: TileKind = TileKind.CLASSIC,
     val element: QuantumElement? = null,
+    val entanglementGroupId: Long? = null,
+    val superpositionValues: List<Int> = emptyList(),
 ) {
     init {
         require(value > 0)
         require(kind != TileKind.ELEMENT || element != null)
+        require(superpositionValues.isEmpty() || (superpositionValues.size == 3 && superpositionValues.all { it > 0 }))
     }
 }
 
@@ -62,12 +69,24 @@ data class GameState(
     val cells: List<Tile?> = List(16) { null },
     val score: Long = 0,
     val bestScore: Long = 0,
+    val dailyBestScore: Long = 0,
+    val dailyChallengeDate: String? = null,
     val status: GameStatus = GameStatus.PLAYING,
     val mode: GameMode = GameMode.CLASSIC,
     val difficulty: Difficulty = Difficulty.fromMode(mode),
     val hasAcknowledgedWin: Boolean = false,
     val moveCount: Int = 0,
     val nextTileId: Long = 1,
+    val energy: Int = FusionRules.initialEnergyFor(difficulty),
+    val successfulCollapseCount: Int = 0,
+    val lowCollapseCount: Int = 0,
+    val highCollapseCount: Int = 0,
+    val totalWinEnergy: Int = 0,
+    val winEnergySamples: Int = 0,
+    val totalChainMergeCount: Int = 0,
+    val usedUndo: Boolean = false,
+    val unlockedAchievements: Set<String> = emptySet(),
+    val tutorialCompleted: Boolean = false,
 ) {
     init { require(size >= 2 && cells.size == size * size) }
     operator fun get(row: Int, column: Int): Tile? = cells[row * size + column]
@@ -79,6 +98,8 @@ data class MoveResult(
     val gainedScore: Int = 0,
     val mergeCount: Int = 0,
     val reactionCount: Int = 0,
+    val entanglementCollapseCount: Int = 0,
+    val energyOverflowBonus: Int = 0,
     val animations: List<MoveAnimation> = emptyList(),
 )
 
@@ -89,12 +110,30 @@ data class MoveAnimation(
     val kind: MoveAnimationKind,
 )
 
-enum class MoveAnimationKind { SLIDE, MERGE, REACTION, SPAWN }
+enum class MoveAnimationKind { SLIDE, MERGE, REACTION, ENTANGLEMENT, TUNNEL, COLLAPSE_LOW, COLLAPSE_HIGH, SPAWN }
 
 enum class CompoundFailure { LAB_DISABLED, GAME_NOT_ACTIVE, TILE_NOT_FOUND, INVALID_TILE, NO_RECIPE }
 sealed interface CompoundResult {
     data class Success(val state: GameState, val recipe: CompoundRecipe) : CompoundResult
     data class Failure(val state: GameState, val reason: CompoundFailure) : CompoundResult
+}
+
+enum class TunnelFailure { LAB_DISABLED, GAME_NOT_ACTIVE, TILE_NOT_FOUND, DESTINATION_OCCUPIED, INSUFFICIENT_SCORE }
+sealed interface TunnelResult {
+    data class Success(val state: GameState, val animation: MoveAnimation) : TunnelResult
+    data class Failure(val state: GameState, val reason: TunnelFailure) : TunnelResult
+}
+
+enum class SuperpositionFailure { LAB_DISABLED, GAME_NOT_ACTIVE, TILE_NOT_FOUND, NOT_SUPERPOSITION, INVALID_CHOICE, INSUFFICIENT_SCORE }
+sealed interface SuperpositionResult {
+    data class Success(val state: GameState, val animation: MoveAnimation) : SuperpositionResult
+    data class Failure(val state: GameState, val reason: SuperpositionFailure) : SuperpositionResult
+}
+
+enum class ObserverFailure { LAB_DISABLED, GAME_NOT_ACTIVE, TILE_NOT_FOUND, NOT_SUPERPOSITION, INSUFFICIENT_SCORE }
+sealed interface ObserverResult {
+    data class Success(val state: GameState, val previewValue: Int) : ObserverResult
+    data class Failure(val state: GameState, val reason: ObserverFailure) : ObserverResult
 }
 
 interface RandomProvider { fun nextInt(bound: Int): Int; fun nextDouble(): Double }

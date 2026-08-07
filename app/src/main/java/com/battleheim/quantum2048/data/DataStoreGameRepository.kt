@@ -72,7 +72,7 @@ class DataStoreGameRepository(private val context: Context) : GameRepository {
     private fun legacyModeFor(difficulty: Difficulty): GameMode? = when (difficulty) {
         Difficulty.EASY -> GameMode.CLASSIC
         Difficulty.QUANTUM -> GameMode.QUANTUM
-        Difficulty.MEDIUM, Difficulty.HARD -> null
+        Difficulty.MEDIUM, Difficulty.HARD, Difficulty.ZEN, Difficulty.HARDCORE, Difficulty.PUZZLE, Difficulty.DAILY -> null
     }
 
     private companion object {
