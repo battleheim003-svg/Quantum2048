@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "600391474052",
+    "project_id": "quantum2048-943b1",
+    "storage_bucket": "quantum2048-943b1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:600391474052:android:446b0a71cf69db40879bd1",
+        "android_client_info": {
+          "package_name": "com.battleheim.quantum2048"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9Fj8nKzXkON4geBR4AEkJfy0iJppCk_M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
