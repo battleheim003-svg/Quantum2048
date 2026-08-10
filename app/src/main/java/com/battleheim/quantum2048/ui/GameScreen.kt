@@ -8,6 +8,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -48,6 +49,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -61,6 +66,8 @@ import androidx.compose.ui.unit.sp
 import com.battleheim.quantum2048.audio.GameAudio
 import com.battleheim.quantum2048.audio.SilentGameAudio
 import com.battleheim.quantum2048.designsystem.Cyan
+import com.battleheim.quantum2048.designsystem.Electric
+import com.battleheim.quantum2048.designsystem.NeonPink
 import com.battleheim.quantum2048.designsystem.PanelRaised
 import com.battleheim.quantum2048.designsystem.Panel
 import com.battleheim.quantum2048.designsystem.TextMuted
@@ -82,10 +89,13 @@ import com.battleheim.quantum2048.engine.GameState
 import com.battleheim.quantum2048.engine.GameStatus
 import com.battleheim.quantum2048.engine.MoveAnimation
 import com.battleheim.quantum2048.engine.MoveAnimationKind
+import com.battleheim.quantum2048.engine.QuantumElement
 import com.battleheim.quantum2048.engine.Tile
 import com.battleheim.quantum2048.engine.TileKind
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sin
 import androidx.compose.ui.unit.IntOffset
 import com.battleheim.quantum2048.R
 import kotlinx.coroutines.launch
@@ -102,6 +112,10 @@ fun GameScreen(
     val snackbar = remember { SnackbarHostState() }
     val haptics = LocalHapticFeedback.current
 
+    LaunchedEffect(settings.musicEnabled) {
+        if (settings.musicEnabled) audio.ambientStart() else audio.ambientStop()
+    }
+
     LaunchedEffect(ui.message) {
         ui.message?.let {
             snackbar.showSnackbar(it)
@@ -112,6 +126,7 @@ fun GameScreen(
         when (ui.feedback) {
             GameFeedback.MOVE -> {
                 if (settings.soundEnabled) audio.move()
+                if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }
             GameFeedback.MERGE -> {
                 if (settings.soundEnabled) audio.merge()
@@ -126,7 +141,7 @@ fun GameScreen(
                 if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             }
             GameFeedback.TUNNEL -> {
-                if (settings.soundEnabled) audio.move()
+                if (settings.soundEnabled) audio.tunnel()
                 if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }
             GameFeedback.COLLAPSE_LOW -> {
@@ -138,7 +153,9 @@ fun GameScreen(
                 if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             }
             GameFeedback.GAME_OVER -> {
-                if (settings.soundEnabled) audio.gameOver()
+                if (settings.soundEnabled) {
+                    if (ui.game.status == GameStatus.WON) audio.win() else audio.gameOver()
+                }
                 if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             }
             null -> Unit
@@ -158,40 +175,43 @@ fun GameScreen(
     }
 
     Scaffold(containerColor = Void, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 18.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Header(ui.game, onPause)
-            duel?.let { DuelHeader(it.currentPlayer, it.config.opponent, turnSecondsLeft, it.winner, vm::passDuelTurn) }
-            if (ui.game.mode == GameMode.QUANTUM) {
-                FusionGuide(ui.game.difficulty)
-                CompoundLab(ui.game, ui.labTileIds, vm::clearCompoundLab)
-            }
-            Board(ui.game, ui.labTileIds, ui.tunnelingTileId, ui.observerPreview, ui.animations, settings.reducedMotion, vm::swipe, vm::sendToCompoundLab, vm::tapBoardCell, vm::observeTile)
-            duel?.let { OpponentBoardSummary(it.inactiveBoard, it.currentPlayer) }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = vm::newGame, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.new_game)) }
-                OutlinedButton(onClick = vm::undo, enabled = ui.canUndo, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.undo)) }
-            }
-            if (ui.game.mode == GameMode.QUANTUM && duel == null) {
-                OutlinedButton(onClick = vm::toggleTunneling, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(if (ui.tunnelingTileId == null) R.string.tunnel else R.string.cancel_tunnel))
-                }
-            }
-            Text(
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF101943), Void, Color.Black)))) {
+            QuantumBackdrop(settings.reducedMotion)
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 18.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Header(ui.game, onPause)
+                duel?.let { DuelHeader(it.currentPlayer, it.config.opponent, turnSecondsLeft, it.winner, vm::passDuelTurn) }
                 if (ui.game.mode == GameMode.QUANTUM) {
-                    stringResource(R.string.quantum_help)
-                } else {
-                    stringResource(R.string.classic_help)
-                },
-                color = TextSecondary,
-                fontSize = 13.sp,
-            )
+                    FusionGuide(ui.game.difficulty)
+                    CompoundLab(ui.game, ui.labTileIds, vm::clearCompoundLab)
+                }
+                Board(ui.game, ui.labTileIds, ui.tunnelingTileId, ui.observerPreview, ui.animations, settings.reducedMotion, vm::swipe, vm::sendToCompoundLab, vm::tapBoardCell, vm::observeTile)
+                duel?.let { OpponentBoardSummary(it.inactiveBoard, it.currentPlayer) }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button(onClick = vm::newGame, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.new_game)) }
+                    OutlinedButton(onClick = vm::undo, enabled = ui.canUndo, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.undo)) }
+                }
+                if (ui.game.mode == GameMode.QUANTUM && duel == null) {
+                    OutlinedButton(onClick = vm::toggleTunneling, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(if (ui.tunnelingTileId == null) R.string.tunnel else R.string.cancel_tunnel))
+                    }
+                }
+                Text(
+                    if (ui.game.mode == GameMode.QUANTUM) {
+                        stringResource(R.string.quantum_help)
+                    } else {
+                        stringResource(R.string.classic_help)
+                    },
+                    color = TextSecondary,
+                    fontSize = 13.sp,
+                )
+            }
         }
 
         if (ui.game.status != GameStatus.PLAYING) {
@@ -202,6 +222,47 @@ fun GameScreen(
             if (tile != null) {
                 SuperpositionDialog(tile, vm::dismissSuperposition, vm::collapseSuperposition)
             }
+        }
+    }
+}
+
+@Composable
+private fun QuantumBackdrop(reducedMotion: Boolean) {
+    val pulse = remember { Animatable(0f) }
+    LaunchedEffect(reducedMotion) {
+        if (reducedMotion) {
+            pulse.snapTo(0f)
+        } else {
+            while (true) {
+                pulse.animateTo(1f, tween(3200, easing = FastOutSlowInEasing))
+                pulse.animateTo(0f, tween(3200, easing = FastOutSlowInEasing))
+            }
+        }
+    }
+    Canvas(Modifier.fillMaxSize()) {
+        val orbitColor = Cyan.copy(alpha = 0.08f + pulse.value * 0.05f)
+        val centerX = size.width * 0.5f
+        val centerY = size.height * 0.28f
+        repeat(3) { index ->
+            rotate(degrees = index * 58f, pivot = androidx.compose.ui.geometry.Offset(centerX, centerY)) {
+                drawOval(
+                    color = orbitColor,
+                    topLeft = androidx.compose.ui.geometry.Offset(centerX - size.width * 0.42f, centerY - 46f - index * 12f),
+                    size = androidx.compose.ui.geometry.Size(size.width * 0.84f, 92f + index * 24f),
+                    style = Stroke(width = 1.3f),
+                )
+            }
+        }
+        repeat(18) { index ->
+            val angle = index * 0.72f
+            val radius = 40f + (index % 6) * 34f + pulse.value * 12f
+            val x = centerX + cos(angle) * radius
+            val y = centerY + sin(angle * 1.35f) * radius
+            drawCircle(
+                color = if (index % 3 == 0) NeonPink.copy(alpha = 0.22f) else Electric.copy(alpha = 0.16f),
+                radius = 1.8f + (index % 4),
+                center = androidx.compose.ui.geometry.Offset(x, y),
+            )
         }
     }
 }
@@ -501,7 +562,17 @@ private fun TileCell(
                     animation?.kind == MoveAnimationKind.COLLAPSE_HIGH
                 ) 18f else 0f
             }
-            .background(color, RoundedCornerShape(8.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        Color.White.copy(alpha = if (tile?.kind == TileKind.ELEMENT) 0.26f else 0.14f),
+                        color.copy(alpha = 0.92f),
+                        Color.Black.copy(alpha = 0.18f),
+                    ),
+                ),
+                RoundedCornerShape(8.dp),
+            )
+            .border(1.dp, color.copy(alpha = 0.86f), RoundedCornerShape(8.dp))
             .then(
                 when {
                     animation?.kind == MoveAnimationKind.COLLAPSE_LOW -> Modifier.border(2.dp, Color(0xFF56E0B5), RoundedCornerShape(8.dp))
@@ -543,6 +614,27 @@ private fun TileCell(
             ),
         contentAlignment = Alignment.Center,
     ) {
+        if (tile?.kind == TileKind.ELEMENT) {
+            Canvas(Modifier.fillMaxSize()) {
+                val glow = elementColor(tile.element).copy(alpha = 0.22f)
+                drawCircle(glow, radius = size.minDimension * 0.54f)
+                drawLine(
+                    color = Color.White.copy(alpha = 0.26f),
+                    start = androidx.compose.ui.geometry.Offset(size.width * 0.16f, size.height * 0.18f),
+                    end = androidx.compose.ui.geometry.Offset(size.width * 0.72f, size.height * 0.12f),
+                    strokeWidth = 1.4f,
+                    cap = StrokeCap.Round,
+                )
+                if (tile.element == QuantumElement.GOLD) {
+                    repeat(6) { index ->
+                        val angle = index * 1.04f
+                        val x = size.width * 0.5f + cos(angle) * size.width * 0.28f
+                        val y = size.height * 0.5f + sin(angle) * size.height * 0.24f
+                        drawCircle(Color.White.copy(alpha = 0.72f), radius = 1.7f, center = androidx.compose.ui.geometry.Offset(x, y))
+                    }
+                }
+            }
+        }
         when {
             tile == null -> Unit
             mode == GameMode.QUANTUM -> QuantumTileLabel(tile, boardSize, observerValue)

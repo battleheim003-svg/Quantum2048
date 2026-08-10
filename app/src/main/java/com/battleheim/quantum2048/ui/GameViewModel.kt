@@ -107,6 +107,7 @@ class GameViewModel(
                     else -> null
                 },
                 feedback = when {
+                    result.state.status == GameStatus.WON -> GameFeedback.GAME_OVER
                     result.state.status == GameStatus.LOST -> GameFeedback.GAME_OVER
                     result.entanglementCollapseCount > 0 -> GameFeedback.REACTION
                     result.reactionCount > 0 -> GameFeedback.REACTION

@@ -24,6 +24,10 @@ val Violet = Color(0xFFA980FF)
 val Electric = Color(0xFF5BA7FF)
 val Warning = Color(0xFFFFD166)
 val Danger = Color(0xFFFF6B7A)
+val NeonPink = Color(0xFFFF4FD8)
+val AcidGreen = Color(0xFFB8FF38)
+val OxygenRed = Color(0xFFFF5A36)
+val RadiantGold = Color(0xFFFFD95A)
 
 val EasyAccent = Color(0xFF8EC5FF)
 val MediumAccent = Color(0xFF56E0B5)
@@ -84,20 +88,21 @@ fun difficultySurface(difficulty: Difficulty): Color = when (difficulty) {
 }
 
 fun tileKindColor(kind: TileKind): Color = when (kind) {
-    TileKind.ELECTRON -> Color(0xFF2563A7)
-    TileKind.PROTON -> Color(0xFFA53F61)
-    TileKind.ELEMENT -> Color(0xFF2BAF8A)
+    TileKind.ELECTRON -> Color(0xFF1D5DFF)
+    TileKind.PROTON -> Color(0xFFFF3D8D)
+    TileKind.ELEMENT -> Cyan
     TileKind.CLASSIC -> PanelSoft
 }
 
 fun elementColor(element: QuantumElement?): Color = when (element) {
-    QuantumElement.HYDROGEN -> Color(0xFF2BAF8A)
-    QuantumElement.HELIUM, QuantumElement.NEON -> Color(0xFF7F6CE1)
-    QuantumElement.BERYLLIUM -> Color(0xFF88A747)
-    QuantumElement.OXYGEN -> Color(0xFF2E98A6)
-    QuantumElement.SILICON -> Color(0xFFB87949)
-    QuantumElement.IRON -> Color(0xFF9E7464)
-    QuantumElement.GOLD -> Color(0xFFD7AE3E)
+    QuantumElement.HYDROGEN -> Color(0xFF72F7FF)
+    QuantumElement.HELIUM -> Violet
+    QuantumElement.BERYLLIUM -> AcidGreen
+    QuantumElement.OXYGEN -> OxygenRed
+    QuantumElement.NEON -> NeonPink
+    QuantumElement.SILICON -> Electric
+    QuantumElement.IRON -> Color(0xFFFFB74A)
+    QuantumElement.GOLD -> RadiantGold
     null -> PanelSoft
 }
 
