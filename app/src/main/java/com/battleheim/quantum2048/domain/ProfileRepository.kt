@@ -7,6 +7,8 @@ import com.battleheim.quantum2048.engine.GameState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 
+private const val MAX_DAILY_ENTRIES = 120
+
 @Serializable
 data class DailyScoreEntry(
     val date: String,
@@ -94,9 +96,6 @@ data class ProfileState(
             .take(MAX_DAILY_ENTRIES)
     }
 
-    companion object {
-        private const val MAX_DAILY_ENTRIES = 120
-    }
 }
 
 private fun derivedBestDailyScore(

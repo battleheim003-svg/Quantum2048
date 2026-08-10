@@ -1,7 +1,9 @@
 package com.battleheim.quantum2048
 import android.app.Application
 import com.battleheim.quantum2048.analytics.OfflineAnalyticsGateway
+import com.battleheim.quantum2048.ads.OfflineAdGateway
 import com.battleheim.quantum2048.config.OfflineRemoteConfigGateway
+import com.battleheim.quantum2048.data.DataStoreBillingRepository
 import com.battleheim.quantum2048.data.DataStoreCollectionRepository
 import com.battleheim.quantum2048.data.DataStoreGameRepository
 import com.battleheim.quantum2048.data.DataStoreProfileRepository
@@ -11,6 +13,8 @@ class QuantumApp : Application() {
     val collectionRepository by lazy { DataStoreCollectionRepository(this) }
     val profileRepository by lazy { DataStoreProfileRepository(this) }
     val settingsRepository by lazy { DataStoreSettingsRepository(this) }
+    val billingRepository by lazy { DataStoreBillingRepository(this) }
+    val adGateway by lazy { OfflineAdGateway() }
     val analyticsGateway by lazy { OfflineAnalyticsGateway() }
     val remoteConfigGateway by lazy { OfflineRemoteConfigGateway() }
 

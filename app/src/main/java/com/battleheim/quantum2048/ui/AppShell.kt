@@ -51,6 +51,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.battleheim.quantum2048.R
+import com.battleheim.quantum2048.ads.AdGateway
+import com.battleheim.quantum2048.ads.NoOpAdGateway
+import com.battleheim.quantum2048.ads.RewardPlacement
 import com.battleheim.quantum2048.analytics.AnalyticsGateway
 import com.battleheim.quantum2048.analytics.NoOpAnalyticsGateway
 import com.battleheim.quantum2048.audio.ToneGameAudio
@@ -63,11 +66,15 @@ import com.battleheim.quantum2048.designsystem.Void
 import com.battleheim.quantum2048.designsystem.difficultyAccent
 import com.battleheim.quantum2048.designsystem.difficultySurface
 import com.battleheim.quantum2048.domain.CollectionRepository
+import com.battleheim.quantum2048.domain.BillingRepository
+import com.battleheim.quantum2048.domain.EntitlementState
 import com.battleheim.quantum2048.domain.GameRepository
 import com.battleheim.quantum2048.domain.AppLanguage
 import com.battleheim.quantum2048.domain.AppSettings
 import com.battleheim.quantum2048.domain.AppThemeMode
 import com.battleheim.quantum2048.domain.ProfileRepository
+import com.battleheim.quantum2048.domain.ProductIds
+import com.battleheim.quantum2048.domain.RewardEntitlement
 import com.battleheim.quantum2048.domain.SettingsRepository
 import com.battleheim.quantum2048.engine.Difficulty
 import com.battleheim.quantum2048.engine.FusionRules
@@ -99,6 +106,8 @@ fun QuantumAppShell(
     collectionRepository: CollectionRepository,
     profileRepository: ProfileRepository,
     settingsRepository: SettingsRepository,
+    billingRepository: BillingRepository,
+    adGateway: AdGateway = NoOpAdGateway,
     analytics: AnalyticsGateway = NoOpAnalyticsGateway,
     engine: GameEngine,
 ) {
@@ -204,7 +213,10 @@ fun QuantumAppShell(
                 settingsRepository = settingsRepository,
                 collectionRepository = collectionRepository,
                 profileRepository = profileRepository,
+                billingRepository = billingRepository,
                 settings = settings,
+                entitlements = billingRepository.observe().collectAsState(initial = EntitlementState()).value,
+                adGateway = adGateway,
                 audio = audio,
                 vm = gameViewModel,
                 analytics = analytics,
@@ -527,7 +539,10 @@ private fun SettingsScreen(
     settingsRepository: SettingsRepository,
     collectionRepository: CollectionRepository,
     profileRepository: ProfileRepository,
+    billingRepository: BillingRepository,
     settings: AppSettings,
+    entitlements: EntitlementState,
+    adGateway: AdGateway,
     audio: ToneGameAudio,
     vm: GameViewModel,
     analytics: AnalyticsGateway,
@@ -559,6 +574,27 @@ private fun SettingsScreen(
             modifier = Modifier.fillMaxWidth().testTag("settings_theme"),
         ) { Text(stringResource(R.string.theme_button, settings.themeMode.displayLabel())) }
         Text(stringResource(R.string.language_note), color = TextSecondary, fontSize = 12.sp)
+        MonetizationSection(
+            entitlements = entitlements,
+            adGateway = adGateway,
+            onRemoveAds = { scope.launch { billingRepository.grant(ProductIds.REMOVE_ADS) } },
+            onRewardUndo = {
+                adGateway.showRewarded(RewardPlacement.EXTRA_UNDO) {
+                    scope.launch { billingRepository.grantReward(RewardEntitlement.EXTRA_UNDO) }
+                }
+            },
+            onRewardRevive = {
+                adGateway.showRewarded(RewardPlacement.REVIVE_AFTER_GAME_OVER) {
+                    scope.launch { billingRepository.grantReward(RewardEntitlement.REVIVE) }
+                }
+            },
+            onRewardDaily = {
+                adGateway.showRewarded(RewardPlacement.DAILY_BONUS_ATTEMPT) {
+                    scope.launch { billingRepository.grantReward(RewardEntitlement.DAILY_ATTEMPT) }
+                }
+            },
+            onReset = { scope.launch { billingRepository.clear() } },
+        )
         OutlinedButton(onClick = { playMenu(audio, settings); confirmResetCollection = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.reset_collection)) }
         OutlinedButton(onClick = { playMenu(audio, settings); confirmResetProfile = true }, modifier = Modifier.fillMaxWidth().testTag("reset_profile")) { Text(stringResource(R.string.reset_profile)) }
         Difficulty.entries.forEach { difficulty ->
@@ -599,6 +635,45 @@ private fun SettingsScreen(
                 confirmResetDifficulty = null
             },
         )
+    }
+}
+
+@Composable
+private fun MonetizationSection(
+    entitlements: EntitlementState,
+    adGateway: AdGateway,
+    onRemoveAds: () -> Unit,
+    onRewardUndo: () -> Unit,
+    onRewardRevive: () -> Unit,
+    onRewardDaily: () -> Unit,
+    onReset: () -> Unit,
+) {
+    Card(colors = CardDefaults.cardColors(containerColor = PanelRaised), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.monetization), fontWeight = FontWeight.Black)
+            Text(
+                stringResource(if (entitlements.removeAds) R.string.remove_ads_owned else R.string.remove_ads_not_owned),
+                color = if (entitlements.removeAds) Cyan else TextSecondary,
+                fontSize = 12.sp,
+            )
+            StatRow(stringResource(R.string.reward_extra_undo), entitlements.rewardedExtraUndoCredits.toString())
+            StatRow(stringResource(R.string.reward_revive), entitlements.rewardedReviveCredits.toString())
+            StatRow(stringResource(R.string.reward_daily_attempt), entitlements.rewardedDailyAttemptCredits.toString())
+            Button(onClick = onRemoveAds, enabled = !entitlements.removeAds, modifier = Modifier.fillMaxWidth().testTag("grant_remove_ads")) {
+                Text(stringResource(R.string.test_grant_remove_ads))
+            }
+            OutlinedButton(onClick = onRewardUndo, enabled = adGateway.isRewardedReady, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.watch_for_extra_undo))
+            }
+            OutlinedButton(onClick = onRewardRevive, enabled = adGateway.isRewardedReady, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.watch_for_revive))
+            }
+            OutlinedButton(onClick = onRewardDaily, enabled = adGateway.isRewardedReady, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.watch_for_daily_attempt))
+            }
+            Text(stringResource(R.string.monetization_offline_note), color = TextMuted, fontSize = 11.sp)
+            TextButton(onClick = onReset, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.reset_entitlements)) }
+        }
     }
 }
 

@@ -9,8 +9,8 @@ data class AppSettings(
     val musicEnabled: Boolean = true,
     val hapticsEnabled: Boolean = true,
     val reducedMotion: Boolean = false,
-    val language: AppLanguage = AppLanguage.PERSIAN,
-    val themeMode: AppThemeMode = AppThemeMode.DARK,
+    val language: AppLanguage = AppLanguage.SYSTEM,
+    val themeMode: AppThemeMode = AppThemeMode.SYSTEM,
 )
 
 @Serializable enum class AppLanguage { SYSTEM, ENGLISH, PERSIAN }

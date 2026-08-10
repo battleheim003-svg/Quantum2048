@@ -13,6 +13,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 private val Context.profileDataStore by preferencesDataStore("profile_state_v1")
+private const val PROFILE_SNAPSHOT_SCHEMA_VERSION = 1
 
 class DataStoreProfileRepository(private val context: Context) : ProfileRepository {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
@@ -40,10 +41,6 @@ class DataStoreProfileRepository(private val context: Context) : ProfileReposito
 
 @Serializable
 private data class ProfileSnapshot(
-    val schemaVersion: Int = CURRENT_SCHEMA_VERSION,
+    val schemaVersion: Int = PROFILE_SNAPSHOT_SCHEMA_VERSION,
     val state: ProfileState = ProfileState(),
-) {
-    companion object {
-        const val CURRENT_SCHEMA_VERSION = 1
-    }
-}
+)
