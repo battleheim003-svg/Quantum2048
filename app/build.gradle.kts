@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.Test
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -8,6 +10,27 @@ plugins {
 android {
     namespace = "com.battleheim.quantum2048"
     compileSdk = 35
+
+    signingConfigs {
+        create("release") {
+            val storeFilePath = providers.gradleProperty("QUANTUM2048_RELEASE_STORE_FILE")
+                .orElse(providers.environmentVariable("QUANTUM2048_RELEASE_STORE_FILE"))
+                .orNull
+            if (!storeFilePath.isNullOrBlank()) {
+                storeFile = file(storeFilePath)
+                storePassword = providers.gradleProperty("QUANTUM2048_RELEASE_STORE_PASSWORD")
+                    .orElse(providers.environmentVariable("QUANTUM2048_RELEASE_STORE_PASSWORD"))
+                    .orNull
+                keyAlias = providers.gradleProperty("QUANTUM2048_RELEASE_KEY_ALIAS")
+                    .orElse(providers.environmentVariable("QUANTUM2048_RELEASE_KEY_ALIAS"))
+                    .orNull
+                keyPassword = providers.gradleProperty("QUANTUM2048_RELEASE_KEY_PASSWORD")
+                    .orElse(providers.environmentVariable("QUANTUM2048_RELEASE_KEY_PASSWORD"))
+                    .orNull
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "com.battleheim.quantum2048"
         minSdk = 26
@@ -16,10 +39,32 @@ android {
         versionName = "0.2.0-quantum-core"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    buildTypes {
+        debug {
+            isDebuggable = true
+            isMinifyEnabled = false
+        }
+        release {
+            isDebuggable = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
+    }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
+}
+
+tasks.withType<Test>().configureEach {
+    maxHeapSize = "512m"
+    maxParallelForks = 1
+    forkEvery = 25
 }
 
 dependencies {

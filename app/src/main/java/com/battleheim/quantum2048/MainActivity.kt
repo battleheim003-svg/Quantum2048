@@ -17,6 +17,9 @@ import com.battleheim.quantum2048.ui.QuantumAppShell
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
+    private val app: QuantumApp
+        get() = application as QuantumApp
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -31,11 +34,22 @@ class MainActivity : ComponentActivity() {
                     collectionRepository = app.collectionRepository,
                     profileRepository = app.profileRepository,
                     settingsRepository = app.settingsRepository,
+                    analytics = app.analyticsGateway,
                     engine = GameEngine(KotlinRandomProvider()),
                 )
                 }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        app.analyticsGateway.logSessionStart()
+    }
+
+    override fun onStop() {
+        app.analyticsGateway.logSessionEnd()
+        super.onStop()
     }
 }
 

@@ -29,11 +29,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,29 +42,35 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.battleheim.quantum2048.audio.GameAudio
 import com.battleheim.quantum2048.audio.SilentGameAudio
 import com.battleheim.quantum2048.designsystem.Cyan
+import com.battleheim.quantum2048.designsystem.Electric
 import com.battleheim.quantum2048.designsystem.PanelRaised
 import com.battleheim.quantum2048.designsystem.Panel
 import com.battleheim.quantum2048.designsystem.TextMuted
 import com.battleheim.quantum2048.designsystem.TextSecondary
 import com.battleheim.quantum2048.designsystem.Void
+import com.battleheim.quantum2048.designsystem.Violet
 import com.battleheim.quantum2048.designsystem.difficultyAccent
 import com.battleheim.quantum2048.designsystem.difficultySurface
 import com.battleheim.quantum2048.designsystem.elementColor
@@ -99,14 +104,10 @@ fun GameScreen(
     onPause: () -> Unit = {},
 ) {
     val ui by vm.ui.collectAsState()
-    val snackbar = remember { SnackbarHostState() }
     val haptics = LocalHapticFeedback.current
 
     LaunchedEffect(ui.message) {
-        ui.message?.let {
-            snackbar.showSnackbar(it)
-            vm.consumeMessage()
-        }
+        if (ui.message != null) vm.consumeMessage()
     }
     LaunchedEffect(ui.feedback) {
         when (ui.feedback) {
@@ -157,10 +158,17 @@ fun GameScreen(
         if (turnSecondsLeft == 0 && activeDuel.winner == null) vm.passDuelTurn()
     }
 
-    Scaffold(containerColor = Void, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
+    val pageBackground = MaterialTheme.colorScheme.background
+    val pageGradient = if (pageBackground == Void) {
+        Brush.verticalGradient(listOf(Void, Panel, Color(0xFF080713)))
+    } else {
+        Brush.verticalGradient(listOf(Color(0xFFF5FDFF), Color(0xFFEAF8FA), Color(0xFFF9F5FF)))
+    }
+    Scaffold(containerColor = pageBackground) { padding ->
         Column(
             Modifier
                 .fillMaxSize()
+                .background(pageGradient)
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 18.dp, vertical = 12.dp),
@@ -175,22 +183,26 @@ fun GameScreen(
             Board(ui.game, ui.labTileIds, ui.tunnelingTileId, ui.observerPreview, ui.animations, settings.reducedMotion, vm::swipe, vm::sendToCompoundLab, vm::tapBoardCell, vm::observeTile)
             duel?.let { OpponentBoardSummary(it.inactiveBoard, it.currentPlayer) }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = vm::newGame, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.new_game)) }
+                Button(
+                    onClick = vm::newGame,
+                    colors = ButtonDefaults.buttonColors(containerColor = Cyan, contentColor = Color(0xFF001B20)),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.weight(1f).height(56.dp),
+                ) { Text(stringResource(R.string.new_game), fontWeight = FontWeight.Black) }
                 OutlinedButton(onClick = vm::undo, enabled = ui.canUndo, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.undo)) }
             }
             if (ui.game.mode == GameMode.QUANTUM && duel == null) {
-                OutlinedButton(onClick = vm::toggleTunneling, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(if (ui.tunnelingTileId == null) R.string.tunnel else R.string.cancel_tunnel))
+                OutlinedButton(onClick = vm::toggleTunneling, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth().height(54.dp)) {
+                    Text(stringResource(if (ui.tunnelingTileId == null) R.string.tunnel else R.string.cancel_tunnel), fontWeight = FontWeight.Black)
                 }
+                HelpText(stringResource(if (ui.tunnelingTileId == null) R.string.tunnel_help_idle else R.string.tunnel_help_active), accent = Cyan)
             }
-            Text(
+            HelpText(
                 if (ui.game.mode == GameMode.QUANTUM) {
                     stringResource(R.string.quantum_help)
                 } else {
                     stringResource(R.string.classic_help)
                 },
-                color = TextSecondary,
-                fontSize = 13.sp,
             )
         }
 
@@ -207,8 +219,25 @@ fun GameScreen(
 }
 
 @Composable
+private fun HelpText(text: String, accent: Color = MaterialTheme.colorScheme.primary) {
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    Text(
+        text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f), RoundedCornerShape(8.dp))
+            .border(1.dp, accent.copy(alpha = 0.18f), RoundedCornerShape(8.dp))
+            .padding(12.dp),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontSize = 13.sp,
+        lineHeight = 19.sp,
+        textAlign = if (rtl) TextAlign.End else TextAlign.Start,
+    )
+}
+
+@Composable
 private fun DuelHeader(current: DuelPlayer, opponent: DuelOpponent, secondsLeft: Int, winner: DuelPlayer?, pass: () -> Unit) {
-    Surface(color = PanelRaised, shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
+    Surface(color = PanelRaised.copy(alpha = 0.92f), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth().border(1.dp, Cyan.copy(alpha = 0.16f), RoundedCornerShape(8.dp))) {
         Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
                 Text(winner?.let { stringResource(R.string.player_wins, it.label()) } ?: stringResource(R.string.player_turn, current.label()), fontWeight = FontWeight.Black)
@@ -224,7 +253,7 @@ private fun DuelHeader(current: DuelPlayer, opponent: DuelOpponent, secondsLeft:
 
 @Composable
 private fun OpponentBoardSummary(board: GameState, current: DuelPlayer) {
-    Surface(color = PanelRaised, shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
+    Surface(color = PanelRaised.copy(alpha = 0.92f), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth().border(1.dp, Violet.copy(alpha = 0.16f), RoundedCornerShape(8.dp))) {
         Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
                 Text(stringResource(R.string.opponent_board, current.opponent().label()), fontWeight = FontWeight.Bold)
@@ -239,12 +268,12 @@ private fun OpponentBoardSummary(board: GameState, current: DuelPlayer) {
 private fun Header(game: GameState, onPause: () -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Column {
-            Text(stringResource(R.string.app_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+            Text(stringResource(R.string.app_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onBackground)
             Text("${game.difficulty.label()} - ${if (game.mode == GameMode.QUANTUM) stringResource(R.string.synthesis_lab) else stringResource(R.string.classic_board)}", color = difficultyAccent(game.difficulty), fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedButton(onClick = onPause) { Text(stringResource(R.string.pause)) }
-            Surface(shape = RoundedCornerShape(12.dp), color = difficultySurface(game.difficulty)) {
+            Surface(shape = RoundedCornerShape(12.dp), color = difficultySurface(game.difficulty).copy(alpha = 0.94f), modifier = Modifier.border(1.dp, difficultyAccent(game.difficulty).copy(alpha = 0.4f), RoundedCornerShape(12.dp))) {
                 Column(Modifier.padding(horizontal = 14.dp, vertical = 9.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(game.score.toString(), fontWeight = FontWeight.Black)
                     Text(stringResource(R.string.best_score, game.bestScore.toString()), color = TextSecondary, fontSize = 11.sp)
@@ -258,13 +287,13 @@ private fun Header(game: GameState, onPause: () -> Unit) {
 
 @Composable
 private fun FusionGuide(difficulty: Difficulty) {
-    Surface(color = difficultySurface(difficulty), shape = RoundedCornerShape(8.dp)) {
+    Surface(color = difficultySurface(difficulty).copy(alpha = 0.9f), shape = RoundedCornerShape(8.dp), modifier = Modifier.border(1.dp, difficultyAccent(difficulty).copy(alpha = 0.32f), RoundedCornerShape(8.dp))) {
         Row(
             Modifier.fillMaxWidth().padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(difficulty.label(), color = TextSecondary, fontSize = 12.sp)
+            Text(difficulty.label(), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
             Text(stringResource(R.string.fusion_guide), color = difficultyAccent(difficulty), fontWeight = FontWeight.Bold, fontSize = 12.sp)
         }
     }
@@ -273,11 +302,11 @@ private fun FusionGuide(difficulty: Difficulty) {
 @Composable
 private fun CompoundLab(game: GameState, labTileIds: List<Long>, clear: () -> Unit) {
     val labels = labTileIds.mapNotNull { id -> game.cells.firstOrNull { it?.id == id }?.element?.symbol }
-    Surface(color = PanelRaised, shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
+    Surface(color = PanelRaised.copy(alpha = 0.92f), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth().border(1.dp, Electric.copy(alpha = 0.16f), RoundedCornerShape(8.dp))) {
         Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
-                Text(stringResource(R.string.compound_lab), fontWeight = FontWeight.Black)
-                Text(if (labels.isEmpty()) stringResource(R.string.lab_empty) else labels.joinToString(" + "), color = TextSecondary, fontSize = 12.sp)
+                Text(stringResource(R.string.compound_lab), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+                Text(if (labels.isEmpty()) stringResource(R.string.lab_empty) else labels.joinToString(" + "), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
             }
             TextButton(onClick = clear, enabled = labels.isNotEmpty()) { Text(stringResource(R.string.clear)) }
         }
@@ -299,26 +328,42 @@ private fun Board(
 ) {
     var dx by remember { mutableFloatStateOf(0f) }
     var dy by remember { mutableFloatStateOf(0f) }
+    var swipeSent by remember { mutableStateOf(false) }
     val gap = if (game.size >= 8) 4.dp else if (game.size >= 6) 5.dp else 7.dp
     val boardPadding = if (game.size >= 8) 5.dp else 8.dp
     val animationByTileId = animations.associateBy { it.tileId }
+    val swipeThresholdPx = with(LocalDensity.current) { SWIPE_THRESHOLD_DP.dp.toPx() }
     BoxWithConstraints(
         Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
-            .background(Panel, RoundedCornerShape(12.dp))
-            .border(1.dp, difficultyAccent(game.difficulty).copy(alpha = 0.42f), RoundedCornerShape(12.dp))
+            .background(Brush.verticalGradient(listOf(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.surface)), RoundedCornerShape(12.dp))
+            .border(1.dp, difficultyAccent(game.difficulty).copy(alpha = 0.62f), RoundedCornerShape(12.dp))
             .padding(boardPadding)
-            .pointerInput(game.mode) {
+            .pointerInput(game.mode, swipeThresholdPx) {
                 detectDragGestures(
-                    onDragStart = { dx = 0f; dy = 0f },
+                    onDragStart = {
+                        dx = 0f
+                        dy = 0f
+                        swipeSent = false
+                    },
                     onDrag = { change, drag ->
                         change.consume()
                         dx += drag.x
                         dy += drag.y
+                        if (!swipeSent && maxOf(abs(dx), abs(dy)) > swipeThresholdPx) {
+                            swipeSent = true
+                            onSwipe(
+                                if (abs(dx) > abs(dy)) {
+                                    if (dx > 0) Direction.RIGHT else Direction.LEFT
+                                } else {
+                                    if (dy > 0) Direction.DOWN else Direction.UP
+                                },
+                            )
+                        }
                     },
                     onDragEnd = {
-                        if (maxOf(abs(dx), abs(dy)) > 36f) {
+                        if (!swipeSent && maxOf(abs(dx), abs(dy)) > swipeThresholdPx) {
                             onSwipe(
                                 if (abs(dx) > abs(dy)) {
                                     if (dx > 0) Direction.RIGHT else Direction.LEFT
@@ -345,7 +390,8 @@ private fun Board(
                     Modifier
                         .offset { IntOffset((column * stepPx).roundToInt(), (row * stepPx).roundToInt()) }
                         .size(cellDp)
-                        .background(Color(0xFF171D38), RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.82f), RoundedCornerShape(6.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(6.dp))
                         .clickable(enabled = tunnelingTileId != null) { onCellTap(row * game.size + column) },
                 )
             }
@@ -477,7 +523,7 @@ private fun TileCell(
     }
 
     val color = when {
-        tile == null -> Color(0xFF171D38)
+        tile == null -> MaterialTheme.colorScheme.surface
         mode == GameMode.QUANTUM && tile.kind == TileKind.ELEMENT -> elementColor(tile.element)
         mode == GameMode.QUANTUM -> tileKindColor(tile.kind)
         tile.value < 16 -> Color(0xFF193A55)
@@ -501,14 +547,15 @@ private fun TileCell(
                     animation?.kind == MoveAnimationKind.COLLAPSE_HIGH
                 ) 18f else 0f
             }
-            .background(color, RoundedCornerShape(8.dp))
+            .background(color, RoundedCornerShape(6.dp))
+            .border(1.dp, Color.Black.copy(alpha = 0.18f), RoundedCornerShape(6.dp))
             .then(
                 when {
-                    animation?.kind == MoveAnimationKind.COLLAPSE_LOW -> Modifier.border(2.dp, Color(0xFF56E0B5), RoundedCornerShape(8.dp))
-                    animation?.kind == MoveAnimationKind.COLLAPSE_HIGH -> Modifier.border(3.dp, Color(0xFFFFD166), RoundedCornerShape(8.dp))
-                    selectedForTunnel -> Modifier.border(3.dp, Color(0xFFFFD166), RoundedCornerShape(8.dp))
-                    tile?.entanglementGroupId != null -> Modifier.border(2.dp, Color(0xFFFF7CE5), RoundedCornerShape(8.dp))
-                    tile?.kind == TileKind.ELEMENT -> Modifier.border(if (selectedForLab) 2.dp else 1.dp, if (selectedForLab) Cyan else Color.White.copy(alpha = 0.18f), RoundedCornerShape(8.dp))
+                    animation?.kind == MoveAnimationKind.COLLAPSE_LOW -> Modifier.border(2.dp, Color(0xFF56E0B5), RoundedCornerShape(6.dp))
+                    animation?.kind == MoveAnimationKind.COLLAPSE_HIGH -> Modifier.border(3.dp, Color(0xFFFFD166), RoundedCornerShape(6.dp))
+                    selectedForTunnel -> Modifier.border(3.dp, Color(0xFFFFD166), RoundedCornerShape(6.dp))
+                    tile?.entanglementGroupId != null -> Modifier.border(2.dp, Color(0xFFFF7CE5), RoundedCornerShape(6.dp))
+                    tile?.kind == TileKind.ELEMENT -> Modifier.border(if (selectedForLab) 2.dp else 1.dp, if (selectedForLab) Cyan else Color.Black.copy(alpha = 0.22f), RoundedCornerShape(6.dp))
                     else -> Modifier
                 },
             )
@@ -551,7 +598,8 @@ private fun TileCell(
     }
 }
 
-private const val MOVE_ANIMATION_MS = 360
+private const val MOVE_ANIMATION_MS = 210
+private const val SWIPE_THRESHOLD_DP = 14
 
 @Composable
 private fun QuantumTileLabel(tile: Tile, boardSize: Int, observerValue: Int?) {
@@ -561,11 +609,13 @@ private fun QuantumTileLabel(tile: Tile, boardSize: Int, observerValue: Int?) {
     val valueSize = if (boardSize >= 8) 10.sp else if (boardSize >= 6) 12.sp else 15.sp
     val rankSize = if (boardSize >= 8) 7.sp else 9.sp
     val familySize = if (boardSize >= 8) 0.sp else 7.sp
-    Column(Modifier.fillMaxWidth().padding(if (boardSize >= 8) 2.dp else 5.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Text(FusionRules.rankOf(tile).toString(), modifier = Modifier.align(Alignment.Start), color = TextSecondary, fontSize = rankSize, fontWeight = FontWeight.Bold)
-        Text(observerValue?.toString() ?: FusionRules.displaySymbol(tile), fontSize = symbolSize, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center)
-        Text(FusionRules.gameValueOf(tile).toString(), color = Cyan, fontSize = valueSize, fontWeight = FontWeight.Black)
-        if (boardSize < 8) tile.element?.let { Text(elementFamily(it), color = TextSecondary, fontSize = familySize, textAlign = TextAlign.Center) }
+    Box(Modifier.fillMaxSize().padding(if (boardSize >= 8) 2.dp else 5.dp)) {
+        Text(FusionRules.rankOf(tile).toString(), modifier = Modifier.align(Alignment.TopStart), color = Color.Black.copy(alpha = 0.72f), fontSize = rankSize, fontWeight = FontWeight.Bold)
+        Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text(observerValue?.toString() ?: FusionRules.displaySymbol(tile), fontSize = symbolSize, fontWeight = FontWeight.Black, color = Color.Black, textAlign = TextAlign.Center)
+            Text(FusionRules.gameValueOf(tile).toString(), color = Color.Black.copy(alpha = 0.62f), fontSize = valueSize, fontWeight = FontWeight.Black)
+        }
+        if (boardSize < 8) tile.element?.let { Text(elementFamily(it), modifier = Modifier.align(Alignment.BottomCenter), color = Color.Black.copy(alpha = 0.62f), fontSize = familySize, textAlign = TextAlign.Center) }
     }
 }
 
@@ -589,7 +639,17 @@ private fun SuperpositionDialog(tile: Tile, onDismiss: () -> Unit, onCollapse: (
     )
 }
 
-private fun Difficulty.label(): String = name.lowercase().replaceFirstChar { it.uppercase() }
+@Composable
+private fun Difficulty.label(): String = when (this) {
+    Difficulty.EASY -> stringResource(R.string.difficulty_easy)
+    Difficulty.MEDIUM -> stringResource(R.string.difficulty_medium)
+    Difficulty.HARD -> stringResource(R.string.difficulty_hard)
+    Difficulty.QUANTUM -> stringResource(R.string.difficulty_quantum)
+    Difficulty.ZEN -> stringResource(R.string.difficulty_zen)
+    Difficulty.HARDCORE -> stringResource(R.string.difficulty_hardcore)
+    Difficulty.PUZZLE -> stringResource(R.string.difficulty_puzzle)
+    Difficulty.DAILY -> stringResource(R.string.difficulty_daily)
+}
 
 @Composable
 private fun DuelPlayer.label(): String = when (this) {

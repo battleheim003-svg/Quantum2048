@@ -51,6 +51,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.battleheim.quantum2048.R
+import com.battleheim.quantum2048.analytics.AnalyticsGateway
+import com.battleheim.quantum2048.analytics.NoOpAnalyticsGateway
 import com.battleheim.quantum2048.audio.ToneGameAudio
 import com.battleheim.quantum2048.designsystem.Cyan
 import com.battleheim.quantum2048.designsystem.PanelRaised
@@ -97,10 +99,11 @@ fun QuantumAppShell(
     collectionRepository: CollectionRepository,
     profileRepository: ProfileRepository,
     settingsRepository: SettingsRepository,
+    analytics: AnalyticsGateway = NoOpAnalyticsGateway,
     engine: GameEngine,
 ) {
     val nav = rememberNavController()
-    val gameViewModel: GameViewModel = viewModel { GameViewModel(gameRepository, collectionRepository, profileRepository, engine) }
+    val gameViewModel: GameViewModel = viewModel { GameViewModel(gameRepository, collectionRepository, profileRepository, engine, analytics) }
     val ui by gameViewModel.ui.collectAsState()
     val settings by settingsRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.AppSettings())
     val audio = remember { ToneGameAudio() }
@@ -129,6 +132,7 @@ fun QuantumAppShell(
                 vm = gameViewModel,
                 settings = settings,
                 settingsRepository = settingsRepository,
+                analytics = analytics,
                 audio = audio,
                 onContinue = { saved -> playSelect(audio, settings); nav.navigate(Routes.game(saved.difficulty, saved.size)) },
                 onNewGame = { playSelect(audio, settings); nav.navigate(Routes.LevelSelect) },
@@ -203,6 +207,7 @@ fun QuantumAppShell(
                 settings = settings,
                 audio = audio,
                 vm = gameViewModel,
+                analytics = analytics,
                 onBack = { nav.popBackStack() },
             )
         }
@@ -214,6 +219,7 @@ private fun MainMenuScreen(
     vm: GameViewModel,
     settings: AppSettings,
     settingsRepository: SettingsRepository,
+    analytics: AnalyticsGateway,
     audio: ToneGameAudio,
     onContinue: (SavedGameKey) -> Unit,
     onNewGame: () -> Unit,
@@ -232,11 +238,15 @@ private fun MainMenuScreen(
             settings = settings,
             onLanguage = {
                 playMenu(audio, settings)
-                scope.launch { settingsRepository.save(settings.copy(language = settings.language.next())) }
+                val next = settings.copy(language = settings.language.next())
+                analytics.logSettingsChanged(next.themeMode, next.language)
+                scope.launch { settingsRepository.save(next) }
             },
             onTheme = {
                 playMenu(audio, settings)
-                scope.launch { settingsRepository.save(settings.copy(themeMode = settings.themeMode.next())) }
+                val next = settings.copy(themeMode = settings.themeMode.next())
+                analytics.logSettingsChanged(next.themeMode, next.language)
+                scope.launch { settingsRepository.save(next) }
             },
         )
         SectionTitle(stringResource(R.string.app_title), stringResource(R.string.fusion_lab))
@@ -520,6 +530,7 @@ private fun SettingsScreen(
     settings: AppSettings,
     audio: ToneGameAudio,
     vm: GameViewModel,
+    analytics: AnalyticsGateway,
     onBack: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -529,21 +540,21 @@ private fun SettingsScreen(
 
     MenuScaffold {
         SectionTitle(stringResource(R.string.settings), stringResource(R.string.fusion_lab))
-        SettingsToggle(stringResource(R.string.sound), settings.soundEnabled) { playMenu(audio, settings); scope.launch { settingsRepository.save(settings.copy(soundEnabled = it)) } }
-        SettingsToggle(stringResource(R.string.music), settings.musicEnabled) { playMenu(audio, settings); scope.launch { settingsRepository.save(settings.copy(musicEnabled = it)) } }
-        SettingsToggle(stringResource(R.string.haptics), settings.hapticsEnabled) { playMenu(audio, settings); scope.launch { settingsRepository.save(settings.copy(hapticsEnabled = it)) } }
-        SettingsToggle(stringResource(R.string.reduced_motion), settings.reducedMotion) { playMenu(audio, settings); scope.launch { settingsRepository.save(settings.copy(reducedMotion = it)) } }
+        SettingsToggle(stringResource(R.string.sound), settings.soundEnabled) { playMenu(audio, settings); saveSettings(settings.copy(soundEnabled = it), analytics, settingsRepository, scope) }
+        SettingsToggle(stringResource(R.string.music), settings.musicEnabled) { playMenu(audio, settings); saveSettings(settings.copy(musicEnabled = it), analytics, settingsRepository, scope) }
+        SettingsToggle(stringResource(R.string.haptics), settings.hapticsEnabled) { playMenu(audio, settings); saveSettings(settings.copy(hapticsEnabled = it), analytics, settingsRepository, scope) }
+        SettingsToggle(stringResource(R.string.reduced_motion), settings.reducedMotion) { playMenu(audio, settings); saveSettings(settings.copy(reducedMotion = it), analytics, settingsRepository, scope) }
         OutlinedButton(
             onClick = {
                 playMenu(audio, settings)
-                scope.launch { settingsRepository.save(settings.copy(language = settings.language.next())) }
+                saveSettings(settings.copy(language = settings.language.next()), analytics, settingsRepository, scope)
             },
             modifier = Modifier.fillMaxWidth().testTag("settings_language"),
         ) { Text(stringResource(R.string.language_button, settings.language.displayLabel())) }
         OutlinedButton(
             onClick = {
                 playMenu(audio, settings)
-                scope.launch { settingsRepository.save(settings.copy(themeMode = settings.themeMode.next())) }
+                saveSettings(settings.copy(themeMode = settings.themeMode.next()), analytics, settingsRepository, scope)
             },
             modifier = Modifier.fillMaxWidth().testTag("settings_theme"),
         ) { Text(stringResource(R.string.theme_button, settings.themeMode.displayLabel())) }
@@ -597,6 +608,16 @@ private fun playMenu(audio: ToneGameAudio, settings: AppSettings) {
 
 private fun playSelect(audio: ToneGameAudio, settings: AppSettings) {
     if (settings.soundEnabled) audio.select()
+}
+
+private fun saveSettings(
+    settings: AppSettings,
+    analytics: AnalyticsGateway,
+    settingsRepository: SettingsRepository,
+    scope: kotlinx.coroutines.CoroutineScope,
+) {
+    analytics.logSettingsChanged(settings.themeMode, settings.language)
+    scope.launch { settingsRepository.save(settings) }
 }
 
 private fun AppLanguage.next(): AppLanguage = when (this) {

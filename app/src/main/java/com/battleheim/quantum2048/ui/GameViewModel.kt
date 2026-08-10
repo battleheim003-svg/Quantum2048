@@ -2,6 +2,8 @@ package com.battleheim.quantum2048.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.battleheim.quantum2048.analytics.AnalyticsGateway
+import com.battleheim.quantum2048.analytics.NoOpAnalyticsGateway
 import com.battleheim.quantum2048.domain.CollectionRepository
 import com.battleheim.quantum2048.domain.GameRepository
 import com.battleheim.quantum2048.domain.ProfileRepository
@@ -62,6 +64,7 @@ class GameViewModel(
     private val collectionRepository: CollectionRepository,
     private val profileRepository: ProfileRepository,
     private val engine: GameEngine,
+    private val analytics: AnalyticsGateway = NoOpAnalyticsGateway,
 ) : ViewModel() {
     private val _ui = MutableStateFlow(GameUiState())
     val ui: StateFlow<GameUiState> = _ui.asStateFlow()
@@ -88,6 +91,11 @@ class GameViewModel(
         if (result.changed) {
             rememberUndoIfAllowed(before)
             undoCompoundSymbol = null
+            logTerminalStateIfNeeded(result.state)
+            result.state.cells.mapNotNull { it?.element }.maxByOrNull { it.rank }?.let { element ->
+                val beforeBestRank = before.cells.mapNotNull { it?.element }.maxOfOrNull { it.rank } ?: 0
+                if (element.rank > beforeBestRank) analytics.logFusionPerformed(element)
+            }
             _ui.value = _ui.value.copy(
                 game = _ui.value.duel?.activeBoard ?: result.state,
                 canUndo = undo.canUndo && FusionRules.isUndoEnabled(before.difficulty),
@@ -120,6 +128,9 @@ class GameViewModel(
     private fun runBotTurnIfNeeded() {
         val duel = _ui.value.duel ?: return
         val (nextDuel, result) = duelEngine.botMoveIfNeeded(duel)
+        if (duel.winner == null && nextDuel.winner != null) {
+            analytics.logDuelResult(nextDuel.config.difficulty, nextDuel.config.botDifficulty, nextDuel.winner)
+        }
         _ui.value = _ui.value.copy(
             duel = nextDuel,
             game = nextDuel.activeBoard,
@@ -295,6 +306,7 @@ class GameViewModel(
             is CompoundResult.Success -> {
                 rememberUndoIfAllowed(before)
                 undoCompoundSymbol = result.recipe.output.symbol
+                result.state.cells.mapNotNull { it?.element }.maxByOrNull { it.rank }?.let(analytics::logFusionPerformed)
                 _ui.value = _ui.value.copy(
                     game = result.state,
                     canUndo = undo.canUndo,
@@ -342,8 +354,10 @@ class GameViewModel(
     fun newGame() {
         undo.clear()
         val previous = _ui.value.game
+        val nextGame = engine.newGame(previous.difficulty, previous.size).copy(bestScore = previous.bestScore)
+        analytics.logLevelStart(nextGame)
         _ui.value = _ui.value.copy(
-            game = engine.newGame(previous.difficulty, previous.size).copy(bestScore = previous.bestScore),
+            game = nextGame,
             canUndo = false,
             labTileIds = emptyList(),
             tunnelingTileId = null,
@@ -357,8 +371,10 @@ class GameViewModel(
     fun newGame(difficulty: Difficulty, size: Int = requestedSize) {
         undo.clear()
         requestedSize = size
+        val nextGame = engine.newGame(difficulty, size)
+        analytics.logLevelStart(nextGame)
         _ui.value = _ui.value.copy(
-            game = engine.newGame(difficulty, size),
+            game = nextGame,
             canUndo = false,
             labTileIds = emptyList(),
             tunnelingTileId = null,
@@ -381,12 +397,16 @@ class GameViewModel(
                 turnSeconds = turnSeconds,
             ),
         )
+        analytics.logDuelStarted(difficulty, opponent, botDifficulty)
         _ui.value = GameUiState(game = duel.activeBoard, loading = false, duel = duel)
     }
 
     fun passDuelTurn() {
         val duel = _ui.value.duel ?: return
         val next = duelEngine.passTimedOutTurn(duel)
+        if (duel.winner == null && next.winner != null) {
+            analytics.logDuelResult(next.config.difficulty, next.config.botDifficulty, next.winner)
+        }
         _ui.value = _ui.value.copy(
             duel = next,
             game = next.activeBoard,
@@ -418,8 +438,10 @@ class GameViewModel(
             repository.clear(difficulty)
             if (_ui.value.game.difficulty == difficulty) {
                 undo.clear()
+                val nextGame = engine.newGame(difficulty, _ui.value.game.size)
+                analytics.logLevelStart(nextGame)
                 _ui.value = _ui.value.copy(
-                    game = engine.newGame(difficulty, _ui.value.game.size),
+                    game = nextGame,
                     canUndo = false,
                     labTileIds = emptyList(),
                     tunnelingTileId = null,
@@ -475,6 +497,7 @@ class GameViewModel(
                 game
             }
             _ui.value = GameUiState(game = loadedGame, loading = false, duel = null)
+            analytics.logLevelStart(loadedGame)
             repository.save(loadedGame)
             inputLocked = false
         }
@@ -490,6 +513,14 @@ class GameViewModel(
             undo.remember(state)
         } else {
             undo.clear()
+        }
+    }
+
+    private fun logTerminalStateIfNeeded(state: GameState) {
+        when (state.status) {
+            GameStatus.WON -> analytics.logLevelComplete(state)
+            GameStatus.LOST -> analytics.logLevelFail(state)
+            GameStatus.PLAYING -> Unit
         }
     }
 
