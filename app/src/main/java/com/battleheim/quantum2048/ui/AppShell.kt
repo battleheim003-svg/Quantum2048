@@ -370,18 +370,20 @@ private fun TutorialBoard(cells: List<String>) {
 private fun StatisticsScreen(profileRepository: ProfileRepository, socialRepository: SocialRepository, onBack: () -> Unit) {
     val profile by profileRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.ProfileState())
     val social by socialRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.SocialState())
+    val today = LocalDate.now()
     MenuScaffold {
         SectionTitle(stringResource(R.string.statistics), stringResource(R.string.profile))
-        StatRow(stringResource(R.string.stat_daily_best_today), profile.dailyBestScore(LocalDate.now().toString()).toString())
-        StatRow(stringResource(R.string.stat_best_daily_score), profile.bestDailyScore.toString())
-        StatRow(stringResource(R.string.stat_daily_challenge_count), profile.dailyChallengeCount.toString())
-        StatRow(stringResource(R.string.stat_daily_current_streak), social.dailyStreak.currentStreak.toString())
-        StatRow(stringResource(R.string.stat_daily_best_streak), social.dailyStreak.bestStreak.toString())
-        StatRow(stringResource(R.string.stat_best_duel_streak), social.duelRecord.bestWinStreak.toString())
-        StatRow(stringResource(R.string.stat_leaderboard_entries), social.leaderboards.size.toString())
-        StatRow(stringResource(R.string.stat_collapse_ratio), "${(profile.collapseLowRatio * 100).toInt()}%")
-        StatRow(stringResource(R.string.stat_average_win_energy), "%.1f".format(profile.averageWinEnergy))
-        StatRow(stringResource(R.string.stat_chain_merges), profile.totalChainMergeCount.toString())
+        StatRow(stringResource(R.string.stat_today_date), formatDate(today))
+        StatRow(stringResource(R.string.stat_daily_best_today), formatNumber(profile.dailyBestScore(today.toString())))
+        StatRow(stringResource(R.string.stat_best_daily_score), formatNumber(profile.bestDailyScore))
+        StatRow(stringResource(R.string.stat_daily_challenge_count), formatNumber(profile.dailyChallengeCount))
+        StatRow(stringResource(R.string.stat_daily_current_streak), formatNumber(social.dailyStreak.currentStreak))
+        StatRow(stringResource(R.string.stat_daily_best_streak), formatNumber(social.dailyStreak.bestStreak))
+        StatRow(stringResource(R.string.stat_best_duel_streak), formatNumber(social.duelRecord.bestWinStreak))
+        StatRow(stringResource(R.string.stat_leaderboard_entries), formatNumber(social.leaderboards.size))
+        StatRow(stringResource(R.string.stat_collapse_ratio), formatPercent(profile.collapseLowRatio))
+        StatRow(stringResource(R.string.stat_average_win_energy), formatDecimal(profile.averageWinEnergy))
+        StatRow(stringResource(R.string.stat_chain_merges), formatNumber(profile.totalChainMergeCount))
         OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }
     }
 }
@@ -655,9 +657,9 @@ private fun SocialRetentionSection(socialRepository: SocialRepository) {
     Card(colors = CardDefaults.cardColors(containerColor = PanelRaised), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.social_retention), fontWeight = FontWeight.Black)
-            StatRow(stringResource(R.string.stat_best_duel_streak), social.duelRecord.bestWinStreak.toString())
-            StatRow(stringResource(R.string.stat_daily_current_streak), social.dailyStreak.currentStreak.toString())
-            StatRow(stringResource(R.string.stat_leaderboard_entries), social.leaderboards.size.toString())
+            StatRow(stringResource(R.string.stat_best_duel_streak), formatNumber(social.duelRecord.bestWinStreak))
+            StatRow(stringResource(R.string.stat_daily_current_streak), formatNumber(social.dailyStreak.currentStreak))
+            StatRow(stringResource(R.string.stat_leaderboard_entries), formatNumber(social.leaderboards.size))
             Text(stringResource(R.string.play_games_offline_note), color = TextMuted, fontSize = 11.sp)
             TextButton(onClick = { scope.launch { socialRepository.clear() } }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.reset_social_progress))
@@ -684,9 +686,9 @@ private fun MonetizationSection(
                 color = if (entitlements.removeAds) Cyan else TextSecondary,
                 fontSize = 12.sp,
             )
-            StatRow(stringResource(R.string.reward_extra_undo), entitlements.rewardedExtraUndoCredits.toString())
-            StatRow(stringResource(R.string.reward_revive), entitlements.rewardedReviveCredits.toString())
-            StatRow(stringResource(R.string.reward_daily_attempt), entitlements.rewardedDailyAttemptCredits.toString())
+            StatRow(stringResource(R.string.reward_extra_undo), formatNumber(entitlements.rewardedExtraUndoCredits))
+            StatRow(stringResource(R.string.reward_revive), formatNumber(entitlements.rewardedReviveCredits))
+            StatRow(stringResource(R.string.reward_daily_attempt), formatNumber(entitlements.rewardedDailyAttemptCredits))
             Button(onClick = onRemoveAds, enabled = !entitlements.removeAds, modifier = Modifier.fillMaxWidth().testTag("grant_remove_ads")) {
                 Text(stringResource(R.string.test_grant_remove_ads))
             }

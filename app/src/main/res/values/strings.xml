@@ -50,7 +50,7 @@
     <string name="player_wins">%1$s wins</string>
     <string name="duel_vs_bot">Duel vs bot</string>
     <string name="pass_and_play">Pass &amp; Play</string>
-    <string name="score_moves">Score %1$s / Moves %2$d</string>
+    <string name="score_moves">Score %1$s / Moves %2$s</string>
     <string name="empty_count">Empty %1$d</string>
     <string name="opponent_board">%1$s board</string>
     <string name="player_one">Player 1</string>
@@ -61,7 +61,7 @@
     <string name="lose_body">No more moves are available.</string>
     <string name="difficulty_line">Difficulty: %1$s</string>
     <string name="score_line">Score: %1$s</string>
-    <string name="moves_line">Moves: %1$d</string>
+    <string name="moves_line">Moves: %1$s</string>
     <string name="best_element_line">Best element: %1$s</string>
     <string name="none">none</string>
     <string name="sound">Sound</string>
@@ -84,9 +84,9 @@
     <string name="cancel_tunnel">Cancel tunnel</string>
     <string name="superposition_title">Collapse superposition</string>
     <string name="superposition_body">Choose one stable value for this tile.</string>
-    <string name="superposition_choice">%1$d for %2$d energy</string>
-    <string name="energy_line">Energy %1$d</string>
-    <string name="daily_best_line">Daily best %1$d</string>
+    <string name="superposition_choice">%1$s for %2$s energy</string>
+    <string name="energy_line">Energy %1$s</string>
+    <string name="daily_best_line">Daily best %1$s</string>
     <string name="achievements">Achievements</string>
     <string name="achievement_collapse_century">Collapse Century: 100 successful collapses without losing</string>
     <string name="achievement_resolved_2048">Resolved 2048: reach 2048 with no unresolved tiles</string>
@@ -96,6 +96,7 @@
     <string name="stat_average_win_energy">Average win energy</string>
     <string name="stat_chain_merges">Chain merges</string>
     <string name="stat_daily_best_today">Daily best today</string>
+    <string name="stat_today_date">Today</string>
     <string name="stat_best_daily_score">Best daily score</string>
     <string name="stat_daily_challenge_count">Daily challenges scored</string>
     <string name="stat_daily_current_streak">Current daily streak</string>

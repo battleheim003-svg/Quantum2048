@@ -289,7 +289,7 @@ private fun OpponentBoardSummary(board: GameState, current: DuelPlayer) {
         Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
                 Text(stringResource(R.string.opponent_board, current.opponent().label()), fontWeight = FontWeight.Bold)
-                Text(stringResource(R.string.score_moves, board.score.toString(), board.moveCount), color = TextSecondary, fontSize = 12.sp)
+                Text(stringResource(R.string.score_moves, formatNumber(board.score), formatNumber(board.moveCount)), color = TextSecondary, fontSize = 12.sp)
             }
             Text(stringResource(R.string.empty_count, board.cells.count { it == null }), color = Cyan, fontWeight = FontWeight.Bold)
         }
@@ -307,10 +307,10 @@ private fun Header(game: GameState, onPause: () -> Unit) {
             OutlinedButton(onClick = onPause) { Text(stringResource(R.string.pause)) }
             Surface(shape = RoundedCornerShape(12.dp), color = difficultySurface(game.difficulty)) {
                 Column(Modifier.padding(horizontal = 14.dp, vertical = 9.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(game.score.toString(), fontWeight = FontWeight.Black)
-                    Text(stringResource(R.string.best_score, game.bestScore.toString()), color = TextSecondary, fontSize = 11.sp)
-                    if (game.mode == GameMode.QUANTUM) Text(stringResource(R.string.energy_line, game.energy), color = Cyan, fontSize = 11.sp)
-                    if (game.difficulty == Difficulty.DAILY) Text(stringResource(R.string.daily_best_line, game.dailyBestScore), color = TextSecondary, fontSize = 11.sp)
+                    Text(formatNumber(game.score), fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.best_score, formatNumber(game.bestScore)), color = TextSecondary, fontSize = 11.sp)
+                    if (game.mode == GameMode.QUANTUM) Text(stringResource(R.string.energy_line, formatNumber(game.energy)), color = Cyan, fontSize = 11.sp)
+                    if (game.difficulty == Difficulty.DAILY) Text(stringResource(R.string.daily_best_line, formatNumber(game.dailyBestScore)), color = TextSecondary, fontSize = 11.sp)
                 }
             }
         }
@@ -638,7 +638,7 @@ private fun TileCell(
         when {
             tile == null -> Unit
             mode == GameMode.QUANTUM -> QuantumTileLabel(tile, boardSize, observerValue)
-            else -> Text(tile.value.toString(), fontSize = if (tile.value < 1000) 26.sp else 20.sp, fontWeight = FontWeight.Black, color = Color.White)
+            else -> Text(formatNumber(tile.value), fontSize = if (tile.value < 1000) 26.sp else 20.sp, fontWeight = FontWeight.Black, color = Color.White)
         }
     }
 }
@@ -654,9 +654,9 @@ private fun QuantumTileLabel(tile: Tile, boardSize: Int, observerValue: Int?) {
     val rankSize = if (boardSize >= 8) 7.sp else 9.sp
     val familySize = if (boardSize >= 8) 0.sp else 7.sp
     Column(Modifier.fillMaxWidth().padding(if (boardSize >= 8) 2.dp else 5.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Text(FusionRules.rankOf(tile).toString(), modifier = Modifier.align(Alignment.Start), color = TextSecondary, fontSize = rankSize, fontWeight = FontWeight.Bold)
-        Text(observerValue?.toString() ?: FusionRules.displaySymbol(tile), fontSize = symbolSize, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center)
-        Text(FusionRules.gameValueOf(tile).toString(), color = Cyan, fontSize = valueSize, fontWeight = FontWeight.Black)
+        Text(formatNumber(FusionRules.rankOf(tile)), modifier = Modifier.align(Alignment.Start), color = TextSecondary, fontSize = rankSize, fontWeight = FontWeight.Bold)
+        Text(observerValue?.let { formatNumber(it) } ?: FusionRules.displaySymbol(tile), fontSize = symbolSize, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center)
+        Text(formatNumber(FusionRules.gameValueOf(tile)), color = Cyan, fontSize = valueSize, fontWeight = FontWeight.Black)
         if (boardSize < 8) tile.element?.let { Text(elementFamily(it), color = TextSecondary, fontSize = familySize, textAlign = TextAlign.Center) }
     }
 }
@@ -671,7 +671,7 @@ private fun SuperpositionDialog(tile: Tile, onDismiss: () -> Unit, onCollapse: (
                 Text(stringResource(R.string.superposition_body), color = TextSecondary)
                 tile.superpositionValues.forEachIndexed { index, value ->
                     OutlinedButton(onClick = { onCollapse(index) }, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.superposition_choice, value, FusionRules.superpositionCollapseEnergyCosts[index]))
+                        Text(stringResource(R.string.superposition_choice, formatNumber(value), formatNumber(FusionRules.superpositionCollapseEnergyCosts[index])))
                     }
                 }
             }
@@ -705,9 +705,9 @@ private fun EndDialog(game: GameState, continueGame: () -> Unit, newGame: () -> 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(if (status == GameStatus.WON) stringResource(R.string.win_body) else stringResource(R.string.lose_body))
                 Text(stringResource(R.string.difficulty_line, game.difficulty.label()), color = TextSecondary)
-                Text(stringResource(R.string.score_line, game.score.toString()), color = TextSecondary)
-                if (game.difficulty == Difficulty.DAILY) Text(stringResource(R.string.daily_best_line, game.dailyBestScore), color = TextSecondary)
-                Text(stringResource(R.string.moves_line, game.moveCount), color = TextSecondary)
+                Text(stringResource(R.string.score_line, formatNumber(game.score)), color = TextSecondary)
+                if (game.difficulty == Difficulty.DAILY) Text(stringResource(R.string.daily_best_line, formatNumber(game.dailyBestScore)), color = TextSecondary)
+                Text(stringResource(R.string.moves_line, formatNumber(game.moveCount)), color = TextSecondary)
                 Text(stringResource(R.string.best_element_line, bestElement?.symbol ?: stringResource(R.string.none)), color = TextSecondary)
             }
         },
