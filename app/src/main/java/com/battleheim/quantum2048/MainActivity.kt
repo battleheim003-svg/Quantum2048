@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
                     collectionRepository = app.collectionRepository,
                     profileRepository = app.profileRepository,
                     settingsRepository = app.settingsRepository,
+                    socialRepository = app.socialRepository,
                     billingRepository = app.billingRepository,
                     adGateway = app.adGateway,
                     analytics = app.analyticsGateway,

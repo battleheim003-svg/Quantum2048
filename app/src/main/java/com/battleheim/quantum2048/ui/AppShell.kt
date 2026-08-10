@@ -76,6 +76,7 @@ import com.battleheim.quantum2048.domain.ProfileRepository
 import com.battleheim.quantum2048.domain.ProductIds
 import com.battleheim.quantum2048.domain.RewardEntitlement
 import com.battleheim.quantum2048.domain.SettingsRepository
+import com.battleheim.quantum2048.domain.SocialRepository
 import com.battleheim.quantum2048.engine.Difficulty
 import com.battleheim.quantum2048.engine.FusionRules
 import com.battleheim.quantum2048.engine.GameEngine
@@ -106,13 +107,14 @@ fun QuantumAppShell(
     collectionRepository: CollectionRepository,
     profileRepository: ProfileRepository,
     settingsRepository: SettingsRepository,
+    socialRepository: SocialRepository,
     billingRepository: BillingRepository,
     adGateway: AdGateway = NoOpAdGateway,
     analytics: AnalyticsGateway = NoOpAnalyticsGateway,
     engine: GameEngine,
 ) {
     val nav = rememberNavController()
-    val gameViewModel: GameViewModel = viewModel { GameViewModel(gameRepository, collectionRepository, profileRepository, engine, analytics) }
+    val gameViewModel: GameViewModel = viewModel { GameViewModel(gameRepository, collectionRepository, profileRepository, socialRepository, engine, analytics) }
     val ui by gameViewModel.ui.collectAsState()
     val settings by settingsRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.AppSettings())
     val audio = remember { ToneGameAudio() }
@@ -197,7 +199,7 @@ fun QuantumAppShell(
             CollectionScreen(collectionRepository, profileRepository, onBack = { nav.popBackStack() })
         }
         composable(Routes.Statistics) {
-            StatisticsScreen(profileRepository, onBack = { nav.popBackStack() })
+            StatisticsScreen(profileRepository, socialRepository, onBack = { nav.popBackStack() })
         }
         composable(Routes.Tutorial) {
             TutorialScreen(
@@ -213,6 +215,7 @@ fun QuantumAppShell(
                 settingsRepository = settingsRepository,
                 collectionRepository = collectionRepository,
                 profileRepository = profileRepository,
+                socialRepository = socialRepository,
                 billingRepository = billingRepository,
                 settings = settings,
                 entitlements = billingRepository.observe().collectAsState(initial = EntitlementState()).value,
@@ -364,13 +367,18 @@ private fun TutorialBoard(cells: List<String>) {
 }
 
 @Composable
-private fun StatisticsScreen(profileRepository: ProfileRepository, onBack: () -> Unit) {
+private fun StatisticsScreen(profileRepository: ProfileRepository, socialRepository: SocialRepository, onBack: () -> Unit) {
     val profile by profileRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.ProfileState())
+    val social by socialRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.SocialState())
     MenuScaffold {
         SectionTitle(stringResource(R.string.statistics), stringResource(R.string.profile))
         StatRow(stringResource(R.string.stat_daily_best_today), profile.dailyBestScore(LocalDate.now().toString()).toString())
         StatRow(stringResource(R.string.stat_best_daily_score), profile.bestDailyScore.toString())
         StatRow(stringResource(R.string.stat_daily_challenge_count), profile.dailyChallengeCount.toString())
+        StatRow(stringResource(R.string.stat_daily_current_streak), social.dailyStreak.currentStreak.toString())
+        StatRow(stringResource(R.string.stat_daily_best_streak), social.dailyStreak.bestStreak.toString())
+        StatRow(stringResource(R.string.stat_best_duel_streak), social.duelRecord.bestWinStreak.toString())
+        StatRow(stringResource(R.string.stat_leaderboard_entries), social.leaderboards.size.toString())
         StatRow(stringResource(R.string.stat_collapse_ratio), "${(profile.collapseLowRatio * 100).toInt()}%")
         StatRow(stringResource(R.string.stat_average_win_energy), "%.1f".format(profile.averageWinEnergy))
         StatRow(stringResource(R.string.stat_chain_merges), profile.totalChainMergeCount.toString())
@@ -539,6 +547,7 @@ private fun SettingsScreen(
     settingsRepository: SettingsRepository,
     collectionRepository: CollectionRepository,
     profileRepository: ProfileRepository,
+    socialRepository: SocialRepository,
     billingRepository: BillingRepository,
     settings: AppSettings,
     entitlements: EntitlementState,
@@ -595,6 +604,7 @@ private fun SettingsScreen(
             },
             onReset = { scope.launch { billingRepository.clear() } },
         )
+        SocialRetentionSection(socialRepository)
         OutlinedButton(onClick = { playMenu(audio, settings); confirmResetCollection = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.reset_collection)) }
         OutlinedButton(onClick = { playMenu(audio, settings); confirmResetProfile = true }, modifier = Modifier.fillMaxWidth().testTag("reset_profile")) { Text(stringResource(R.string.reset_profile)) }
         Difficulty.entries.forEach { difficulty ->
@@ -635,6 +645,24 @@ private fun SettingsScreen(
                 confirmResetDifficulty = null
             },
         )
+    }
+}
+
+@Composable
+private fun SocialRetentionSection(socialRepository: SocialRepository) {
+    val social by socialRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.SocialState())
+    val scope = rememberCoroutineScope()
+    Card(colors = CardDefaults.cardColors(containerColor = PanelRaised), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.social_retention), fontWeight = FontWeight.Black)
+            StatRow(stringResource(R.string.stat_best_duel_streak), social.duelRecord.bestWinStreak.toString())
+            StatRow(stringResource(R.string.stat_daily_current_streak), social.dailyStreak.currentStreak.toString())
+            StatRow(stringResource(R.string.stat_leaderboard_entries), social.leaderboards.size.toString())
+            Text(stringResource(R.string.play_games_offline_note), color = TextMuted, fontSize = 11.sp)
+            TextButton(onClick = { scope.launch { socialRepository.clear() } }, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.reset_social_progress))
+            }
+        }
     }
 }
 

@@ -7,6 +7,7 @@ import com.battleheim.quantum2048.analytics.NoOpAnalyticsGateway
 import com.battleheim.quantum2048.domain.CollectionRepository
 import com.battleheim.quantum2048.domain.GameRepository
 import com.battleheim.quantum2048.domain.ProfileRepository
+import com.battleheim.quantum2048.domain.SocialRepository
 import com.battleheim.quantum2048.domain.UndoBuffer
 import com.battleheim.quantum2048.engine.CompoundFailure
 import com.battleheim.quantum2048.engine.CompoundResult
@@ -63,6 +64,7 @@ class GameViewModel(
     private val repository: GameRepository,
     private val collectionRepository: CollectionRepository,
     private val profileRepository: ProfileRepository,
+    private val socialRepository: SocialRepository? = null,
     private val engine: GameEngine,
     private val analytics: AnalyticsGateway = NoOpAnalyticsGateway,
 ) : ViewModel() {
@@ -130,6 +132,7 @@ class GameViewModel(
         val (nextDuel, result) = duelEngine.botMoveIfNeeded(duel)
         if (duel.winner == null && nextDuel.winner != null) {
             analytics.logDuelResult(nextDuel.config.difficulty, nextDuel.config.botDifficulty, nextDuel.winner)
+            recordDuel(nextDuel)
         }
         _ui.value = _ui.value.copy(
             duel = nextDuel,
@@ -406,6 +409,7 @@ class GameViewModel(
         val next = duelEngine.passTimedOutTurn(duel)
         if (duel.winner == null && next.winner != null) {
             analytics.logDuelResult(next.config.difficulty, next.config.botDifficulty, next.winner)
+            recordDuel(next)
         }
         _ui.value = _ui.value.copy(
             duel = next,
@@ -506,6 +510,18 @@ class GameViewModel(
     private fun persist() = viewModelScope.launch {
         repository.save(_ui.value.game)
         profileRepository.record(_ui.value.game)
+        socialRepository?.recordGame(_ui.value.game)
+    }
+
+    private fun recordDuel(duel: DuelState) {
+        viewModelScope.launch {
+            socialRepository?.recordDuelResult(
+                difficulty = duel.config.difficulty,
+                opponent = duel.config.opponent,
+                botDifficulty = duel.config.botDifficulty,
+                winner = duel.winner,
+            )
+        }
     }
 
     private fun rememberUndoIfAllowed(state: GameState) {

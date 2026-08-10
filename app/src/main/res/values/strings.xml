@@ -98,6 +98,10 @@
     <string name="stat_daily_best_today">Daily best today</string>
     <string name="stat_best_daily_score">Best daily score</string>
     <string name="stat_daily_challenge_count">Daily challenges scored</string>
+    <string name="stat_daily_current_streak">Current daily streak</string>
+    <string name="stat_daily_best_streak">Best daily streak</string>
+    <string name="stat_best_duel_streak">Best duel win streak</string>
+    <string name="stat_leaderboard_entries">Local leaderboard entries</string>
     <string name="tutorial_step_move">Move and merge</string>
     <string name="tutorial_step_quantum">Particles react</string>
     <string name="tutorial_step_collapse">Collapse choices</string>
@@ -122,4 +126,7 @@
     <string name="watch_for_daily_attempt">Reward: daily attempt</string>
     <string name="monetization_offline_note">Offline-safe build: real AdMob and Play Billing adapters can plug into this contract later.</string>
     <string name="reset_entitlements">Reset entitlements</string>
+    <string name="social_retention">Social &amp; retention</string>
+    <string name="play_games_offline_note">Offline-safe build: local leaderboards, achievements, daily streaks, and cloud-save metadata are ready for a future Play Games adapter.</string>
+    <string name="reset_social_progress">Reset social progress</string>
 </resources>

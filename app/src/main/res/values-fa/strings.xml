@@ -97,6 +97,10 @@
     <string name="stat_daily_best_today">بهترین روزانه امروز</string>
     <string name="stat_best_daily_score">بهترین امتیاز روزانه</string>
     <string name="stat_daily_challenge_count">روزهای روزانه ثبت‌شده</string>
+    <string name="stat_daily_current_streak">استریک فعلی روزانه</string>
+    <string name="stat_daily_best_streak">بهترین استریک روزانه</string>
+    <string name="stat_best_duel_streak">بهترین برد پیاپی دوئل</string>
+    <string name="stat_leaderboard_entries">رکوردهای لیدربورد محلی</string>
     <string name="tutorial">Tutorial</string>
     <string name="tutorial_step_move">Move and merge</string>
     <string name="tutorial_step_quantum">Particles react</string>
@@ -122,4 +126,7 @@
     <string name="watch_for_daily_attempt">پاداش: تلاش روزانه</string>
     <string name="monetization_offline_note">نسخه تحریم‌پسند: آداپتر واقعی AdMob و Google Play Billing بعداً به همین قرارداد وصل می‌شود.</string>
     <string name="reset_entitlements">ریست دسترسی‌های خرید</string>
+    <string name="social_retention">اجتماعی و بازگشت کاربر</string>
+    <string name="play_games_offline_note">نسخه تحریم‌پسند: لیدربورد محلی، اچیومنت‌ها، استریک روزانه و متادیتای cloud-save برای اتصال بعدی Play Games آماده‌اند.</string>
+    <string name="reset_social_progress">ریست پیشرفت اجتماعی</string>
 </resources>
