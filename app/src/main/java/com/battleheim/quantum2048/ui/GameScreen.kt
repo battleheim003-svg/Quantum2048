@@ -2,7 +2,6 @@ package com.battleheim.quantum2048.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -74,6 +73,8 @@ import com.battleheim.quantum2048.designsystem.TextMuted
 import com.battleheim.quantum2048.designsystem.TextSecondary
 import com.battleheim.quantum2048.designsystem.Void
 import com.battleheim.quantum2048.designsystem.RadiantGold
+import com.battleheim.quantum2048.designsystem.classicTileColor
+import com.battleheim.quantum2048.designsystem.classicTileTextColor
 import com.battleheim.quantum2048.designsystem.difficultyAccent
 import com.battleheim.quantum2048.designsystem.difficultySurface
 import com.battleheim.quantum2048.designsystem.elementColor
@@ -664,10 +665,16 @@ private fun TileCell(
             val toCol = to % boardSize
             translationX.snapTo((fromCol - toCol) * stepPx)
             translationY.snapTo((fromRow - toRow) * stepPx)
-            val x = launch { translationX.animateTo(0f, tween(MOVE_ANIMATION_MS, easing = LinearOutSlowInEasing)) }
-            val y = launch { translationY.animateTo(0f, tween(MOVE_ANIMATION_MS, easing = LinearOutSlowInEasing)) }
+            scale.snapTo(0.985f)
+            val x = launch { translationX.animateTo(0f, tween(MOVE_ANIMATION_MS, easing = FastOutSlowInEasing)) }
+            val y = launch { translationY.animateTo(0f, tween(MOVE_ANIMATION_MS, easing = FastOutSlowInEasing)) }
+            val s = launch {
+                scale.animateTo(1.025f, tween(MOVE_ANIMATION_MS / 2, easing = FastOutSlowInEasing))
+                scale.animateTo(1f, tween(MOVE_ANIMATION_MS / 2, easing = FastOutSlowInEasing))
+            }
             x.join()
             y.join()
+            s.join()
         }
         when (animation?.kind) {
             MoveAnimationKind.MERGE -> {
@@ -739,10 +746,7 @@ private fun TileCell(
         tile == null -> Color(0xFF171D38)
         mode == GameMode.QUANTUM && tile.kind == TileKind.ELEMENT -> elementColor(tile.element)
         mode == GameMode.QUANTUM -> tileKindColor(tile.kind)
-        tile.value < 16 -> Color(0xFF193A55)
-        tile.value < 128 -> Color(0xFF214C75)
-        tile.value < 1024 -> Color(0xFF4F5178)
-        else -> Color(0xFF71643F)
+        else -> classicTileColor(tile.value)
     }
 
     Box(
@@ -839,7 +843,7 @@ private fun TileCell(
         when {
             tile == null -> Unit
             mode == GameMode.QUANTUM -> QuantumTileLabel(tile, boardSize, observerValue)
-            else -> Text(formatNumber(tile.value), fontSize = if (tile.value < 1000) 26.sp else 20.sp, fontWeight = FontWeight.Black, color = Color.White)
+            else -> Text(formatNumber(tile.value), fontSize = if (tile.value < 1000) 26.sp else 20.sp, fontWeight = FontWeight.Black, color = classicTileTextColor(tile.value))
         }
     }
 }
@@ -885,7 +889,7 @@ private fun ParticleBurst(progress: Float, color: Color, intense: Boolean) {
     }
 }
 
-private const val MOVE_ANIMATION_MS = 165
+private const val MOVE_ANIMATION_MS = 270
 
 @Composable
 private fun QuantumTileLabel(tile: Tile, boardSize: Int, observerValue: Int?) {

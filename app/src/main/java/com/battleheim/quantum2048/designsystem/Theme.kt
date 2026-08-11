@@ -90,21 +90,21 @@ val DarkQuantumPalette = QuantumPalette(
 )
 
 val LightQuantumPalette = QuantumPalette(
-    void = Color(0xFFF3F8FF),
-    panel = Color(0xFFEAF2FF),
-    panelRaised = Color(0xFFFFFFFF),
-    panelSoft = Color(0xFFDCE9FF),
-    glassPanel = Color(0xCCFFFFFF),
-    boardGlass = Color(0xDDE8F1FF),
-    textPrimary = Color(0xFF06172A),
-    textSecondary = Color(0xFF314968),
-    textMuted = Color(0xFF6E7F95),
-    cyan = Color(0xFF007D8B),
-    violet = Color(0xFF714DE8),
-    electric = Color(0xFF006DCC),
-    neonPink = Color(0xFFC11690),
-    radiantGold = Color(0xFF9B6B00),
-    danger = Color(0xFFC93046),
+    void = Color(0xFFEAF4FF),
+    panel = Color(0xFFDCEBFF),
+    panelRaised = Color(0xFFF8FCFF),
+    panelSoft = Color(0xFFC9DBF4),
+    glassPanel = Color(0xDDF8FCFF),
+    boardGlass = Color(0xE6D8E8FF),
+    textPrimary = Color(0xFF071A30),
+    textSecondary = Color(0xFF25425F),
+    textMuted = Color(0xFF627891),
+    cyan = Color(0xFF007C89),
+    violet = Color(0xFF6541D8),
+    electric = Color(0xFF005EB8),
+    neonPink = Color(0xFFB80083),
+    radiantGold = Color(0xFF8B5D00),
+    danger = Color(0xFFC2293F),
 )
 
 val LocalQuantumPalette = compositionLocalOf { DarkQuantumPalette }
@@ -142,10 +142,31 @@ fun difficultyAccent(difficulty: Difficulty): Color = when (difficulty) {
 }
 
 fun difficultySurface(difficulty: Difficulty): Color = when (difficulty) {
-    Difficulty.EASY -> Color(0xFF152238)
+    Difficulty.EASY -> Color(0xFF102D3C)
     Difficulty.MEDIUM -> Color(0xFF123026)
     Difficulty.HARD -> Color(0xFF332716)
     Difficulty.QUANTUM, Difficulty.ZEN, Difficulty.HARDCORE, Difficulty.PUZZLE, Difficulty.DAILY -> Color(0xFF241B3D)
+}
+
+fun classicTileColor(value: Int): Color = when {
+    value <= 2 -> Color(0xFF0E7490)
+    value <= 4 -> Color(0xFF1D4ED8)
+    value <= 8 -> Color(0xFF6D28D9)
+    value <= 16 -> Color(0xFFBE185D)
+    value <= 32 -> Color(0xFFDC2626)
+    value <= 64 -> Color(0xFFEA580C)
+    value <= 128 -> Color(0xFFD97706)
+    value <= 256 -> Color(0xFF65A30D)
+    value <= 512 -> Color(0xFF059669)
+    value <= 1024 -> Color(0xFF0891B2)
+    value <= 2048 -> Color(0xFFA16207)
+    else -> Color(0xFF7C3AED)
+}
+
+fun classicTileTextColor(value: Int): Color = when {
+    value <= 4 -> Color(0xFFF7FDFF)
+    value <= 1024 -> Color.White
+    else -> Color(0xFFFFF7D6)
 }
 
 fun tileKindColor(kind: TileKind): Color = when (kind) {

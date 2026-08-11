@@ -320,11 +320,8 @@ private fun MainMenuScreen(
         )
         MainMenuHero()
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            QuantumChipButton(
-                text = stringResource(R.string.refresh_saves),
-                selected = false,
+            RefreshSavesButton(
                 onClick = { playMenu(audio, settings); scope.launch { saves = vm.savedGames() } },
-                accent = Electric,
             )
         }
         NeonMenuButton(
@@ -356,29 +353,102 @@ private fun MainMenuScreen(
 
 @Composable
 private fun MainMenuHero() {
-    val titleColor = MaterialTheme.colorScheme.onBackground
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            stringResource(R.string.app_title).uppercase(),
-            color = titleColor,
-            fontSize = 36.sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = 1.2.sp,
-            lineHeight = 38.sp,
-        )
-        Text(
-            stringResource(R.string.fusion_lab).uppercase(),
-            color = Cyan,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = 2.sp,
-        )
-        Box(
-            Modifier
-                .fillMaxWidth(0.72f)
-                .height(2.dp)
-                .background(Brush.horizontalGradient(listOf(Cyan, Electric, Color.Transparent)), RoundedCornerShape(2.dp)),
-        )
+    val shape = RoundedCornerShape(24.dp)
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.62f),
+                    ),
+                ),
+                shape,
+            )
+            .border(1.25.dp, Cyan.copy(alpha = 0.58f), shape)
+            .padding(18.dp),
+    ) {
+        Canvas(Modifier.fillMaxSize()) {
+            val center = androidx.compose.ui.geometry.Offset(size.width * 0.78f, size.height * 0.36f)
+            repeat(3) { index ->
+                rotate(-28f + index * 34f, pivot = center) {
+                    drawOval(
+                        color = Cyan.copy(alpha = 0.10f - index * 0.018f),
+                        topLeft = androidx.compose.ui.geometry.Offset(center.x - size.width * 0.24f, center.y - size.height * (0.09f + index * 0.02f)),
+                        size = androidx.compose.ui.geometry.Size(size.width * 0.48f, size.height * (0.18f + index * 0.04f)),
+                        style = Stroke(width = 1.2f),
+                    )
+                }
+            }
+            drawCircle(RadiantGold.copy(alpha = 0.18f), radius = size.minDimension * 0.08f, center = center)
+            drawCircle(Cyan.copy(alpha = 0.22f), radius = 2.2f, center = androidx.compose.ui.geometry.Offset(size.width * 0.18f, size.height * 0.26f))
+            drawCircle(NeonPink.copy(alpha = 0.20f), radius = 1.8f, center = androidx.compose.ui.geometry.Offset(size.width * 0.92f, size.height * 0.72f))
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            Text(
+                "QUANTUM 2048",
+                color = Cyan,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 2.4.sp,
+            )
+            Text(
+                stringResource(R.string.app_title),
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 35.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.2.sp,
+                lineHeight = 38.sp,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                Box(
+                    Modifier
+                        .size(8.dp)
+                        .background(RadiantGold, RoundedCornerShape(8.dp))
+                        .border(1.dp, Color.White.copy(alpha = 0.32f), RoundedCornerShape(8.dp)),
+                )
+                Text(
+                    stringResource(R.string.fusion_lab),
+                    color = RadiantGold,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.4.sp,
+                )
+            }
+            Box(
+                Modifier
+                    .fillMaxWidth(0.70f)
+                    .height(2.dp)
+                    .background(Brush.horizontalGradient(listOf(Cyan, Electric, NeonPink.copy(alpha = 0.65f), Color.Transparent)), RoundedCornerShape(2.dp)),
+            )
+        }
+    }
+}
+
+@Composable
+private fun RefreshSavesButton(onClick: () -> Unit) {
+    val shape = RoundedCornerShape(18.dp)
+    Button(
+        onClick = onClick,
+        shape = shape,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+            contentColor = Electric,
+        ),
+        modifier = Modifier
+            .size(48.dp)
+            .background(
+                Brush.radialGradient(
+                    listOf(Electric.copy(alpha = 0.22f), Color.Transparent),
+                ),
+                shape,
+            )
+            .border(1.15.dp, Electric.copy(alpha = 0.70f), shape),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+    ) {
+        Text("↻", fontSize = 22.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
     }
 }
 
@@ -1032,16 +1102,17 @@ private fun PauseScreen(vm: GameViewModel, onResume: () -> Unit, onMainMenu: () 
 
 @Composable
 private fun SettingsToggle(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    val shape = RoundedCornerShape(12.dp)
     Row(
         Modifier
             .fillMaxWidth()
-            .background(Color.White.copy(alpha = 0.045f), RoundedCornerShape(12.dp))
-            .border(1.dp, if (checked) Cyan.copy(alpha = 0.45f) else TextMuted.copy(alpha = 0.22f), RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.72f), shape)
+            .border(1.dp, if (checked) Cyan.copy(alpha = 0.58f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f), shape)
             .padding(horizontal = 14.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = if (checked) Color.White else TextSecondary, fontWeight = FontWeight.Black, fontSize = 14.sp, letterSpacing = 0.3.sp)
+        Text(label, color = if (checked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Black, fontSize = 14.sp, letterSpacing = 0.3.sp)
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -1050,8 +1121,8 @@ private fun SettingsToggle(label: String, checked: Boolean, onCheckedChange: (Bo
                 checkedTrackColor = Cyan.copy(alpha = 0.74f),
                 checkedBorderColor = Cyan,
                 uncheckedThumbColor = TextMuted,
-                uncheckedTrackColor = BoardGlass,
-                uncheckedBorderColor = TextMuted.copy(alpha = 0.45f),
+                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f),
+                uncheckedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
             ),
         )
     }
@@ -1150,6 +1221,8 @@ private fun SectionTitle(title: String, subtitle: String) {
 @Composable
 private fun NeonPanel(title: String, accent: Color = Cyan, content: @Composable ColumnScope.() -> Unit) {
     val shape = RoundedCornerShape(18.dp)
+    val surface = MaterialTheme.colorScheme.surface
+    val raised = MaterialTheme.colorScheme.surfaceVariant
     Column(
         Modifier
             .fillMaxWidth()
@@ -1157,8 +1230,8 @@ private fun NeonPanel(title: String, accent: Color = Cyan, content: @Composable 
                 Brush.linearGradient(
                     listOf(
                         Color.White.copy(alpha = 0.085f),
-                        GlassPanel,
-                        BoardGlass.copy(alpha = 0.72f),
+                        surface.copy(alpha = 0.88f),
+                        raised.copy(alpha = 0.72f),
                     ),
                 ),
                 shape,
@@ -1170,7 +1243,7 @@ private fun NeonPanel(title: String, accent: Color = Cyan, content: @Composable 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(
                 title.uppercase(),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 1.sp,
@@ -1244,9 +1317,9 @@ private fun NeonMenuButton(
         enabled = enabled,
         shape = shape,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (filled) accent else GlassPanel,
+            containerColor = if (filled) accent else MaterialTheme.colorScheme.surface.copy(alpha = 0.76f),
             contentColor = if (filled) Color(0xFF061016) else accent,
-            disabledContainerColor = BoardGlass.copy(alpha = 0.5f),
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.50f),
             disabledContentColor = TextMuted,
         ),
         modifier = modifier

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -74,9 +75,9 @@ fun QuantumActionButton(
         interactionSource = interaction,
         shape = shape,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (filled) accent else GlassPanel,
+            containerColor = if (filled) accent else MaterialTheme.colorScheme.surface.copy(alpha = 0.76f),
             contentColor = if (filled) Color(0xFF061016) else accent,
-            disabledContainerColor = Color.Black.copy(alpha = 0.18f),
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.46f),
             disabledContentColor = TextMuted,
         ),
         modifier = modifier
@@ -145,8 +146,8 @@ fun QuantumDialog(
                     Brush.linearGradient(
                         listOf(
                             Color.White.copy(alpha = 0.10f),
-                            GlassPanel,
-                            Color.Black.copy(alpha = 0.68f),
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f),
                         ),
                     ),
                     RoundedCornerShape(22.dp),
@@ -155,7 +156,7 @@ fun QuantumDialog(
                 .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(title.uppercase(), color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+            Text(title.uppercase(), color = MaterialTheme.colorScheme.onSurface, fontSize = 17.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
             Box(
                 Modifier
                     .fillMaxWidth(0.56f)
