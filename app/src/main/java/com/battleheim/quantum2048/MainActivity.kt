@@ -36,6 +36,8 @@ class MainActivity : ComponentActivity() {
                     settingsRepository = app.settingsRepository,
                     socialRepository = app.socialRepository,
                     billingRepository = app.billingRepository,
+                    levelCatalogRepository = app.levelCatalogRepository,
+                    levelProgressRepository = app.levelProgressRepository,
                     adGateway = app.adGateway,
                     analytics = app.analyticsGateway,
                     engine = GameEngine(KotlinRandomProvider()),

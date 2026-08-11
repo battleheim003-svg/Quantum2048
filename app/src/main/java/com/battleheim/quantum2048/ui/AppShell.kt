@@ -86,6 +86,11 @@ import com.battleheim.quantum2048.domain.GameRepository
 import com.battleheim.quantum2048.domain.AppLanguage
 import com.battleheim.quantum2048.domain.AppSettings
 import com.battleheim.quantum2048.domain.AppThemeMode
+import com.battleheim.quantum2048.domain.LevelCatalog
+import com.battleheim.quantum2048.domain.LevelCatalogRepository
+import com.battleheim.quantum2048.domain.LevelDefinition
+import com.battleheim.quantum2048.domain.LevelProgressRepository
+import com.battleheim.quantum2048.domain.PlayerProgress
 import com.battleheim.quantum2048.domain.ProfileRepository
 import com.battleheim.quantum2048.domain.ProductIds
 import com.battleheim.quantum2048.domain.RewardEntitlement
@@ -105,6 +110,8 @@ private object Routes {
     const val LevelSelect = "level_select"
     const val Collection = "collection"
     const val Statistics = "statistics"
+    const val PeriodicPath = "periodic_path"
+    const val PeriodicGame = "periodic_level/{levelId}"
     const val Tutorial = "tutorial"
     const val Settings = "settings"
     const val Game = "game/{difficulty}/{size}"
@@ -113,6 +120,7 @@ private object Routes {
 
     fun game(difficulty: Difficulty, size: Int) = "game/${difficulty.name}/$size"
     fun duel(difficulty: Difficulty) = "duel/${difficulty.name}"
+    fun periodicGame(levelId: String) = "periodic_level/$levelId"
 }
 
 @Composable
@@ -123,12 +131,25 @@ fun QuantumAppShell(
     settingsRepository: SettingsRepository,
     socialRepository: SocialRepository,
     billingRepository: BillingRepository,
+    levelCatalogRepository: LevelCatalogRepository,
+    levelProgressRepository: LevelProgressRepository,
     adGateway: AdGateway = NoOpAdGateway,
     analytics: AnalyticsGateway = NoOpAnalyticsGateway,
     engine: GameEngine,
 ) {
     val nav = rememberNavController()
-    val gameViewModel: GameViewModel = viewModel { GameViewModel(gameRepository, collectionRepository, profileRepository, socialRepository, engine, analytics) }
+    val gameViewModel: GameViewModel = viewModel {
+        GameViewModel(
+            repository = gameRepository,
+            collectionRepository = collectionRepository,
+            profileRepository = profileRepository,
+            socialRepository = socialRepository,
+            levelCatalogRepository = levelCatalogRepository,
+            levelProgressRepository = levelProgressRepository,
+            engine = engine,
+            analytics = analytics,
+        )
+    }
     val ui by gameViewModel.ui.collectAsState()
     val settings by settingsRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.AppSettings())
     val audio = remember { ToneGameAudio() }
@@ -163,9 +184,28 @@ fun QuantumAppShell(
                 onNewGame = { playSelect(audio, settings); nav.navigate(Routes.LevelSelect) },
                 onCollection = { playMenu(audio, settings); nav.navigate(Routes.Collection) },
                 onStatistics = { playMenu(audio, settings); nav.navigate(Routes.Statistics) },
+                onPeriodicPath = { playSelect(audio, settings); nav.navigate(Routes.PeriodicPath) },
                 onTutorial = { playMenu(audio, settings); nav.navigate(Routes.Tutorial) },
                 onSettings = { playMenu(audio, settings); nav.navigate(Routes.Settings) },
             )
+        }
+        composable(Routes.PeriodicPath) {
+            PeriodicPathScreen(
+                catalogRepository = levelCatalogRepository,
+                progressRepository = levelProgressRepository,
+                onBack = { nav.popBackStack() },
+                onPlay = { level ->
+                    playSelect(audio, settings)
+                    gameViewModel.startPeriodicLevel(level.id)
+                    nav.navigate(Routes.periodicGame(level.id))
+                },
+            )
+        }
+        composable(
+            route = Routes.PeriodicGame,
+            arguments = listOf(navArgument("levelId") { type = NavType.StringType }),
+        ) {
+            GameScreen(vm = gameViewModel, settings = settings, audio = audio, onPause = { nav.navigate(Routes.Pause) })
         }
         composable(Routes.LevelSelect) {
             LevelSelectScreen(
@@ -254,6 +294,7 @@ private fun MainMenuScreen(
     onNewGame: () -> Unit,
     onCollection: () -> Unit,
     onStatistics: () -> Unit,
+    onPeriodicPath: () -> Unit,
     onTutorial: () -> Unit,
     onSettings: () -> Unit,
 ) {
@@ -294,6 +335,7 @@ private fun MainMenuScreen(
             accent = RadiantGold,
             filled = true,
         )
+        NeonMenuButton(text = stringResource(R.string.periodic_path), onClick = onPeriodicPath, modifier = Modifier.fillMaxWidth().testTag("periodic_path_button"), accent = Electric, filled = true)
         NeonMenuButton(text = stringResource(R.string.collection), onClick = onCollection, modifier = Modifier.fillMaxWidth(), accent = NeonPink)
         NeonMenuButton(text = stringResource(R.string.statistics), onClick = onStatistics, modifier = Modifier.fillMaxWidth(), accent = Electric)
         NeonMenuButton(text = stringResource(R.string.tutorial), onClick = onTutorial, modifier = Modifier.fillMaxWidth(), accent = Cyan)
@@ -313,6 +355,111 @@ private fun SplashScreen() {
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
         )
+    }
+}
+
+@Composable
+private fun PeriodicPathScreen(
+    catalogRepository: LevelCatalogRepository,
+    progressRepository: LevelProgressRepository,
+    onBack: () -> Unit,
+    onPlay: (LevelDefinition) -> Unit,
+) {
+    var catalog by remember { mutableStateOf<LevelCatalog?>(null) }
+    val progress by progressRepository.observe().collectAsState(initial = PlayerProgress())
+    LaunchedEffect(Unit) { catalog = catalogRepository.catalog() }
+    MenuScaffold {
+        SectionTitle(stringResource(R.string.periodic_path), stringResource(R.string.periodic_path_subtitle))
+        catalog?.let { loaded ->
+            NeonPanel(title = stringResource(R.string.periodic_path_progress), accent = RadiantGold) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DataReadout(
+                        label = stringResource(R.string.periodic_levels_done),
+                        value = "${progress.completedLevelCount}/${loaded.levels.size}",
+                        accent = Cyan,
+                        modifier = Modifier.weight(1f),
+                    )
+                    DataReadout(
+                        label = stringResource(R.string.periodic_total_stars),
+                        value = progress.totalStars.toString(),
+                        accent = RadiantGold,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+            loaded.zones.forEach { zone ->
+                PeriodicZoneCard(zone, progress, onPlay)
+            }
+        } ?: NeonPanel(title = stringResource(R.string.periodic_path), accent = Cyan) {
+            Text(stringResource(R.string.loading), color = TextSecondary, fontSize = 13.sp)
+        }
+        NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+    }
+}
+
+@Composable
+private fun PeriodicZoneCard(zone: com.battleheim.quantum2048.domain.ZoneDefinition, progress: PlayerProgress, onPlay: (LevelDefinition) -> Unit) {
+    val completed = zone.levels.count { progress.completion(it.id) != null }
+    NeonPanel(title = zone.title, accent = if (completed == zone.levels.size) RadiantGold else Electric) {
+        Text(zone.subtitle, color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Text("${completed}/${zone.levels.size} ${stringResource(R.string.periodic_levels_done_short)}", color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Black)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            zone.levels.chunked(3).forEach { rowLevels ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    rowLevels.forEach { level ->
+                        PeriodicLevelChip(
+                            level = level,
+                            progress = progress,
+                            onPlay = onPlay,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    repeat(3 - rowLevels.size) {
+                        Box(Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PeriodicLevelChip(level: LevelDefinition, progress: PlayerProgress, onPlay: (LevelDefinition) -> Unit, modifier: Modifier = Modifier) {
+    val unlocked = progress.isUnlocked(level.id)
+    val completion = progress.completion(level.id)
+    val mercy = progress.mercyFor(level.id)
+    val accent = when {
+        completion?.bestStars == 3 -> RadiantGold
+        completion != null -> Cyan
+        unlocked -> Electric
+        else -> TextMuted
+    }
+    Button(
+        onClick = { onPlay(level) },
+        enabled = unlocked,
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (unlocked) GlassPanel else Color.Black.copy(alpha = 0.18f),
+            contentColor = accent,
+            disabledContainerColor = Color.Black.copy(alpha = 0.14f),
+            disabledContentColor = TextMuted,
+        ),
+        modifier = modifier
+            .height(72.dp)
+            .border(1.dp, accent.copy(alpha = if (unlocked) 0.55f else 0.18f), RoundedCornerShape(14.dp)),
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(level.indexInZone.toString().padStart(2, '0'), fontWeight = FontWeight.Black, fontSize = 16.sp)
+            Text(
+                completion?.let { "★".repeat(it.bestStars) } ?: if (unlocked) stringResource(R.string.periodic_ready) else stringResource(R.string.periodic_locked),
+                fontSize = 10.sp,
+                color = accent,
+                textAlign = TextAlign.Center,
+            )
+            if (mercy.active && completion == null) {
+                Text("+${mercy.assistMoveBonus} ${stringResource(R.string.moves_short)}", color = RadiantGold, fontSize = 9.sp, fontWeight = FontWeight.Black)
+            }
+        }
     }
 }
 

@@ -6,6 +6,14 @@ import com.battleheim.quantum2048.analytics.AnalyticsGateway
 import com.battleheim.quantum2048.analytics.NoOpAnalyticsGateway
 import com.battleheim.quantum2048.domain.CollectionRepository
 import com.battleheim.quantum2048.domain.GameRepository
+import com.battleheim.quantum2048.domain.LevelCatalog
+import com.battleheim.quantum2048.domain.LevelCatalogRepository
+import com.battleheim.quantum2048.domain.LevelDefinition
+import com.battleheim.quantum2048.domain.LevelGoalTracker
+import com.battleheim.quantum2048.domain.LevelProgressRepository
+import com.battleheim.quantum2048.domain.LevelRunStatus
+import com.battleheim.quantum2048.domain.LevelRunUiState
+import com.battleheim.quantum2048.domain.PeriodicPathProgression
 import com.battleheim.quantum2048.domain.ProfileRepository
 import com.battleheim.quantum2048.domain.SocialRepository
 import com.battleheim.quantum2048.domain.UndoBuffer
@@ -53,6 +61,7 @@ data class GameUiState(
     val tunnelingTileId: Long? = null,
     val superpositionTileId: Long? = null,
     val observerPreview: ObserverPreview? = null,
+    val level: LevelRunUiState? = null,
 )
 
 enum class GameFeedback { MOVE, MERGE, REACTION, COMPOUND, TUNNEL, COLLAPSE_LOW, COLLAPSE_HIGH, GAME_OVER }
@@ -65,6 +74,8 @@ class GameViewModel(
     private val collectionRepository: CollectionRepository,
     private val profileRepository: ProfileRepository,
     private val socialRepository: SocialRepository? = null,
+    private val levelCatalogRepository: LevelCatalogRepository? = null,
+    private val levelProgressRepository: LevelProgressRepository? = null,
     private val engine: GameEngine,
     private val analytics: AnalyticsGateway = NoOpAnalyticsGateway,
 ) : ViewModel() {
@@ -75,6 +86,10 @@ class GameViewModel(
     private var inputLocked = false
     private var undoCompoundSymbol: String? = null
     private var requestedSize: Int = 4
+    private var activeLevel: LevelDefinition? = null
+    private var activeCatalog: LevelCatalog? = null
+    private var activeLevelEngine: GameEngine? = null
+    private var activeLevelTerminalRecorded = false
 
     init { load(Difficulty.QUANTUM, requestedSize) }
 
@@ -88,7 +103,7 @@ class GameViewModel(
             _ui.value = _ui.value.copy(duel = nextDuel)
             moveResult
         } else {
-            engine.move(before, direction)
+            currentEngine().move(before, direction)
         }
         if (result.changed) {
             rememberUndoIfAllowed(before)
@@ -98,10 +113,14 @@ class GameViewModel(
                 val beforeBestRank = before.cells.mapNotNull { it?.element }.maxOfOrNull { it.rank } ?: 0
                 if (element.rank > beforeBestRank) analytics.logFusionPerformed(element)
             }
+            val nextGame = _ui.value.duel?.activeBoard ?: result.state
+            val nextLevel = evaluateActiveLevel(nextGame)
             _ui.value = _ui.value.copy(
-                game = _ui.value.duel?.activeBoard ?: result.state,
+                game = nextGame,
                 canUndo = undo.canUndo && FusionRules.isUndoEnabled(before.difficulty),
                 message = when {
+                    nextLevel?.status == LevelRunStatus.COMPLETE -> "Periodic Path cleared: ${nextLevel.stars} stars"
+                    nextLevel?.status == LevelRunStatus.FAILED -> "Attempt failed. Mercy assist may unlock after repeated tries."
                     result.energyOverflowBonus > 0 -> "Energy overflow +${result.energyOverflowBonus}"
                     result.reactionCount > 0 -> "Particle reaction complete"
                     else -> null
@@ -115,6 +134,7 @@ class GameViewModel(
                     else -> GameFeedback.MOVE
                 },
                 animations = result.animations,
+                level = nextLevel ?: _ui.value.level,
             )
             persist()
             viewModelScope.launch {
@@ -208,10 +228,11 @@ class GameViewModel(
             return
         }
         val before = state
-        when (val result = engine.tunnel(before, tunneling, index)) {
+        when (val result = currentEngine().tunnel(before, tunneling, index)) {
             is TunnelResult.Success -> {
                 rememberUndoIfAllowed(before)
                 undoCompoundSymbol = null
+                val nextLevel = evaluateActiveLevel(result.state)
                 _ui.value = _ui.value.copy(
                     game = result.state,
                     canUndo = undo.canUndo,
@@ -219,6 +240,7 @@ class GameViewModel(
                     message = "Tile tunneled",
                     feedback = GameFeedback.TUNNEL,
                     animations = listOf(result.animation),
+                    level = nextLevel ?: _ui.value.level,
                 )
                 persist()
             }
@@ -239,10 +261,11 @@ class GameViewModel(
         if (inputLocked || _ui.value.loading) return
         val tileId = _ui.value.superpositionTileId ?: return
         val before = _ui.value.game
-        when (val result = engine.collapseSuperposition(before, tileId, choiceIndex)) {
+        when (val result = currentEngine().collapseSuperposition(before, tileId, choiceIndex)) {
             is SuperpositionResult.Success -> {
                 rememberUndoIfAllowed(before)
                 undoCompoundSymbol = null
+                val nextLevel = evaluateActiveLevel(result.state)
                 _ui.value = _ui.value.copy(
                     game = result.state,
                     canUndo = undo.canUndo,
@@ -250,6 +273,7 @@ class GameViewModel(
                     message = if (choiceIndex == 0) "Low collapse stabilized" else "High collapse stabilized",
                     feedback = if (choiceIndex == 0) GameFeedback.COLLAPSE_LOW else GameFeedback.COLLAPSE_HIGH,
                     animations = listOf(result.animation),
+                    level = nextLevel ?: _ui.value.level,
                 )
                 persist()
             }
@@ -274,7 +298,7 @@ class GameViewModel(
     fun observeTile(tileId: Long) {
         if (inputLocked || _ui.value.loading || _ui.value.duel != null) return
         val before = _ui.value.game
-        when (val result = engine.observeSuperposition(before, tileId)) {
+        when (val result = currentEngine().observeSuperposition(before, tileId)) {
             is ObserverResult.Success -> {
                 _ui.value = _ui.value.copy(
                     game = result.state,
@@ -306,17 +330,19 @@ class GameViewModel(
         val selected = _ui.value.labTileIds
         if (selected.size < 2) return
         val before = _ui.value.game
-        when (val result = engine.combineCompound(before, selected)) {
+        when (val result = currentEngine().combineCompound(before, selected)) {
             is CompoundResult.Success -> {
                 rememberUndoIfAllowed(before)
                 undoCompoundSymbol = result.recipe.output.symbol
                 result.state.cells.mapNotNull { it?.element }.maxByOrNull { it.rank }?.let(analytics::logFusionPerformed)
+                val nextLevel = evaluateActiveLevel(result.state)
                 _ui.value = _ui.value.copy(
                     game = result.state,
                     canUndo = undo.canUndo,
                     labTileIds = emptyList(),
                     message = "Discovered ${result.recipe.output.symbol}",
                     feedback = GameFeedback.COMPOUND,
+                    level = nextLevel ?: _ui.value.level,
                 )
                 viewModelScope.launch { collectionRepository.record(result.recipe.output, before.difficulty) }
                 persist()
@@ -335,12 +361,14 @@ class GameViewModel(
     fun switchMode(mode: GameMode) {
         if (mode == _ui.value.game.mode || inputLocked) return
         undo.clear()
+        clearActiveLevel()
         load(Difficulty.fromMode(mode), _ui.value.game.size)
     }
 
     fun switchDifficulty(difficulty: Difficulty) {
         if (difficulty == _ui.value.game.difficulty || inputLocked) return
         undo.clear()
+        clearActiveLevel()
         load(difficulty, _ui.value.game.size)
     }
 
@@ -351,11 +379,16 @@ class GameViewModel(
         if (compoundSymbol != null) {
             viewModelScope.launch { collectionRepository.unrecord(compoundSymbol) }
         }
-        _ui.value = _ui.value.copy(game = prior.copy(usedUndo = true), canUndo = false, labTileIds = emptyList(), tunnelingTileId = null, superpositionTileId = null, observerPreview = null, message = "Move undone")
+        val restored = prior.copy(usedUndo = true)
+        _ui.value = _ui.value.copy(game = restored, canUndo = false, labTileIds = emptyList(), tunnelingTileId = null, superpositionTileId = null, observerPreview = null, message = "Move undone", level = evaluateActiveLevel(restored))
         persist()
     }
 
     fun newGame() {
+        activeLevel?.let {
+            startPeriodicLevel(it.id)
+            return
+        }
         undo.clear()
         val previous = _ui.value.game
         val nextGame = engine.newGame(previous.difficulty, previous.size).copy(bestScore = previous.bestScore)
@@ -368,12 +401,14 @@ class GameViewModel(
             superpositionTileId = null,
             observerPreview = null,
             animations = emptyList(),
+            level = null,
         )
         persist()
     }
 
     fun newGame(difficulty: Difficulty, size: Int = requestedSize) {
         undo.clear()
+        clearActiveLevel()
         requestedSize = size
         val nextGame = engine.newGame(difficulty, size)
         analytics.logLevelStart(nextGame)
@@ -386,12 +421,48 @@ class GameViewModel(
             observerPreview = null,
             animations = emptyList(),
             loading = false,
+            level = null,
         )
         persist()
     }
 
+    fun startPeriodicLevel(levelId: String) {
+        val catalogRepository = levelCatalogRepository ?: return
+        undo.clear()
+        inputLocked = true
+        _ui.value = _ui.value.copy(loading = true)
+        viewModelScope.launch {
+            val catalog = catalogRepository.catalog()
+            val level = catalog.findLevel(levelId)
+            if (level == null) {
+                _ui.value = _ui.value.copy(loading = false, message = "Level not found")
+                inputLocked = false
+                return@launch
+            }
+            activeCatalog = catalog
+            activeLevel = level
+            activeLevelTerminalRecorded = false
+            activeLevelEngine = GameEngine(SeededRandomProvider(level.seed ?: stableSeed(level.id)))
+            requestedSize = level.boardSize
+            val progress = levelProgressRepository?.observe()?.first()
+            val mercy = progress?.mercyFor(level.id) ?: com.battleheim.quantum2048.domain.MercyState()
+            val game = currentEngine()
+                .newGame(level.difficulty, level.boardSize)
+                .copy(energy = level.startingEnergy ?: FusionRules.initialEnergyFor(level.difficulty))
+            analytics.logLevelStart(game)
+            _ui.value = GameUiState(
+                game = game,
+                loading = false,
+                duel = null,
+                level = LevelGoalTracker.evaluate(level, game, mercy).copy(zoneTitle = catalog.zoneFor(level.id)?.title ?: level.zoneId),
+            )
+            inputLocked = false
+        }
+    }
+
     fun newDuel(difficulty: Difficulty, opponent: DuelOpponent, botDifficulty: BotDifficulty, turnSeconds: Int = 12) {
         undo.clear()
+        clearActiveLevel()
         val duel = duelEngine.newDuel(
             DuelConfig(
                 difficulty = difficulty,
@@ -454,6 +525,7 @@ class GameViewModel(
                     observerPreview = null,
                     animations = emptyList(),
                     loading = false,
+                    level = null,
                 )
                 persist()
             }
@@ -485,6 +557,7 @@ class GameViewModel(
     private fun load(difficulty: Difficulty, size: Int) {
         inputLocked = true
         requestedSize = size
+        clearActiveLevel()
         _ui.value = _ui.value.copy(loading = true)
         viewModelScope.launch {
             val today = LocalDate.now().toString()
@@ -501,7 +574,7 @@ class GameViewModel(
             } else {
                 game
             }
-            _ui.value = GameUiState(game = loadedGame, loading = false, duel = null)
+            _ui.value = GameUiState(game = loadedGame, loading = false, duel = null, level = null)
             analytics.logLevelStart(loadedGame)
             repository.save(loadedGame)
             inputLocked = false
@@ -509,9 +582,42 @@ class GameViewModel(
     }
 
     private fun persist() = viewModelScope.launch {
-        repository.save(_ui.value.game)
+        if (activeLevel == null) repository.save(_ui.value.game)
         profileRepository.record(_ui.value.game)
         socialRepository?.recordGame(_ui.value.game)
+    }
+
+    private fun evaluateActiveLevel(state: GameState): LevelRunUiState? {
+        val level = activeLevel ?: return null
+        val catalog = activeCatalog
+        val currentUi = _ui.value.level
+        val mercy = currentUi?.mercy ?: com.battleheim.quantum2048.domain.MercyState()
+        val evaluated = LevelGoalTracker
+            .evaluate(level, state, mercy)
+            .copy(zoneTitle = catalog?.zoneFor(level.id)?.title ?: level.zoneId)
+        if (!activeLevelTerminalRecorded && evaluated.status != LevelRunStatus.ACTIVE) {
+            activeLevelTerminalRecorded = true
+            viewModelScope.launch {
+                val repository = levelProgressRepository ?: return@launch
+                val progress = repository.observe().first()
+                val next = when (evaluated.status) {
+                    LevelRunStatus.COMPLETE -> PeriodicPathProgression.recordCompletion(catalog ?: return@launch, progress, level, state)
+                    LevelRunStatus.FAILED -> PeriodicPathProgression.recordFailure(progress, level.id)
+                    LevelRunStatus.ACTIVE -> progress
+                }
+                repository.save(next)
+            }
+        }
+        return evaluated
+    }
+
+    private fun currentEngine(): GameEngine = activeLevelEngine ?: engine
+
+    private fun clearActiveLevel() {
+        activeLevel = null
+        activeCatalog = null
+        activeLevelEngine = null
+        activeLevelTerminalRecorded = false
     }
 
     private fun recordDuel(duel: DuelState) {
@@ -546,6 +652,9 @@ class GameViewModel(
         const val OBSERVER_PREVIEW_MS = 2400L
     }
 }
+
+private fun stableSeed(value: String): Long =
+    value.fold(1125899906842597L) { acc, char -> acc * 31 + char.code }
 
 private fun DuelPlayer.label(): String = when (this) {
     DuelPlayer.PLAYER_ONE -> "Player 1"

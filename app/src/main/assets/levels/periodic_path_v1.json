@@ -1,0 +1,3994 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "periodic_path_v1",
+  "zones": [
+    {
+      "id": "z01",
+      "title": "Alkali Spark",
+      "subtitle": "First stable particle chains",
+      "unlockAfterLevelId": null,
+      "levels": [
+        {
+          "id": "z01-l01",
+          "zoneId": "z01",
+          "indexInZone": 1,
+          "title": "Alkali Spark 1",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048101,
+          "moveLimit": 50,
+          "startingEnergy": 41,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 2
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 34
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 45,
+            "threeStarMoveLimit": 40,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z01-l02",
+          "zoneId": "z01",
+          "indexInZone": 2,
+          "title": "Alkali Spark 2",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048102,
+          "moveLimit": 49,
+          "startingEnergy": 41,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "HYDROGEN"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 227
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 44,
+            "threeStarMoveLimit": 39,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z01-l03",
+          "zoneId": "z01",
+          "indexInZone": 3,
+          "title": "Alkali Spark 3",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048103,
+          "moveLimit": 49,
+          "startingEnergy": 41,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "HYDROGEN"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 175
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 44,
+            "threeStarMoveLimit": 39,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z01-l04",
+          "zoneId": "z01",
+          "indexInZone": 4,
+          "title": "Alkali Spark 4",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048104,
+          "moveLimit": 48,
+          "startingEnergy": 41,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "HELIUM"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 15
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 43,
+            "threeStarMoveLimit": 38,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z01-l05",
+          "zoneId": "z01",
+          "indexInZone": 5,
+          "title": "Alkali Spark 5",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048105,
+          "moveLimit": 48,
+          "startingEnergy": 41,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 665
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 43,
+            "threeStarMoveLimit": 38,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z01-l06",
+          "zoneId": "z01",
+          "indexInZone": 6,
+          "title": "Alkali Spark 6",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048106,
+          "moveLimit": 47,
+          "startingEnergy": 41,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 4
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 34
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 42,
+            "threeStarMoveLimit": 37,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z01-l07",
+          "zoneId": "z01",
+          "indexInZone": 7,
+          "title": "Alkali Spark 7",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048107,
+          "moveLimit": 47,
+          "startingEnergy": 41,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "HELIUM"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 402
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 42,
+            "threeStarMoveLimit": 37,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z01-l08",
+          "zoneId": "z01",
+          "indexInZone": 8,
+          "title": "Alkali Spark 8",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048108,
+          "moveLimit": 46,
+          "startingEnergy": 41,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "HYDROGEN"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 291
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 41,
+            "threeStarMoveLimit": 36,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z01-l09",
+          "zoneId": "z01",
+          "indexInZone": 9,
+          "title": "Alkali Spark 9",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048109,
+          "moveLimit": 46,
+          "startingEnergy": 41,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "HELIUM"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 20
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 41,
+            "threeStarMoveLimit": 36,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z01-l10",
+          "zoneId": "z01",
+          "indexInZone": 10,
+          "title": "Alkali Spark 10",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048110,
+          "moveLimit": 45,
+          "startingEnergy": 41,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1015
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 40,
+            "threeStarMoveLimit": 35,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z01-l11",
+          "zoneId": "z01",
+          "indexInZone": 11,
+          "title": "Alkali Spark 11",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048111,
+          "moveLimit": 45,
+          "startingEnergy": 41,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 6
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 34
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 40,
+            "threeStarMoveLimit": 35,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z01-l12",
+          "zoneId": "z01",
+          "indexInZone": 12,
+          "title": "Alkali Spark 12",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048112,
+          "moveLimit": 44,
+          "startingEnergy": 41,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "HELIUM"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 577
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 39,
+            "threeStarMoveLimit": 34,
+            "requireNoUndoForThreeStars": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "z02",
+      "title": "Alkaline Lab",
+      "subtitle": "Hydrogen and helium control",
+      "unlockAfterLevelId": "z01-l12",
+      "levels": [
+        {
+          "id": "z02-l01",
+          "zoneId": "z02",
+          "indexInZone": 1,
+          "title": "Alkaline Lab 1",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048201,
+          "moveLimit": 48,
+          "startingEnergy": 44,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "HELIUM"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 335
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 43,
+            "threeStarMoveLimit": 38,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z02-l02",
+          "zoneId": "z02",
+          "indexInZone": 2,
+          "title": "Alkaline Lab 2",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048202,
+          "moveLimit": 47,
+          "startingEnergy": 44,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "HYDROGEN"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 246
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 42,
+            "threeStarMoveLimit": 37,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z02-l03",
+          "zoneId": "z02",
+          "indexInZone": 3,
+          "title": "Alkaline Lab 3",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048203,
+          "moveLimit": 47,
+          "startingEnergy": 44,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "HELIUM"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 15
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 42,
+            "threeStarMoveLimit": 37,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z02-l04",
+          "zoneId": "z02",
+          "indexInZone": 4,
+          "title": "Alkaline Lab 4",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048204,
+          "moveLimit": 46,
+          "startingEnergy": 44,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 880
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 41,
+            "threeStarMoveLimit": 36,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z02-l05",
+          "zoneId": "z02",
+          "indexInZone": 5,
+          "title": "Alkaline Lab 5",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048205,
+          "moveLimit": 46,
+          "startingEnergy": 44,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 4
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 38
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 41,
+            "threeStarMoveLimit": 36,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z02-l06",
+          "zoneId": "z02",
+          "indexInZone": 6,
+          "title": "Alkaline Lab 6",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048206,
+          "moveLimit": 45,
+          "startingEnergy": 44,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "BERYLLIUM"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 510
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 40,
+            "threeStarMoveLimit": 35,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z02-l07",
+          "zoneId": "z02",
+          "indexInZone": 7,
+          "title": "Alkaline Lab 7",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048207,
+          "moveLimit": 45,
+          "startingEnergy": 44,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "HELIUM"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 363
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 40,
+            "threeStarMoveLimit": 35,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z02-l08",
+          "zoneId": "z02",
+          "indexInZone": 8,
+          "title": "Alkaline Lab 8",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048208,
+          "moveLimit": 44,
+          "startingEnergy": 44,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "BERYLLIUM"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 20
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 39,
+            "threeStarMoveLimit": 34,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z02-l09",
+          "zoneId": "z02",
+          "indexInZone": 9,
+          "title": "Alkaline Lab 9",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048209,
+          "moveLimit": 44,
+          "startingEnergy": 44,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1230
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 39,
+            "threeStarMoveLimit": 34,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z02-l10",
+          "zoneId": "z02",
+          "indexInZone": 10,
+          "title": "Alkaline Lab 10",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048210,
+          "moveLimit": 43,
+          "startingEnergy": 44,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 7
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 38
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 38,
+            "threeStarMoveLimit": 33,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z02-l11",
+          "zoneId": "z02",
+          "indexInZone": 11,
+          "title": "Alkaline Lab 11",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048211,
+          "moveLimit": 43,
+          "startingEnergy": 44,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "BERYLLIUM"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 685
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 38,
+            "threeStarMoveLimit": 33,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z02-l12",
+          "zoneId": "z02",
+          "indexInZone": 12,
+          "title": "Alkaline Lab 12",
+          "difficulty": "MEDIUM",
+          "boardSize": 4,
+          "seed": 2048212,
+          "moveLimit": 42,
+          "startingEnergy": 44,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "HELIUM"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 480
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 37,
+            "threeStarMoveLimit": 32,
+            "requireNoUndoForThreeStars": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "z03",
+      "title": "Transition Gate",
+      "subtitle": "Beryllium routes open",
+      "unlockAfterLevelId": "z02-l12",
+      "levels": [
+        {
+          "id": "z03-l01",
+          "zoneId": "z03",
+          "indexInZone": 1,
+          "title": "Transition Gate 1",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048301,
+          "moveLimit": 46,
+          "startingEnergy": 47,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "HELIUM"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 381
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 41,
+            "threeStarMoveLimit": 36,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z03-l02",
+          "zoneId": "z03",
+          "indexInZone": 2,
+          "title": "Transition Gate 2",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048302,
+          "moveLimit": 45,
+          "startingEnergy": 47,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "BERYLLIUM"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 15
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 40,
+            "threeStarMoveLimit": 35,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z03-l03",
+          "zoneId": "z03",
+          "indexInZone": 3,
+          "title": "Transition Gate 3",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048303,
+          "moveLimit": 45,
+          "startingEnergy": 47,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1285
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 40,
+            "threeStarMoveLimit": 35,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z03-l04",
+          "zoneId": "z03",
+          "indexInZone": 4,
+          "title": "Transition Gate 4",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048304,
+          "moveLimit": 44,
+          "startingEnergy": 47,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 5
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 42
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 39,
+            "threeStarMoveLimit": 34,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z03-l05",
+          "zoneId": "z03",
+          "indexInZone": 5,
+          "title": "Transition Gate 5",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048305,
+          "moveLimit": 44,
+          "startingEnergy": 47,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "BERYLLIUM"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 712
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 39,
+            "threeStarMoveLimit": 34,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z03-l06",
+          "zoneId": "z03",
+          "indexInZone": 6,
+          "title": "Transition Gate 6",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048306,
+          "moveLimit": 43,
+          "startingEnergy": 47,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "HELIUM"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 498
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 38,
+            "threeStarMoveLimit": 33,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z03-l07",
+          "zoneId": "z03",
+          "indexInZone": 7,
+          "title": "Transition Gate 7",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048307,
+          "moveLimit": 43,
+          "startingEnergy": 47,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "BERYLLIUM"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 20
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 38,
+            "threeStarMoveLimit": 33,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z03-l08",
+          "zoneId": "z03",
+          "indexInZone": 8,
+          "title": "Transition Gate 8",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048308,
+          "moveLimit": 42,
+          "startingEnergy": 47,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1635
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 37,
+            "threeStarMoveLimit": 32,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z03-l09",
+          "zoneId": "z03",
+          "indexInZone": 9,
+          "title": "Transition Gate 9",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048309,
+          "moveLimit": 42,
+          "startingEnergy": 47,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 7
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 42
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 37,
+            "threeStarMoveLimit": 32,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z03-l10",
+          "zoneId": "z03",
+          "indexInZone": 10,
+          "title": "Transition Gate 10",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048310,
+          "moveLimit": 41,
+          "startingEnergy": 47,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "OXYGEN"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 887
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 36,
+            "threeStarMoveLimit": 31,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z03-l11",
+          "zoneId": "z03",
+          "indexInZone": 11,
+          "title": "Transition Gate 11",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048311,
+          "moveLimit": 41,
+          "startingEnergy": 47,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "BERYLLIUM"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 615
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 36,
+            "threeStarMoveLimit": 31,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z03-l12",
+          "zoneId": "z03",
+          "indexInZone": 12,
+          "title": "Transition Gate 12",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048312,
+          "moveLimit": 40,
+          "startingEnergy": 47,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "OXYGEN"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 25
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 35,
+            "threeStarMoveLimit": 30,
+            "requireNoUndoForThreeStars": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "z04",
+      "title": "Oxygen Reactor",
+      "subtitle": "Score pressure begins",
+      "unlockAfterLevelId": "z03-l12",
+      "levels": [
+        {
+          "id": "z04-l01",
+          "zoneId": "z04",
+          "indexInZone": 1,
+          "title": "Oxygen Reactor 1",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048401,
+          "moveLimit": 44,
+          "startingEnergy": 50,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "OXYGEN"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 15
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 39,
+            "threeStarMoveLimit": 34,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z04-l02",
+          "zoneId": "z04",
+          "indexInZone": 2,
+          "title": "Oxygen Reactor 2",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048402,
+          "moveLimit": 43,
+          "startingEnergy": 50,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1880
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 38,
+            "threeStarMoveLimit": 33,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z04-l03",
+          "zoneId": "z04",
+          "indexInZone": 3,
+          "title": "Oxygen Reactor 3",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048403,
+          "moveLimit": 43,
+          "startingEnergy": 50,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 5
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 46
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 38,
+            "threeStarMoveLimit": 33,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z04-l04",
+          "zoneId": "z04",
+          "indexInZone": 4,
+          "title": "Oxygen Reactor 4",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048404,
+          "moveLimit": 42,
+          "startingEnergy": 50,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "OXYGEN"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1010
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 37,
+            "threeStarMoveLimit": 32,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z04-l05",
+          "zoneId": "z04",
+          "indexInZone": 5,
+          "title": "Oxygen Reactor 5",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048405,
+          "moveLimit": 42,
+          "startingEnergy": 50,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "BERYLLIUM"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 696
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 37,
+            "threeStarMoveLimit": 32,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z04-l06",
+          "zoneId": "z04",
+          "indexInZone": 6,
+          "title": "Oxygen Reactor 6",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048406,
+          "moveLimit": 41,
+          "startingEnergy": 50,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "OXYGEN"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 20
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 36,
+            "threeStarMoveLimit": 31,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z04-l07",
+          "zoneId": "z04",
+          "indexInZone": 7,
+          "title": "Oxygen Reactor 7",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048407,
+          "moveLimit": 41,
+          "startingEnergy": 50,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 2230
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 36,
+            "threeStarMoveLimit": 31,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z04-l08",
+          "zoneId": "z04",
+          "indexInZone": 8,
+          "title": "Oxygen Reactor 8",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048408,
+          "moveLimit": 40,
+          "startingEnergy": 50,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 8
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 46
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 35,
+            "threeStarMoveLimit": 30,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z04-l09",
+          "zoneId": "z04",
+          "indexInZone": 9,
+          "title": "Oxygen Reactor 9",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048409,
+          "moveLimit": 40,
+          "startingEnergy": 50,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "OXYGEN"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1185
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 35,
+            "threeStarMoveLimit": 30,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z04-l10",
+          "zoneId": "z04",
+          "indexInZone": 10,
+          "title": "Oxygen Reactor 10",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048410,
+          "moveLimit": 39,
+          "startingEnergy": 50,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "BERYLLIUM"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 813
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 34,
+            "threeStarMoveLimit": 29,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z04-l11",
+          "zoneId": "z04",
+          "indexInZone": 11,
+          "title": "Oxygen Reactor 11",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048411,
+          "moveLimit": 39,
+          "startingEnergy": 50,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "OXYGEN"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 25
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 34,
+            "threeStarMoveLimit": 29,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z04-l12",
+          "zoneId": "z04",
+          "indexInZone": 12,
+          "title": "Oxygen Reactor 12",
+          "difficulty": "HARD",
+          "boardSize": 4,
+          "seed": 2048412,
+          "moveLimit": 38,
+          "startingEnergy": 50,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 2580
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 33,
+            "threeStarMoveLimit": 28,
+            "requireNoUndoForThreeStars": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "z05",
+      "title": "Noble Pulse",
+      "subtitle": "Neon stability tests",
+      "unlockAfterLevelId": "z04-l12",
+      "levels": [
+        {
+          "id": "z05-l01",
+          "zoneId": "z05",
+          "indexInZone": 1,
+          "title": "Noble Pulse 1",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048501,
+          "moveLimit": 42,
+          "startingEnergy": 53,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 2665
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 37,
+            "threeStarMoveLimit": 32,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z05-l02",
+          "zoneId": "z05",
+          "indexInZone": 2,
+          "title": "Noble Pulse 2",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048502,
+          "moveLimit": 41,
+          "startingEnergy": 53,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 6
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 50
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 36,
+            "threeStarMoveLimit": 31,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z05-l03",
+          "zoneId": "z05",
+          "indexInZone": 3,
+          "title": "Noble Pulse 3",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048503,
+          "moveLimit": 41,
+          "startingEnergy": 53,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "NEON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1402
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 36,
+            "threeStarMoveLimit": 31,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z05-l04",
+          "zoneId": "z05",
+          "indexInZone": 4,
+          "title": "Noble Pulse 4",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048504,
+          "moveLimit": 40,
+          "startingEnergy": 53,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "OXYGEN"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 958
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 35,
+            "threeStarMoveLimit": 30,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z05-l05",
+          "zoneId": "z05",
+          "indexInZone": 5,
+          "title": "Noble Pulse 5",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048505,
+          "moveLimit": 40,
+          "startingEnergy": 53,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "NEON"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 20
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 35,
+            "threeStarMoveLimit": 30,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z05-l06",
+          "zoneId": "z05",
+          "indexInZone": 6,
+          "title": "Noble Pulse 6",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048506,
+          "moveLimit": 39,
+          "startingEnergy": 53,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 3015
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 34,
+            "threeStarMoveLimit": 29,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z05-l07",
+          "zoneId": "z05",
+          "indexInZone": 7,
+          "title": "Noble Pulse 7",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048507,
+          "moveLimit": 39,
+          "startingEnergy": 53,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 8
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 50
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 34,
+            "threeStarMoveLimit": 29,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z05-l08",
+          "zoneId": "z05",
+          "indexInZone": 8,
+          "title": "Noble Pulse 8",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048508,
+          "moveLimit": 38,
+          "startingEnergy": 53,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "NEON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1577
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 33,
+            "threeStarMoveLimit": 28,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z05-l09",
+          "zoneId": "z05",
+          "indexInZone": 9,
+          "title": "Noble Pulse 9",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048509,
+          "moveLimit": 38,
+          "startingEnergy": 53,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "OXYGEN"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1075
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 33,
+            "threeStarMoveLimit": 28,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z05-l10",
+          "zoneId": "z05",
+          "indexInZone": 10,
+          "title": "Noble Pulse 10",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048510,
+          "moveLimit": 37,
+          "startingEnergy": 53,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "NEON"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 25
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 32,
+            "threeStarMoveLimit": 27,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z05-l11",
+          "zoneId": "z05",
+          "indexInZone": 11,
+          "title": "Noble Pulse 11",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048511,
+          "moveLimit": 37,
+          "startingEnergy": 53,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 3365
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 32,
+            "threeStarMoveLimit": 27,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z05-l12",
+          "zoneId": "z05",
+          "indexInZone": 12,
+          "title": "Noble Pulse 12",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048512,
+          "moveLimit": 36,
+          "startingEnergy": 53,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 11
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 50
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 31,
+            "threeStarMoveLimit": 26,
+            "requireNoUndoForThreeStars": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "z06",
+      "title": "Silicon Circuit",
+      "subtitle": "Longer chains and tighter boards",
+      "unlockAfterLevelId": "z05-l12",
+      "levels": [
+        {
+          "id": "z06-l01",
+          "zoneId": "z06",
+          "indexInZone": 1,
+          "title": "Silicon Circuit 1",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048601,
+          "moveLimit": 40,
+          "startingEnergy": 56,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 6
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 54
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 35,
+            "threeStarMoveLimit": 30,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z06-l02",
+          "zoneId": "z06",
+          "indexInZone": 2,
+          "title": "Silicon Circuit 2",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048602,
+          "moveLimit": 39,
+          "startingEnergy": 56,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "NEON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1890
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 34,
+            "threeStarMoveLimit": 29,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z06-l03",
+          "zoneId": "z06",
+          "indexInZone": 3,
+          "title": "Silicon Circuit 3",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048603,
+          "moveLimit": 39,
+          "startingEnergy": 56,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "NEON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1283
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 34,
+            "threeStarMoveLimit": 29,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z06-l04",
+          "zoneId": "z06",
+          "indexInZone": 4,
+          "title": "Silicon Circuit 4",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048604,
+          "moveLimit": 38,
+          "startingEnergy": 56,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "SILICON"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 20
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 33,
+            "threeStarMoveLimit": 28,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z06-l05",
+          "zoneId": "z06",
+          "indexInZone": 5,
+          "title": "Silicon Circuit 5",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048605,
+          "moveLimit": 38,
+          "startingEnergy": 56,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 3990
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 33,
+            "threeStarMoveLimit": 28,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z06-l06",
+          "zoneId": "z06",
+          "indexInZone": 6,
+          "title": "Silicon Circuit 6",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048606,
+          "moveLimit": 37,
+          "startingEnergy": 56,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 9
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 54
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 32,
+            "threeStarMoveLimit": 27,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z06-l07",
+          "zoneId": "z06",
+          "indexInZone": 7,
+          "title": "Silicon Circuit 7",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048607,
+          "moveLimit": 37,
+          "startingEnergy": 56,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "SILICON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 2065
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 32,
+            "threeStarMoveLimit": 27,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z06-l08",
+          "zoneId": "z06",
+          "indexInZone": 8,
+          "title": "Silicon Circuit 8",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048608,
+          "moveLimit": 36,
+          "startingEnergy": 56,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "NEON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1400
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 31,
+            "threeStarMoveLimit": 26,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z06-l09",
+          "zoneId": "z06",
+          "indexInZone": 9,
+          "title": "Silicon Circuit 9",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048609,
+          "moveLimit": 36,
+          "startingEnergy": 56,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "SILICON"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 25
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 31,
+            "threeStarMoveLimit": 26,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z06-l10",
+          "zoneId": "z06",
+          "indexInZone": 10,
+          "title": "Silicon Circuit 10",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048610,
+          "moveLimit": 35,
+          "startingEnergy": 56,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 4340
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 30,
+            "threeStarMoveLimit": 25,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z06-l11",
+          "zoneId": "z06",
+          "indexInZone": 11,
+          "title": "Silicon Circuit 11",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048611,
+          "moveLimit": 35,
+          "startingEnergy": 56,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 11
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 54
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 30,
+            "threeStarMoveLimit": 25,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z06-l12",
+          "zoneId": "z06",
+          "indexInZone": 12,
+          "title": "Silicon Circuit 12",
+          "difficulty": "QUANTUM",
+          "boardSize": 4,
+          "seed": 2048612,
+          "moveLimit": 34,
+          "startingEnergy": 56,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "SILICON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 2240
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 29,
+            "threeStarMoveLimit": 24,
+            "requireNoUndoForThreeStars": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "z07",
+      "title": "Iron Core",
+      "subtitle": "Heavy-element discipline",
+      "unlockAfterLevelId": "z06-l12",
+      "levels": [
+        {
+          "id": "z07-l01",
+          "zoneId": "z07",
+          "indexInZone": 1,
+          "title": "Iron Core 1",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048701,
+          "moveLimit": 38,
+          "startingEnergy": 59,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "SILICON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 2472
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 33,
+            "threeStarMoveLimit": 28,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z07-l02",
+          "zoneId": "z07",
+          "indexInZone": 2,
+          "title": "Iron Core 2",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048702,
+          "moveLimit": 37,
+          "startingEnergy": 59,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "NEON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1671
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 32,
+            "threeStarMoveLimit": 27,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z07-l03",
+          "zoneId": "z07",
+          "indexInZone": 3,
+          "title": "Iron Core 3",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048703,
+          "moveLimit": 37,
+          "startingEnergy": 59,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "SILICON"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 20
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 32,
+            "threeStarMoveLimit": 27,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z07-l04",
+          "zoneId": "z07",
+          "indexInZone": 4,
+          "title": "Iron Core 4",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048704,
+          "moveLimit": 36,
+          "startingEnergy": 59,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 5155
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 31,
+            "threeStarMoveLimit": 26,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z07-l05",
+          "zoneId": "z07",
+          "indexInZone": 5,
+          "title": "Iron Core 5",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048705,
+          "moveLimit": 36,
+          "startingEnergy": 59,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 9
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 58
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 31,
+            "threeStarMoveLimit": 26,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z07-l06",
+          "zoneId": "z07",
+          "indexInZone": 6,
+          "title": "Iron Core 6",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048706,
+          "moveLimit": 35,
+          "startingEnergy": 59,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 2647
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 30,
+            "threeStarMoveLimit": 25,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z07-l07",
+          "zoneId": "z07",
+          "indexInZone": 7,
+          "title": "Iron Core 7",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048707,
+          "moveLimit": 35,
+          "startingEnergy": 59,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "SILICON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1788
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 30,
+            "threeStarMoveLimit": 25,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z07-l08",
+          "zoneId": "z07",
+          "indexInZone": 8,
+          "title": "Iron Core 8",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048708,
+          "moveLimit": 34,
+          "startingEnergy": 59,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 25
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 29,
+            "threeStarMoveLimit": 24,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z07-l09",
+          "zoneId": "z07",
+          "indexInZone": 9,
+          "title": "Iron Core 9",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048709,
+          "moveLimit": 34,
+          "startingEnergy": 59,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 5505
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 29,
+            "threeStarMoveLimit": 24,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z07-l10",
+          "zoneId": "z07",
+          "indexInZone": 10,
+          "title": "Iron Core 10",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048710,
+          "moveLimit": 33,
+          "startingEnergy": 59,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 12
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 58
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 28,
+            "threeStarMoveLimit": 23,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z07-l11",
+          "zoneId": "z07",
+          "indexInZone": 11,
+          "title": "Iron Core 11",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048711,
+          "moveLimit": 33,
+          "startingEnergy": 59,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 2822
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 28,
+            "threeStarMoveLimit": 23,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z07-l12",
+          "zoneId": "z07",
+          "indexInZone": 12,
+          "title": "Iron Core 12",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048712,
+          "moveLimit": 32,
+          "startingEnergy": 59,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "SILICON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 1905
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 27,
+            "threeStarMoveLimit": 22,
+            "requireNoUndoForThreeStars": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "z08",
+      "title": "Gold Horizon",
+      "subtitle": "Premium fusion targets",
+      "unlockAfterLevelId": "z07-l12",
+      "levels": [
+        {
+          "id": "z08-l01",
+          "zoneId": "z08",
+          "indexInZone": 1,
+          "title": "Gold Horizon 1",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048801,
+          "moveLimit": 36,
+          "startingEnergy": 62,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "SILICON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 2123
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 31,
+            "threeStarMoveLimit": 26,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z08-l02",
+          "zoneId": "z08",
+          "indexInZone": 2,
+          "title": "Gold Horizon 2",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048802,
+          "moveLimit": 35,
+          "startingEnergy": 62,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 20
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 30,
+            "threeStarMoveLimit": 25,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z08-l03",
+          "zoneId": "z08",
+          "indexInZone": 3,
+          "title": "Gold Horizon 3",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048803,
+          "moveLimit": 35,
+          "startingEnergy": 62,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 6510
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 30,
+            "threeStarMoveLimit": 25,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z08-l04",
+          "zoneId": "z08",
+          "indexInZone": 4,
+          "title": "Gold Horizon 4",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048804,
+          "moveLimit": 34,
+          "startingEnergy": 62,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 10
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 62
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 29,
+            "threeStarMoveLimit": 24,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z08-l05",
+          "zoneId": "z08",
+          "indexInZone": 5,
+          "title": "Gold Horizon 5",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048805,
+          "moveLimit": 34,
+          "startingEnergy": 62,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 3325
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 29,
+            "threeStarMoveLimit": 24,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z08-l06",
+          "zoneId": "z08",
+          "indexInZone": 6,
+          "title": "Gold Horizon 6",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048806,
+          "moveLimit": 33,
+          "startingEnergy": 62,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "SILICON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 2240
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 28,
+            "threeStarMoveLimit": 23,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z08-l07",
+          "zoneId": "z08",
+          "indexInZone": 7,
+          "title": "Gold Horizon 7",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048807,
+          "moveLimit": 33,
+          "startingEnergy": 62,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 25
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 28,
+            "threeStarMoveLimit": 23,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z08-l08",
+          "zoneId": "z08",
+          "indexInZone": 8,
+          "title": "Gold Horizon 8",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048808,
+          "moveLimit": 32,
+          "startingEnergy": 62,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 6860
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 27,
+            "threeStarMoveLimit": 22,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z08-l09",
+          "zoneId": "z08",
+          "indexInZone": 9,
+          "title": "Gold Horizon 9",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048809,
+          "moveLimit": 32,
+          "startingEnergy": 62,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 12
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 62
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 27,
+            "threeStarMoveLimit": 22,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z08-l10",
+          "zoneId": "z08",
+          "indexInZone": 10,
+          "title": "Gold Horizon 10",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048810,
+          "moveLimit": 31,
+          "startingEnergy": 62,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 3500
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 26,
+            "threeStarMoveLimit": 21,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z08-l11",
+          "zoneId": "z08",
+          "indexInZone": 11,
+          "title": "Gold Horizon 11",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048811,
+          "moveLimit": 31,
+          "startingEnergy": 62,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 2356
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 26,
+            "threeStarMoveLimit": 21,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z08-l12",
+          "zoneId": "z08",
+          "indexInZone": 12,
+          "title": "Gold Horizon 12",
+          "difficulty": "HARDCORE",
+          "boardSize": 4,
+          "seed": 2048812,
+          "moveLimit": 30,
+          "startingEnergy": 62,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 28
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 25,
+            "threeStarMoveLimit": 20,
+            "requireNoUndoForThreeStars": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "z09",
+      "title": "Isotope Drift",
+      "subtitle": "Mixed objective control",
+      "unlockAfterLevelId": "z08-l12",
+      "levels": [
+        {
+          "id": "z09-l01",
+          "zoneId": "z09",
+          "indexInZone": 1,
+          "title": "Isotope Drift 1",
+          "difficulty": "QUANTUM",
+          "boardSize": 5,
+          "seed": 2048901,
+          "moveLimit": 34,
+          "startingEnergy": 65,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 20
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 29,
+            "threeStarMoveLimit": 24,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z09-l02",
+          "zoneId": "z09",
+          "indexInZone": 2,
+          "title": "Isotope Drift 2",
+          "difficulty": "QUANTUM",
+          "boardSize": 5,
+          "seed": 2048902,
+          "moveLimit": 33,
+          "startingEnergy": 65,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 8055
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 28,
+            "threeStarMoveLimit": 23,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z09-l03",
+          "zoneId": "z09",
+          "indexInZone": 3,
+          "title": "Isotope Drift 3",
+          "difficulty": "QUANTUM",
+          "boardSize": 5,
+          "seed": 2048903,
+          "moveLimit": 33,
+          "startingEnergy": 65,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 10
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 66
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 28,
+            "threeStarMoveLimit": 23,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z09-l04",
+          "zoneId": "z09",
+          "indexInZone": 4,
+          "title": "Isotope Drift 4",
+          "difficulty": "QUANTUM",
+          "boardSize": 5,
+          "seed": 2048904,
+          "moveLimit": 32,
+          "startingEnergy": 65,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 4097
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 27,
+            "threeStarMoveLimit": 22,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z09-l05",
+          "zoneId": "z09",
+          "indexInZone": 5,
+          "title": "Isotope Drift 5",
+          "difficulty": "QUANTUM",
+          "boardSize": 5,
+          "seed": 2048905,
+          "moveLimit": 32,
+          "startingEnergy": 65,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 2755
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 27,
+            "threeStarMoveLimit": 22,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z09-l06",
+          "zoneId": "z09",
+          "indexInZone": 6,
+          "title": "Isotope Drift 6",
+          "difficulty": "QUANTUM",
+          "boardSize": 5,
+          "seed": 2048906,
+          "moveLimit": 31,
+          "startingEnergy": 65,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 25
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 26,
+            "threeStarMoveLimit": 21,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z09-l07",
+          "zoneId": "z09",
+          "indexInZone": 7,
+          "title": "Isotope Drift 7",
+          "difficulty": "QUANTUM",
+          "boardSize": 5,
+          "seed": 2048907,
+          "moveLimit": 31,
+          "startingEnergy": 65,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 8405
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 26,
+            "threeStarMoveLimit": 21,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z09-l08",
+          "zoneId": "z09",
+          "indexInZone": 8,
+          "title": "Isotope Drift 8",
+          "difficulty": "QUANTUM",
+          "boardSize": 5,
+          "seed": 2048908,
+          "moveLimit": 30,
+          "startingEnergy": 65,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 13
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 66
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 25,
+            "threeStarMoveLimit": 20,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z09-l09",
+          "zoneId": "z09",
+          "indexInZone": 9,
+          "title": "Isotope Drift 9",
+          "difficulty": "QUANTUM",
+          "boardSize": 5,
+          "seed": 2048909,
+          "moveLimit": 30,
+          "startingEnergy": 65,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 4272
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 25,
+            "threeStarMoveLimit": 20,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z09-l10",
+          "zoneId": "z09",
+          "indexInZone": 10,
+          "title": "Isotope Drift 10",
+          "difficulty": "QUANTUM",
+          "boardSize": 5,
+          "seed": 2048910,
+          "moveLimit": 29,
+          "startingEnergy": 65,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 2871
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 24,
+            "threeStarMoveLimit": 19,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z09-l11",
+          "zoneId": "z09",
+          "indexInZone": 11,
+          "title": "Isotope Drift 11",
+          "difficulty": "QUANTUM",
+          "boardSize": 5,
+          "seed": 2048911,
+          "moveLimit": 29,
+          "startingEnergy": 65,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 27
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 24,
+            "threeStarMoveLimit": 19,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z09-l12",
+          "zoneId": "z09",
+          "indexInZone": 12,
+          "title": "Isotope Drift 12",
+          "difficulty": "QUANTUM",
+          "boardSize": 5,
+          "seed": 2048912,
+          "moveLimit": 28,
+          "startingEnergy": 65,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 8755
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 23,
+            "threeStarMoveLimit": 18,
+            "requireNoUndoForThreeStars": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "z10",
+      "title": "Quantum Crucible",
+      "subtitle": "High pressure synthesis",
+      "unlockAfterLevelId": "z09-l12",
+      "levels": [
+        {
+          "id": "z10-l01",
+          "zoneId": "z10",
+          "indexInZone": 1,
+          "title": "Quantum Crucible 1",
+          "difficulty": "HARDCORE",
+          "boardSize": 5,
+          "seed": 2049001,
+          "moveLimit": 32,
+          "startingEnergy": 68,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 9790
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 27,
+            "threeStarMoveLimit": 22,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z10-l02",
+          "zoneId": "z10",
+          "indexInZone": 2,
+          "title": "Quantum Crucible 2",
+          "difficulty": "HARDCORE",
+          "boardSize": 5,
+          "seed": 2049002,
+          "moveLimit": 31,
+          "startingEnergy": 68,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 11
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 70
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 26,
+            "threeStarMoveLimit": 21,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z10-l03",
+          "zoneId": "z10",
+          "indexInZone": 3,
+          "title": "Quantum Crucible 3",
+          "difficulty": "HARDCORE",
+          "boardSize": 5,
+          "seed": 2049003,
+          "moveLimit": 31,
+          "startingEnergy": 68,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 4965
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 26,
+            "threeStarMoveLimit": 21,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z10-l04",
+          "zoneId": "z10",
+          "indexInZone": 4,
+          "title": "Quantum Crucible 4",
+          "difficulty": "HARDCORE",
+          "boardSize": 5,
+          "seed": 2049004,
+          "moveLimit": 30,
+          "startingEnergy": 68,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 3333
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 25,
+            "threeStarMoveLimit": 20,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z10-l05",
+          "zoneId": "z10",
+          "indexInZone": 5,
+          "title": "Quantum Crucible 5",
+          "difficulty": "HARDCORE",
+          "boardSize": 5,
+          "seed": 2049005,
+          "moveLimit": 30,
+          "startingEnergy": 68,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 25
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 25,
+            "threeStarMoveLimit": 20,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z10-l06",
+          "zoneId": "z10",
+          "indexInZone": 6,
+          "title": "Quantum Crucible 6",
+          "difficulty": "HARDCORE",
+          "boardSize": 5,
+          "seed": 2049006,
+          "moveLimit": 29,
+          "startingEnergy": 68,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 10140
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 24,
+            "threeStarMoveLimit": 19,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z10-l07",
+          "zoneId": "z10",
+          "indexInZone": 7,
+          "title": "Quantum Crucible 7",
+          "difficulty": "HARDCORE",
+          "boardSize": 5,
+          "seed": 2049007,
+          "moveLimit": 29,
+          "startingEnergy": 68,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 13
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 70
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 24,
+            "threeStarMoveLimit": 19,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z10-l08",
+          "zoneId": "z10",
+          "indexInZone": 8,
+          "title": "Quantum Crucible 8",
+          "difficulty": "HARDCORE",
+          "boardSize": 5,
+          "seed": 2049008,
+          "moveLimit": 28,
+          "startingEnergy": 68,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 5140
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 23,
+            "threeStarMoveLimit": 18,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z10-l09",
+          "zoneId": "z10",
+          "indexInZone": 9,
+          "title": "Quantum Crucible 9",
+          "difficulty": "HARDCORE",
+          "boardSize": 5,
+          "seed": 2049009,
+          "moveLimit": 28,
+          "startingEnergy": 68,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 3450
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 23,
+            "threeStarMoveLimit": 18,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z10-l10",
+          "zoneId": "z10",
+          "indexInZone": 10,
+          "title": "Quantum Crucible 10",
+          "difficulty": "HARDCORE",
+          "boardSize": 5,
+          "seed": 2049010,
+          "moveLimit": 27,
+          "startingEnergy": 68,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 25
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 22,
+            "threeStarMoveLimit": 17,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z10-l11",
+          "zoneId": "z10",
+          "indexInZone": 11,
+          "title": "Quantum Crucible 11",
+          "difficulty": "HARDCORE",
+          "boardSize": 5,
+          "seed": 2049011,
+          "moveLimit": 27,
+          "startingEnergy": 68,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 10490
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 22,
+            "threeStarMoveLimit": 17,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z10-l12",
+          "zoneId": "z10",
+          "indexInZone": 12,
+          "title": "Quantum Crucible 12",
+          "difficulty": "HARDCORE",
+          "boardSize": 5,
+          "seed": 2049012,
+          "moveLimit": 26,
+          "startingEnergy": 68,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 16
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 70
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 21,
+            "threeStarMoveLimit": 16,
+            "requireNoUndoForThreeStars": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "z11",
+      "title": "Periodic Apex",
+      "subtitle": "Mastery gauntlet",
+      "unlockAfterLevelId": "z10-l12",
+      "levels": [
+        {
+          "id": "z11-l01",
+          "zoneId": "z11",
+          "indexInZone": 1,
+          "title": "Periodic Apex 1",
+          "difficulty": "PUZZLE",
+          "boardSize": 5,
+          "seed": 2049101,
+          "moveLimit": 30,
+          "startingEnergy": 71,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 11
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 74
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 25,
+            "threeStarMoveLimit": 20,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z11-l02",
+          "zoneId": "z11",
+          "indexInZone": 2,
+          "title": "Periodic Apex 2",
+          "difficulty": "PUZZLE",
+          "boardSize": 5,
+          "seed": 2049102,
+          "moveLimit": 29,
+          "startingEnergy": 71,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 5927
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 24,
+            "threeStarMoveLimit": 19,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z11-l03",
+          "zoneId": "z11",
+          "indexInZone": 3,
+          "title": "Periodic Apex 3",
+          "difficulty": "PUZZLE",
+          "boardSize": 5,
+          "seed": 2049103,
+          "moveLimit": 29,
+          "startingEnergy": 71,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 3975
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 24,
+            "threeStarMoveLimit": 19,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z11-l04",
+          "zoneId": "z11",
+          "indexInZone": 4,
+          "title": "Periodic Apex 4",
+          "difficulty": "PUZZLE",
+          "boardSize": 5,
+          "seed": 2049104,
+          "moveLimit": 28,
+          "startingEnergy": 71,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 25
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 23,
+            "threeStarMoveLimit": 18,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z11-l05",
+          "zoneId": "z11",
+          "indexInZone": 5,
+          "title": "Periodic Apex 5",
+          "difficulty": "PUZZLE",
+          "boardSize": 5,
+          "seed": 2049105,
+          "moveLimit": 28,
+          "startingEnergy": 71,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 12065
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 23,
+            "threeStarMoveLimit": 18,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z11-l06",
+          "zoneId": "z11",
+          "indexInZone": 6,
+          "title": "Periodic Apex 6",
+          "difficulty": "PUZZLE",
+          "boardSize": 5,
+          "seed": 2049106,
+          "moveLimit": 27,
+          "startingEnergy": 71,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 14
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 74
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 22,
+            "threeStarMoveLimit": 17,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z11-l07",
+          "zoneId": "z11",
+          "indexInZone": 7,
+          "title": "Periodic Apex 7",
+          "difficulty": "PUZZLE",
+          "boardSize": 5,
+          "seed": 2049107,
+          "moveLimit": 27,
+          "startingEnergy": 71,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 6102
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 22,
+            "threeStarMoveLimit": 17,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z11-l08",
+          "zoneId": "z11",
+          "indexInZone": 8,
+          "title": "Periodic Apex 8",
+          "difficulty": "PUZZLE",
+          "boardSize": 5,
+          "seed": 2049108,
+          "moveLimit": 26,
+          "startingEnergy": 71,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 4091
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 21,
+            "threeStarMoveLimit": 16,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z11-l09",
+          "zoneId": "z11",
+          "indexInZone": 9,
+          "title": "Periodic Apex 9",
+          "difficulty": "PUZZLE",
+          "boardSize": 5,
+          "seed": 2049109,
+          "moveLimit": 26,
+          "startingEnergy": 71,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 24
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 21,
+            "threeStarMoveLimit": 16,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z11-l10",
+          "zoneId": "z11",
+          "indexInZone": 10,
+          "title": "Periodic Apex 10",
+          "difficulty": "PUZZLE",
+          "boardSize": 5,
+          "seed": 2049110,
+          "moveLimit": 25,
+          "startingEnergy": 71,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 12415
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 20,
+            "threeStarMoveLimit": 15,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z11-l11",
+          "zoneId": "z11",
+          "indexInZone": 11,
+          "title": "Periodic Apex 11",
+          "difficulty": "PUZZLE",
+          "boardSize": 5,
+          "seed": 2049111,
+          "moveLimit": 25,
+          "startingEnergy": 71,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 16
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 74
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 20,
+            "threeStarMoveLimit": 15,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z11-l12",
+          "zoneId": "z11",
+          "indexInZone": 12,
+          "title": "Periodic Apex 12",
+          "difficulty": "PUZZLE",
+          "boardSize": 5,
+          "seed": 2049112,
+          "moveLimit": 24,
+          "startingEnergy": 71,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 6277
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 19,
+            "threeStarMoveLimit": 14,
+            "requireNoUndoForThreeStars": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "z12",
+      "title": "Aurum Singularity",
+      "subtitle": "Gold-focused endgame",
+      "unlockAfterLevelId": "z11-l12",
+      "levels": [
+        {
+          "id": "z12-l01",
+          "zoneId": "z12",
+          "indexInZone": 1,
+          "title": "Aurum Singularity 1",
+          "difficulty": "PUZZLE",
+          "boardSize": 6,
+          "seed": 2049201,
+          "moveLimit": 28,
+          "startingEnergy": 74,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 6985
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 23,
+            "threeStarMoveLimit": 18,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z12-l02",
+          "zoneId": "z12",
+          "indexInZone": 2,
+          "title": "Aurum Singularity 2",
+          "difficulty": "PUZZLE",
+          "boardSize": 6,
+          "seed": 2049202,
+          "moveLimit": 27,
+          "startingEnergy": 74,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 4680
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 22,
+            "threeStarMoveLimit": 17,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z12-l03",
+          "zoneId": "z12",
+          "indexInZone": 3,
+          "title": "Aurum Singularity 3",
+          "difficulty": "PUZZLE",
+          "boardSize": 6,
+          "seed": 2049203,
+          "moveLimit": 27,
+          "startingEnergy": 74,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 25
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 22,
+            "threeStarMoveLimit": 17,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z12-l04",
+          "zoneId": "z12",
+          "indexInZone": 4,
+          "title": "Aurum Singularity 4",
+          "difficulty": "PUZZLE",
+          "boardSize": 6,
+          "seed": 2049204,
+          "moveLimit": 26,
+          "startingEnergy": 74,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 14180
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 21,
+            "threeStarMoveLimit": 16,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z12-l05",
+          "zoneId": "z12",
+          "indexInZone": 5,
+          "title": "Aurum Singularity 5",
+          "difficulty": "PUZZLE",
+          "boardSize": 6,
+          "seed": 2049205,
+          "moveLimit": 26,
+          "startingEnergy": 74,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 14
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 78
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 21,
+            "threeStarMoveLimit": 16,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z12-l06",
+          "zoneId": "z12",
+          "indexInZone": 6,
+          "title": "Aurum Singularity 6",
+          "difficulty": "PUZZLE",
+          "boardSize": 6,
+          "seed": 2049206,
+          "moveLimit": 25,
+          "startingEnergy": 74,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 7160
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 20,
+            "threeStarMoveLimit": 15,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z12-l07",
+          "zoneId": "z12",
+          "indexInZone": 7,
+          "title": "Aurum Singularity 7",
+          "difficulty": "PUZZLE",
+          "boardSize": 6,
+          "seed": 2049207,
+          "moveLimit": 25,
+          "startingEnergy": 74,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 4796
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 20,
+            "threeStarMoveLimit": 15,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z12-l08",
+          "zoneId": "z12",
+          "indexInZone": 8,
+          "title": "Aurum Singularity 8",
+          "difficulty": "PUZZLE",
+          "boardSize": 6,
+          "seed": 2049208,
+          "moveLimit": 24,
+          "startingEnergy": 74,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "survive_moves",
+              "type": "SURVIVE_MOVES",
+              "moves": 22
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 19,
+            "threeStarMoveLimit": 14,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z12-l09",
+          "zoneId": "z12",
+          "indexInZone": 9,
+          "title": "Aurum Singularity 9",
+          "difficulty": "PUZZLE",
+          "boardSize": 6,
+          "seed": 2049209,
+          "moveLimit": 24,
+          "startingEnergy": 74,
+          "goals": [
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 14530
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 19,
+            "threeStarMoveLimit": 14,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z12-l10",
+          "zoneId": "z12",
+          "indexInZone": 10,
+          "title": "Aurum Singularity 10",
+          "difficulty": "PUZZLE",
+          "boardSize": 6,
+          "seed": 2049210,
+          "moveLimit": 23,
+          "startingEnergy": 74,
+          "goals": [
+            {
+              "id": "chain_merges",
+              "type": "CHAIN_MERGES",
+              "count": 17
+            },
+            {
+              "id": "energy",
+              "type": "ENERGY_AT_LEAST",
+              "energy": 78
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 18,
+            "threeStarMoveLimit": 13,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z12-l11",
+          "zoneId": "z12",
+          "indexInZone": 11,
+          "title": "Aurum Singularity 11",
+          "difficulty": "PUZZLE",
+          "boardSize": 6,
+          "seed": 2049211,
+          "moveLimit": 23,
+          "startingEnergy": 74,
+          "goals": [
+            {
+              "id": "reach_element",
+              "type": "REACH_ELEMENT",
+              "element": "GOLD"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 7335
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 18,
+            "threeStarMoveLimit": 13,
+            "requireNoUndoForThreeStars": true
+          }
+        },
+        {
+          "id": "z12-l12",
+          "zoneId": "z12",
+          "indexInZone": 12,
+          "title": "Aurum Singularity 12",
+          "difficulty": "PUZZLE",
+          "boardSize": 6,
+          "seed": 2049212,
+          "moveLimit": 22,
+          "startingEnergy": 74,
+          "goals": [
+            {
+              "id": "clear_element",
+              "type": "CLEAR_ELEMENT",
+              "element": "IRON"
+            },
+            {
+              "id": "reach_score",
+              "type": "REACH_SCORE",
+              "score": 4913
+            }
+          ],
+          "starRules": {
+            "twoStarMoveLimit": 17,
+            "threeStarMoveLimit": 12,
+            "requireNoUndoForThreeStars": true
+          }
+        }
+      ]
+    }
+  ]
+}

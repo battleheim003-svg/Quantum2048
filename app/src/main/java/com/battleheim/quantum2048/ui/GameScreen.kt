@@ -80,6 +80,8 @@ import com.battleheim.quantum2048.designsystem.elementColor
 import com.battleheim.quantum2048.designsystem.elementFamily
 import com.battleheim.quantum2048.designsystem.tileKindColor
 import com.battleheim.quantum2048.domain.AppSettings
+import com.battleheim.quantum2048.domain.LevelRunStatus
+import com.battleheim.quantum2048.domain.LevelRunUiState
 import com.battleheim.quantum2048.engine.Difficulty
 import com.battleheim.quantum2048.engine.Direction
 import com.battleheim.quantum2048.engine.DuelOpponent
@@ -187,6 +189,7 @@ fun GameScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Header(ui.game, onPause)
+                ui.level?.let { LevelGoalHud(it) }
                 duel?.let { DuelHeader(it.currentPlayer, it.config.opponent, turnSecondsLeft, it.winner, vm::passDuelTurn) }
                 if (ui.game.mode == GameMode.QUANTUM) {
                     FusionGuide(ui.game.difficulty)
@@ -222,6 +225,78 @@ fun GameScreen(
             val tile = ui.game.cells.firstOrNull { it?.id == tileId }
             if (tile != null) {
                 SuperpositionDialog(tile, vm::dismissSuperposition, vm::collapseSuperposition)
+            }
+        }
+    }
+}
+
+@Composable
+private fun LevelGoalHud(level: LevelRunUiState) {
+    val accent = when (level.status) {
+        LevelRunStatus.ACTIVE -> Electric
+        LevelRunStatus.COMPLETE -> RadiantGold
+        LevelRunStatus.FAILED -> NeonPink
+    }
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = GlassPanel,
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, accent.copy(alpha = 0.55f), RoundedCornerShape(14.dp)),
+    ) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(level.title.uppercase(), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.9.sp)
+                    Text(level.zoneTitle, color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        level.movesRemaining?.let { stringResource(R.string.moves_left, formatNumber(it)) } ?: stringResource(R.string.moves_unlimited),
+                        color = accent,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Black,
+                    )
+                    if (level.status != LevelRunStatus.ACTIVE) {
+                        Text(
+                            if (level.status == LevelRunStatus.COMPLETE) stringResource(R.string.level_complete_stars, level.stars) else stringResource(R.string.level_failed),
+                            color = accent,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+            level.goals.forEach { goal ->
+                val progress = if (goal.target <= 0) 0f else (goal.current.toFloat() / goal.target.toFloat()).coerceIn(0f, 1f)
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(goal.label, color = if (goal.complete) Cyan else TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("${formatNumber(goal.current)}/${formatNumber(goal.target)}", color = if (goal.complete) RadiantGold else accent, fontSize = 11.sp, fontWeight = FontWeight.Black)
+                    }
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(7.dp)
+                            .background(Color.Black.copy(alpha = 0.32f), RoundedCornerShape(8.dp))
+                            .border(1.dp, accent.copy(alpha = 0.25f), RoundedCornerShape(8.dp)),
+                    ) {
+                        Box(
+                            Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(progress.coerceAtLeast(0.03f))
+                                .background(Brush.horizontalGradient(listOf(Cyan, accent, RadiantGold.copy(alpha = 0.85f))), RoundedCornerShape(8.dp)),
+                        )
+                    }
+                }
+            }
+            if (level.mercy.active) {
+                Text(
+                    stringResource(R.string.mercy_active, level.mercy.assistMoveBonus),
+                    color = RadiantGold,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                )
             }
         }
     }
