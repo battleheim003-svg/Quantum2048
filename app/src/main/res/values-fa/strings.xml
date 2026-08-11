@@ -32,15 +32,21 @@
     <string name="pass_play">نفر دوم روی گوشی</string>
     <string name="pass_play_selected">نفر دوم انتخاب شد</string>
     <string name="easy">آسان</string>
+    <string name="medium">متوسط</string>
+    <string name="hard">سخت</string>
     <string name="normal">معمولی</string>
     <string name="quantum">کوانتومی</string>
+    <string name="zen">ذن</string>
+    <string name="hardcore">هاردکور</string>
+    <string name="puzzle">معمایی</string>
+    <string name="daily">روزانه</string>
     <string name="saved_size">ذخیره %1$dx%1$d</string>
     <string name="board_size">%1$dx%1$d</string>
     <string name="board_size_selected">%1$dx%1$d انتخاب شد</string>
-    <string name="classic_description">۲۰۴۸ کلاسیک فقط با عدد.</string>
-    <string name="medium_description">زنجیره ذرات و فیوژن عنصر روی صفحه کوانتومی تمیز.</string>
-    <string name="hard_description">زنجیره کامل عنصرها با کلکسیون ترکیب‌ها.</string>
-    <string name="quantum_description">سنتز کامل: الکترون، پروتون، عنصر و واکنش.</string>
+    <string name="classic_description">۲۰۴۸ سریع و تمیز؛ فقط عدد، تمرکز کامل روی امتیاز.</string>
+    <string name="medium_description">زنجیره ذرات را بساز و اولین عنصرهای پایدار را کشف کن.</string>
+    <string name="hard_description">فیوژن‌های سنگین‌تر، فشار بیشتر، و آزمایشگاه ترکیب فعال.</string>
+    <string name="quantum_description">قوانین کامل آزمایشگاه: ذرات، واکنش‌ها، انرژی و سنتز عنصر.</string>
     <string name="back">بازگشت</string>
     <string name="pause">مکث</string>
     <string name="best_score">بهترین %1$s</string>
@@ -49,7 +55,7 @@
     <string name="hud_energy">انرژی %1$s%%</string>
     <string name="synthesis_lab">آزمایشگاه سنتز</string>
     <string name="classic_board">صفحه کلاسیک</string>
-    <string name="fusion_guide">زنجیره e-/p+، واکنش e- + p+ به عنصر</string>
+    <string name="fusion_guide">ذرات همسان را شارژ کن؛ سپس e- و p+ را ترکیب کن تا عنصر بسازی.</string>
     <string name="compound_lab">آزمایشگاه ترکیب</string>
     <string name="lab_empty">عنصر پایدار را لمس یا درگ کن</string>
     <string name="clear">پاک کردن</string>
@@ -97,10 +103,10 @@
     <string name="superposition_body">یک مقدار پایدار برای این کاشی انتخاب کن.</string>
     <string name="superposition_choice">%1$s با %2$s انرژی</string>
     <string name="energy_line">انرژی %1$s</string>
-    <string name="zen_description">آزمایشگاه کوانتومی بی‌پایان با سقف انرژی آرام‌تر.</string>
-    <string name="hardcore_description">قوانین کوانتومی با انرژی شروع صفر و بدون برگشت.</string>
-    <string name="puzzle_description">چالش طراحی‌شده: در سه حرکت به ۱۲۸ برس.</string>
-    <string name="daily_description">چالش روزانه قطعی با رکورد محلی.</string>
+    <string name="zen_description">یک آزمایشگاه آرام‌تر برای ران‌های طولانی و فیوژن بی‌وقفه.</string>
+    <string name="hardcore_description">بدون حاشیه امن: انرژی محدود، بدون برگشت، هر حرکت حیاتی است.</string>
+    <string name="puzzle_description">مرحله‌های دست‌ساز با هدف‌های کوتاه، فشرده و تاکتیکی.</string>
+    <string name="daily_description">یک چالش ثابت برای امروز؛ یک فرصت تمیز برای شکستن رکورد.</string>
     <string name="daily_best_line">بهترین روزانه %1$s</string>
     <string name="achievements">اچیومنت‌ها</string>
     <string name="achievement_collapse_century">قرن فروپاشی: ۱۰۰ فروپاشی موفق بدون باخت</string>
@@ -148,4 +154,6 @@
     <string name="social_retention">اجتماعی و بازگشت کاربر</string>
     <string name="play_games_offline_note">نسخه تحریم‌پسند: لیدربورد محلی، اچیومنت‌ها، استریک روزانه و متادیتای cloud-save برای اتصال بعدی Play Games آماده‌اند.</string>
     <string name="reset_social_progress">ریست پیشرفت اجتماعی</string>
+    <string name="restart_level_title">مرحله از نو شروع شود؟</string>
+    <string name="restart_level_body">پیشرفت همین اجرای فعلی از بین می‌رود.</string>
 </resources>

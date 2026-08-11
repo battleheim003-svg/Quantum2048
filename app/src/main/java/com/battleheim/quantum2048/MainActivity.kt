@@ -60,7 +60,6 @@ class MainActivity : ComponentActivity() {
 
 private fun Context.localized(language: AppLanguage): Context {
     val tag = when (language) {
-        AppLanguage.SYSTEM -> return this
         AppLanguage.ENGLISH -> "en"
         AppLanguage.PERSIAN -> "fa"
     }

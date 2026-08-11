@@ -2,6 +2,7 @@ package com.battleheim.quantum2048.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -27,7 +28,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -177,8 +177,20 @@ fun GameScreen(
         if (turnSecondsLeft == 0 && activeDuel.winner == null) vm.passDuelTurn()
     }
 
-    Scaffold(containerColor = Void, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF101943), Void, Color.Black)))) {
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
+                            MaterialTheme.colorScheme.background,
+                            MaterialTheme.colorScheme.background,
+                        ),
+                    ),
+                ),
+        ) {
             QuantumBackdrop(settings.reducedMotion)
             Column(
                 Modifier
@@ -198,13 +210,18 @@ fun GameScreen(
                 Board(ui.game, ui.labTileIds, ui.tunnelingTileId, ui.observerPreview, ui.animations, settings.reducedMotion, vm::swipe, vm::sendToCompoundLab, vm::tapBoardCell, vm::observeTile)
                 duel?.let { OpponentBoardSummary(it.inactiveBoard, it.currentPlayer) }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(onClick = vm::newGame, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.new_game)) }
-                    OutlinedButton(onClick = vm::undo, enabled = ui.canUndo, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.undo)) }
+                    QuantumActionButton(text = stringResource(R.string.new_game), onClick = vm::newGame, modifier = Modifier.weight(1f), accent = RadiantGold, filled = true, icon = "+")
+                    QuantumActionButton(text = stringResource(R.string.undo), onClick = vm::undo, enabled = ui.canUndo, modifier = Modifier.weight(1f), accent = Cyan, icon = "↶")
                 }
                 if (ui.game.mode == GameMode.QUANTUM && duel == null) {
-                    OutlinedButton(onClick = vm::toggleTunneling, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(if (ui.tunnelingTileId == null) R.string.tunnel else R.string.cancel_tunnel))
-                    }
+                    QuantumActionButton(
+                        text = stringResource(if (ui.tunnelingTileId == null) R.string.tunnel else R.string.cancel_tunnel),
+                        onClick = vm::toggleTunneling,
+                        modifier = Modifier.fillMaxWidth(),
+                        accent = if (ui.tunnelingTileId == null) Electric else NeonPink,
+                        filled = ui.tunnelingTileId != null,
+                        icon = "⟐",
+                    )
                 }
                 Text(
                     if (ui.game.mode == GameMode.QUANTUM) {
@@ -399,7 +416,7 @@ private fun Header(game: GameState, onPause: () -> Unit) {
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "${game.difficulty.label()} / ${if (game.mode == GameMode.QUANTUM) stringResource(R.string.synthesis_lab) else stringResource(R.string.classic_board)}",
+                        "${game.difficulty.localizedLabel()} / ${if (game.mode == GameMode.QUANTUM) stringResource(R.string.synthesis_lab) else stringResource(R.string.classic_board)}",
                         color = difficultyAccent(game.difficulty),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
@@ -448,13 +465,17 @@ private fun EnergyMeter(energy: Int) {
 
 @Composable
 private fun FusionGuide(difficulty: Difficulty) {
-    Surface(color = difficultySurface(difficulty), shape = RoundedCornerShape(8.dp)) {
+    Surface(
+        color = GlassPanel,
+        shape = RoundedCornerShape(14.dp),
+        modifier = Modifier.border(1.dp, difficultyAccent(difficulty).copy(alpha = 0.55f), RoundedCornerShape(14.dp)),
+    ) {
         Row(
             Modifier.fillMaxWidth().padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(difficulty.label(), color = TextSecondary, fontSize = 12.sp)
+            Text(difficulty.localizedLabel(), color = TextSecondary, fontSize = 12.sp)
             Text(stringResource(R.string.fusion_guide), color = difficultyAccent(difficulty), fontWeight = FontWeight.Bold, fontSize = 12.sp)
         }
     }
@@ -463,13 +484,19 @@ private fun FusionGuide(difficulty: Difficulty) {
 @Composable
 private fun CompoundLab(game: GameState, labTileIds: List<Long>, clear: () -> Unit) {
     val labels = labTileIds.mapNotNull { id -> game.cells.firstOrNull { it?.id == id }?.element?.symbol }
-    Surface(color = PanelRaised, shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
+    Surface(
+        color = GlassPanel,
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Cyan.copy(alpha = 0.45f), RoundedCornerShape(16.dp)),
+    ) {
         Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
-                Text(stringResource(R.string.compound_lab), fontWeight = FontWeight.Black)
+                Text("⟡ ${stringResource(R.string.compound_lab)}", fontWeight = FontWeight.Black, color = Color.White)
                 Text(if (labels.isEmpty()) stringResource(R.string.lab_empty) else labels.joinToString(" + "), color = TextSecondary, fontSize = 12.sp)
             }
-            TextButton(onClick = clear, enabled = labels.isNotEmpty()) { Text(stringResource(R.string.clear)) }
+            QuantumChipButton(text = stringResource(R.string.clear), selected = labels.isNotEmpty(), onClick = clear, enabled = labels.isNotEmpty(), accent = NeonPink)
         }
     }
 }
@@ -637,8 +664,8 @@ private fun TileCell(
             val toCol = to % boardSize
             translationX.snapTo((fromCol - toCol) * stepPx)
             translationY.snapTo((fromRow - toRow) * stepPx)
-            val x = launch { translationX.animateTo(0f, tween(MOVE_ANIMATION_MS, easing = FastOutSlowInEasing)) }
-            val y = launch { translationY.animateTo(0f, tween(MOVE_ANIMATION_MS, easing = FastOutSlowInEasing)) }
+            val x = launch { translationX.animateTo(0f, tween(MOVE_ANIMATION_MS, easing = LinearOutSlowInEasing)) }
+            val y = launch { translationY.animateTo(0f, tween(MOVE_ANIMATION_MS, easing = LinearOutSlowInEasing)) }
             x.join()
             y.join()
         }
@@ -858,7 +885,7 @@ private fun ParticleBurst(progress: Float, color: Color, intense: Boolean) {
     }
 }
 
-private const val MOVE_ANIMATION_MS = 360
+private const val MOVE_ANIMATION_MS = 165
 
 @Composable
 private fun QuantumTileLabel(tile: Tile, boardSize: Int, observerValue: Int?) {
@@ -878,25 +905,23 @@ private fun QuantumTileLabel(tile: Tile, boardSize: Int, observerValue: Int?) {
 
 @Composable
 private fun SuperpositionDialog(tile: Tile, onDismiss: () -> Unit, onCollapse: (Int) -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.superposition_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.superposition_body), color = TextSecondary)
-                tile.superpositionValues.forEachIndexed { index, value ->
-                    OutlinedButton(onClick = { onCollapse(index) }, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.superposition_choice, formatNumber(value), formatNumber(FusionRules.superpositionCollapseEnergyCosts[index])))
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
-    )
+    QuantumDialog(
+        title = stringResource(R.string.superposition_title),
+        onDismiss = onDismiss,
+        accent = Electric,
+        dismissText = stringResource(R.string.cancel),
+    ) {
+        Text(stringResource(R.string.superposition_body), color = TextSecondary, fontSize = 13.sp)
+        tile.superpositionValues.forEachIndexed { index, value ->
+            QuantumActionButton(
+                text = stringResource(R.string.superposition_choice, formatNumber(value), formatNumber(FusionRules.superpositionCollapseEnergyCosts[index])),
+                onClick = { onCollapse(index) },
+                modifier = Modifier.fillMaxWidth(),
+                accent = actionAccent(index),
+            )
+        }
+    }
 }
-
-private fun Difficulty.label(): String = name.lowercase().replaceFirstChar { it.uppercase() }
 
 @Composable
 private fun DuelPlayer.label(): String = when (this) {
@@ -913,23 +938,18 @@ private fun DuelPlayer.opponent(): DuelPlayer = when (this) {
 private fun EndDialog(game: GameState, continueGame: () -> Unit, newGame: () -> Unit) {
     val status = game.status
     val bestElement = game.cells.mapNotNull { it?.element }.maxByOrNull { it.rank }
-    AlertDialog(
-        onDismissRequest = {},
-        title = { Text(if (status == GameStatus.WON) stringResource(R.string.target_reached) else stringResource(R.string.game_over)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(if (status == GameStatus.WON) stringResource(R.string.win_body) else stringResource(R.string.lose_body))
-                Text(stringResource(R.string.difficulty_line, game.difficulty.label()), color = TextSecondary)
-                Text(stringResource(R.string.score_line, formatNumber(game.score)), color = TextSecondary)
-                if (game.difficulty == Difficulty.DAILY) Text(stringResource(R.string.daily_best_line, formatNumber(game.dailyBestScore)), color = TextSecondary)
-                Text(stringResource(R.string.moves_line, formatNumber(game.moveCount)), color = TextSecondary)
-                Text(stringResource(R.string.best_element_line, bestElement?.symbol ?: stringResource(R.string.none)), color = TextSecondary)
-            }
-        },
-        confirmButton = {
-            Button(onClick = if (status == GameStatus.WON) continueGame else newGame) {
-                Text(if (status == GameStatus.WON) stringResource(R.string.continue_game) else stringResource(R.string.new_game))
-            }
-        },
-    )
+    QuantumDialog(
+        title = if (status == GameStatus.WON) stringResource(R.string.target_reached) else stringResource(R.string.game_over),
+        onDismiss = {},
+        accent = if (status == GameStatus.WON) RadiantGold else NeonPink,
+        confirmText = if (status == GameStatus.WON) stringResource(R.string.continue_game) else stringResource(R.string.new_game),
+        onConfirm = if (status == GameStatus.WON) continueGame else newGame,
+    ) {
+        Text(if (status == GameStatus.WON) stringResource(R.string.win_body) else stringResource(R.string.lose_body), color = Color.White)
+        Text(stringResource(R.string.difficulty_line, game.difficulty.localizedLabel()), color = TextSecondary)
+        Text(stringResource(R.string.score_line, formatNumber(game.score)), color = TextSecondary)
+        if (game.difficulty == Difficulty.DAILY) Text(stringResource(R.string.daily_best_line, formatNumber(game.dailyBestScore)), color = TextSecondary)
+        Text(stringResource(R.string.moves_line, formatNumber(game.moveCount)), color = TextSecondary)
+        Text(stringResource(R.string.best_element_line, bestElement?.symbol ?: stringResource(R.string.none)), color = TextSecondary)
+    }
 }

@@ -5,7 +5,8 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.battleheim.quantum2048.domain.AppThemeMode
 import com.battleheim.quantum2048.engine.Difficulty
@@ -51,28 +52,86 @@ private val scheme = darkColorScheme(
     onSurfaceVariant = TextSecondary,
 )
 
+@Immutable
+data class QuantumPalette(
+    val void: Color,
+    val panel: Color,
+    val panelRaised: Color,
+    val panelSoft: Color,
+    val glassPanel: Color,
+    val boardGlass: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textMuted: Color,
+    val cyan: Color,
+    val violet: Color,
+    val electric: Color,
+    val neonPink: Color,
+    val radiantGold: Color,
+    val danger: Color,
+)
+
+val DarkQuantumPalette = QuantumPalette(
+    void = Void,
+    panel = Panel,
+    panelRaised = PanelRaised,
+    panelSoft = PanelSoft,
+    glassPanel = GlassPanel,
+    boardGlass = BoardGlass,
+    textPrimary = TextPrimary,
+    textSecondary = TextSecondary,
+    textMuted = TextMuted,
+    cyan = Cyan,
+    violet = Violet,
+    electric = Electric,
+    neonPink = NeonPink,
+    radiantGold = RadiantGold,
+    danger = Danger,
+)
+
+val LightQuantumPalette = QuantumPalette(
+    void = Color(0xFFF3F8FF),
+    panel = Color(0xFFEAF2FF),
+    panelRaised = Color(0xFFFFFFFF),
+    panelSoft = Color(0xFFDCE9FF),
+    glassPanel = Color(0xCCFFFFFF),
+    boardGlass = Color(0xDDE8F1FF),
+    textPrimary = Color(0xFF06172A),
+    textSecondary = Color(0xFF314968),
+    textMuted = Color(0xFF6E7F95),
+    cyan = Color(0xFF007D8B),
+    violet = Color(0xFF714DE8),
+    electric = Color(0xFF006DCC),
+    neonPink = Color(0xFFC11690),
+    radiantGold = Color(0xFF9B6B00),
+    danger = Color(0xFFC93046),
+)
+
+val LocalQuantumPalette = compositionLocalOf { DarkQuantumPalette }
+
 @Composable
-fun QuantumTheme(themeMode: AppThemeMode = AppThemeMode.SYSTEM, content: @Composable () -> Unit) {
-    val dark = when (themeMode) {
-        AppThemeMode.SYSTEM -> isSystemInDarkTheme()
-        AppThemeMode.DARK -> true
-        AppThemeMode.LIGHT -> false
-    }
+fun quantumPalette(): QuantumPalette = LocalQuantumPalette.current
+
+@Composable
+fun QuantumTheme(themeMode: AppThemeMode = AppThemeMode.DARK, content: @Composable () -> Unit) {
+    val dark = themeMode == AppThemeMode.DARK
     val lightScheme = lightColorScheme(
-        primary = Color(0xFF006B72),
-        secondary = Color(0xFF6650A4),
-        tertiary = Color(0xFF0061A4),
-        background = Color(0xFFFFFBFF),
-        surface = Color(0xFFFFFBFF),
-        surfaceVariant = Color(0xFFE6E0EC),
-        error = Color(0xFFBA1A1A),
+        primary = LightQuantumPalette.cyan,
+        secondary = LightQuantumPalette.violet,
+        tertiary = LightQuantumPalette.electric,
+        background = LightQuantumPalette.void,
+        surface = LightQuantumPalette.panelRaised,
+        surfaceVariant = LightQuantumPalette.panelSoft,
+        error = LightQuantumPalette.danger,
         onPrimary = Color.White,
         onSecondary = Color.White,
-        onBackground = Color(0xFF1C1B1F),
-        onSurface = Color(0xFF1C1B1F),
-        onSurfaceVariant = Color(0xFF49454F),
+        onBackground = LightQuantumPalette.textPrimary,
+        onSurface = LightQuantumPalette.textPrimary,
+        onSurfaceVariant = LightQuantumPalette.textSecondary,
     )
-    MaterialTheme(colorScheme = if (dark) scheme else lightScheme, typography = Typography(), content = content)
+    androidx.compose.runtime.CompositionLocalProvider(LocalQuantumPalette provides if (dark) DarkQuantumPalette else LightQuantumPalette) {
+        MaterialTheme(colorScheme = if (dark) scheme else lightScheme, typography = Typography(), content = content)
+    }
 }
 
 fun difficultyAccent(difficulty: Difficulty): Color = when (difficulty) {

@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -319,7 +318,15 @@ private fun MainMenuScreen(
                 scope.launch { settingsRepository.save(next) }
             },
         )
-        SectionTitle(stringResource(R.string.app_title), stringResource(R.string.fusion_lab))
+        MainMenuHero()
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            QuantumChipButton(
+                text = stringResource(R.string.refresh_saves),
+                selected = false,
+                onClick = { playMenu(audio, settings); scope.launch { saves = vm.savedGames() } },
+                accent = Electric,
+            )
+        }
         NeonMenuButton(
             text = stringResource(R.string.continue_game),
             onClick = { onContinue(continueSave) },
@@ -336,13 +343,42 @@ private fun MainMenuScreen(
             filled = true,
         )
         NeonMenuButton(text = stringResource(R.string.periodic_path), onClick = onPeriodicPath, modifier = Modifier.fillMaxWidth().testTag("periodic_path_button"), accent = Electric, filled = true)
-        NeonMenuButton(text = stringResource(R.string.collection), onClick = onCollection, modifier = Modifier.fillMaxWidth(), accent = NeonPink)
-        NeonMenuButton(text = stringResource(R.string.statistics), onClick = onStatistics, modifier = Modifier.fillMaxWidth(), accent = Electric)
-        NeonMenuButton(text = stringResource(R.string.tutorial), onClick = onTutorial, modifier = Modifier.fillMaxWidth(), accent = Cyan)
-        NeonMenuButton(text = stringResource(R.string.settings), onClick = onSettings, modifier = Modifier.fillMaxWidth(), accent = RadiantGold)
-        TextButton(onClick = { playMenu(audio, settings); scope.launch { saves = vm.savedGames() } }) {
-            Text(stringResource(R.string.refresh_saves), color = Cyan, fontWeight = FontWeight.Black)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            NeonMenuButton(text = stringResource(R.string.collection), onClick = onCollection, modifier = Modifier.weight(1f), accent = NeonPink, icon = "◇")
+            NeonMenuButton(text = stringResource(R.string.statistics), onClick = onStatistics, modifier = Modifier.weight(1f), accent = Electric, icon = "▦")
         }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            NeonMenuButton(text = stringResource(R.string.tutorial), onClick = onTutorial, modifier = Modifier.weight(1f), accent = Cyan, icon = "?")
+            NeonMenuButton(text = stringResource(R.string.settings), onClick = onSettings, modifier = Modifier.weight(1f), accent = RadiantGold, icon = "⚙")
+        }
+    }
+}
+
+@Composable
+private fun MainMenuHero() {
+    val titleColor = MaterialTheme.colorScheme.onBackground
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            stringResource(R.string.app_title).uppercase(),
+            color = titleColor,
+            fontSize = 36.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 1.2.sp,
+            lineHeight = 38.sp,
+        )
+        Text(
+            stringResource(R.string.fusion_lab).uppercase(),
+            color = Cyan,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 2.sp,
+        )
+        Box(
+            Modifier
+                .fillMaxWidth(0.72f)
+                .height(2.dp)
+                .background(Brush.horizontalGradient(listOf(Cyan, Electric, Color.Transparent)), RoundedCornerShape(2.dp)),
+        )
     }
 }
 
@@ -616,24 +652,30 @@ private fun LevelSelectScreen(vm: GameViewModel, onBack: () -> Unit, onSelect: (
         if (duel) {
             DuelSelector(opponent, botDifficulty, onOpponent = { opponent = it }, onBot = { botDifficulty = it })
         }
-        Difficulty.entries.forEach { difficulty ->
-            DifficultyCard(
-                difficulty = difficulty,
-                size = selectedSize,
-                hasSave = SavedGameKey(difficulty, selectedSize) in saves,
-                description = difficultyDescription(difficulty),
-                onClick = { onSelect(difficulty, selectedSize, duel, opponent, botDifficulty) },
-            )
+        Difficulty.entries.chunked(2).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                row.forEach { difficulty ->
+                    DifficultyCard(
+                        difficulty = difficulty,
+                        size = selectedSize,
+                        hasSave = SavedGameKey(difficulty, selectedSize) in saves,
+                        description = difficultyDescription(difficulty),
+                        onClick = { onSelect(difficulty, selectedSize, duel, opponent, botDifficulty) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                repeat(2 - row.size) { Box(Modifier.weight(1f)) }
+            }
         }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }
+        NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
     }
 }
 
 @Composable
 private fun ModeSelector(duel: Boolean, onSelect: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Button(onClick = { onSelect(false) }, modifier = Modifier.weight(1f)) { Text(stringResource(if (!duel) R.string.solo_selected else R.string.solo)) }
-        Button(onClick = { onSelect(true) }, modifier = Modifier.weight(1f).testTag("mode_duel")) { Text(stringResource(if (duel) R.string.duel_selected else R.string.duel)) }
+        QuantumChipButton(text = stringResource(R.string.solo), selected = !duel, onClick = { onSelect(false) }, modifier = Modifier.weight(1f), accent = Cyan)
+        QuantumChipButton(text = stringResource(R.string.duel), selected = duel, onClick = { onSelect(true) }, modifier = Modifier.weight(1f).testTag("mode_duel"), accent = RadiantGold)
     }
 }
 
@@ -642,13 +684,14 @@ private fun BoardSizeSelector(selected: Int, enabled: Boolean, onSelect: (Int) -
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         FusionRules.supportedBoardSizes.forEach { size ->
             val active = size == selected
-            Button(
+            QuantumChipButton(
+                text = stringResource(R.string.board_size, size),
+                selected = active,
                 onClick = { onSelect(size) },
                 enabled = enabled || active,
                 modifier = Modifier.weight(1f).testTag("board_size_${size}x$size"),
-            ) {
-                Text(stringResource(if (active) R.string.board_size_selected else R.string.board_size, size), fontSize = 12.sp)
-            }
+                accent = Electric,
+            )
         }
     }
 }
@@ -657,15 +700,13 @@ private fun BoardSizeSelector(selected: Int, enabled: Boolean, onSelect: (Int) -
 private fun DuelSelector(opponent: DuelOpponent, botDifficulty: BotDifficulty, onOpponent: (DuelOpponent) -> Unit, onBot: (BotDifficulty) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { onOpponent(DuelOpponent.BOT) }, modifier = Modifier.weight(1f).testTag("duel_bot")) { Text(stringResource(if (opponent == DuelOpponent.BOT) R.string.bot_selected else R.string.bot)) }
-            Button(onClick = { onOpponent(DuelOpponent.PASS_AND_PLAY) }, modifier = Modifier.weight(1f).testTag("duel_pass")) { Text(stringResource(if (opponent == DuelOpponent.PASS_AND_PLAY) R.string.pass_play_selected else R.string.pass_play)) }
+            QuantumChipButton(text = stringResource(R.string.bot), selected = opponent == DuelOpponent.BOT, onClick = { onOpponent(DuelOpponent.BOT) }, modifier = Modifier.weight(1f).testTag("duel_bot"), accent = Electric)
+            QuantumChipButton(text = stringResource(R.string.pass_play), selected = opponent == DuelOpponent.PASS_AND_PLAY, onClick = { onOpponent(DuelOpponent.PASS_AND_PLAY) }, modifier = Modifier.weight(1f).testTag("duel_pass"), accent = NeonPink)
         }
         if (opponent == DuelOpponent.BOT) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BotDifficulty.entries.forEach { level ->
-                    Button(onClick = { onBot(level) }, modifier = Modifier.weight(1f).testTag("bot_${level.name.lowercase()}")) {
-                        Text(level.label(), fontSize = 11.sp)
-                    }
+                    QuantumChipButton(text = level.label(), selected = botDifficulty == level, onClick = { onBot(level) }, modifier = Modifier.weight(1f).testTag("bot_${level.name.lowercase()}"), accent = actionAccent(level.ordinal))
                 }
             }
         }
@@ -680,13 +721,12 @@ private fun BotDifficulty.label(): String = when (this) {
 }
 
 @Composable
-private fun DifficultyCard(difficulty: Difficulty, size: Int, hasSave: Boolean, description: String, onClick: () -> Unit) {
+private fun DifficultyCard(difficulty: Difficulty, size: Int, hasSave: Boolean, description: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(
         onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = difficultySurface(difficulty)),
         shape = RoundedCornerShape(8.dp),
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .border(1.dp, difficultyAccent(difficulty), RoundedCornerShape(8.dp))
             .testTag("level_${difficulty.name.lowercase()}"),
     ) {
@@ -694,11 +734,11 @@ private fun DifficultyCard(difficulty: Difficulty, size: Int, hasSave: Boolean, 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Box(Modifier.size(14.dp).background(difficultyAccent(difficulty), RoundedCornerShape(3.dp)))
-                    Text(difficulty.name.lowercase().replaceFirstChar { it.uppercase() }, fontWeight = FontWeight.Black)
+                    Text(difficulty.localizedLabel(), fontWeight = FontWeight.Black)
                 }
                 Text(if (hasSave) stringResource(R.string.saved_size, size) else stringResource(R.string.board_size, size), color = difficultyAccent(difficulty), fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
-            Text(description, color = TextSecondary, fontSize = 13.sp)
+            Text(description, color = TextSecondary, fontSize = 11.sp, lineHeight = 14.sp)
         }
     }
 }
@@ -937,37 +977,31 @@ private fun saveSettings(
 }
 
 private fun AppLanguage.next(): AppLanguage = when (this) {
-    AppLanguage.SYSTEM -> AppLanguage.ENGLISH
     AppLanguage.ENGLISH -> AppLanguage.PERSIAN
-    AppLanguage.PERSIAN -> AppLanguage.SYSTEM
+    AppLanguage.PERSIAN -> AppLanguage.ENGLISH
 }
 
 private fun AppThemeMode.next(): AppThemeMode = when (this) {
-    AppThemeMode.SYSTEM -> AppThemeMode.DARK
     AppThemeMode.DARK -> AppThemeMode.LIGHT
-    AppThemeMode.LIGHT -> AppThemeMode.SYSTEM
+    AppThemeMode.LIGHT -> AppThemeMode.DARK
 }
 
 private fun AppLanguage.shortLabel(): String = when (this) {
-    AppLanguage.SYSTEM -> "Auto"
     AppLanguage.ENGLISH -> "EN"
     AppLanguage.PERSIAN -> "FA"
 }
 
 private fun AppLanguage.displayLabel(): String = when (this) {
-    AppLanguage.SYSTEM -> "System"
     AppLanguage.ENGLISH -> "English"
     AppLanguage.PERSIAN -> "فارسی"
 }
 
 private fun AppThemeMode.iconLabel(): String = when (this) {
-    AppThemeMode.SYSTEM -> "☾☀"
     AppThemeMode.DARK -> "☾"
     AppThemeMode.LIGHT -> "☀"
 }
 
 private fun AppThemeMode.displayLabel(): String = when (this) {
-    AppThemeMode.SYSTEM -> "System"
     AppThemeMode.DARK -> "Dark"
     AppThemeMode.LIGHT -> "Light"
 }
@@ -977,15 +1011,15 @@ private fun PauseScreen(vm: GameViewModel, onResume: () -> Unit, onMainMenu: () 
     val ui by vm.ui.collectAsState()
     var confirmRestart by remember { mutableStateOf(false) }
     MenuScaffold(modifier = Modifier.testTag("pause_screen")) {
-        SectionTitle(stringResource(R.string.pause), ui.game.difficulty.name.lowercase().replaceFirstChar { it.uppercase() })
-        Button(onClick = onResume, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.resume)) }
-        OutlinedButton(onClick = { confirmRestart = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.new_game)) }
-        OutlinedButton(onClick = onMainMenu, modifier = Modifier.fillMaxWidth().testTag("pause_main_menu")) { Text(stringResource(R.string.main_menu)) }
+        SectionTitle(stringResource(R.string.pause), ui.game.difficulty.localizedLabel())
+        NeonMenuButton(text = stringResource(R.string.resume), onClick = onResume, modifier = Modifier.fillMaxWidth(), accent = Cyan, filled = true)
+        NeonMenuButton(text = stringResource(R.string.new_game), onClick = { confirmRestart = true }, modifier = Modifier.fillMaxWidth(), accent = RadiantGold)
+        NeonMenuButton(text = stringResource(R.string.main_menu), onClick = onMainMenu, modifier = Modifier.fillMaxWidth().testTag("pause_main_menu"), accent = Electric)
     }
     if (confirmRestart) {
         ConfirmDialog(
-            title = "Restart level?",
-            body = "Current progress for this run will be lost.",
+            title = stringResource(R.string.restart_level_title),
+            body = stringResource(R.string.restart_level_body),
             onDismiss = { confirmRestart = false },
             onConfirm = {
                 vm.newGame(ui.game.difficulty)
@@ -1025,27 +1059,30 @@ private fun SettingsToggle(label: String, checked: Boolean, onCheckedChange: (Bo
 
 @Composable
 private fun ConfirmDialog(title: String, body: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = { Text(body) },
-        confirmButton = { Button(onClick = onConfirm) { Text(stringResource(R.string.confirm)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
-    )
+    QuantumDialog(
+        title = title,
+        onDismiss = onDismiss,
+        accent = NeonPink,
+        confirmText = stringResource(R.string.confirm),
+        onConfirm = onConfirm,
+        dismissText = stringResource(R.string.cancel),
+    ) {
+        Text(body, color = TextSecondary, fontSize = 13.sp)
+    }
 }
 
 @Composable
 private fun MenuScaffold(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Scaffold(containerColor = Void) { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Box(
             modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            Color(0xFF111A45),
-                            Void,
-                            Color.Black,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
+                            MaterialTheme.colorScheme.background,
+                            MaterialTheme.colorScheme.background,
                         ),
                     ),
                 )
@@ -1067,6 +1104,7 @@ private fun MenuScaffold(modifier: Modifier = Modifier, content: @Composable Col
 
 @Composable
 private fun SectionTitle(title: String, subtitle: String) {
+    val titleColor = MaterialTheme.colorScheme.onBackground
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(
             Modifier
@@ -1086,7 +1124,7 @@ private fun SectionTitle(title: String, subtitle: String) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
                 title,
-                color = Color(0xFFF6FBFF),
+                color = titleColor,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 0.6.sp,
@@ -1198,6 +1236,7 @@ private fun NeonMenuButton(
     enabled: Boolean = true,
     accent: Color = Cyan,
     filled: Boolean = false,
+    icon: String? = null,
 ) {
     val shape = RoundedCornerShape(28.dp)
     Button(
@@ -1224,13 +1263,16 @@ private fun NeonMenuButton(
             )
             .border(1.2.dp, accent.copy(alpha = if (enabled) 0.78f else 0.25f), shape),
     ) {
-        Text(
-            text,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = 0.4.sp,
-            textAlign = TextAlign.Center,
-        )
+        Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            icon?.let { Text(it, fontSize = 15.sp, modifier = Modifier.padding(end = 7.dp)) }
+            Text(
+                text,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.4.sp,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
