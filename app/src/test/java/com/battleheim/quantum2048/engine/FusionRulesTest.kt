@@ -60,13 +60,45 @@ class FusionRulesTest {
         assertEquals(listOf(QuantumElement.OXYGEN), product.tiles.map { it.element })
     }
 
+    @Test fun single_proton_injects_into_element_atomic_number() {
+        val product = FusionRules.mergeProduct(
+            Tile(1, QuantumElement.OXYGEN.atomicNumber, TileKind.ELEMENT, QuantumElement.OXYGEN),
+            Tile(2, 1, TileKind.PROTON),
+        )!!
+
+        assertEquals(true, product.isReaction)
+        assertEquals(QuantumElement.FLUORINE, product.tiles.single().element)
+        assertEquals(QuantumElement.FLUORINE.atomicNumber, product.tiles.single().value)
+    }
+
+    @Test fun proton_injection_can_bridge_fluorine_to_neon() {
+        val product = FusionRules.mergeProduct(
+            Tile(1, QuantumElement.FLUORINE.atomicNumber, TileKind.ELEMENT, QuantumElement.FLUORINE),
+            Tile(2, 1, TileKind.PROTON),
+        )!!
+
+        assertEquals(QuantumElement.NEON, product.tiles.single().element)
+    }
+
     @Test fun undefined_atomic_number_rounds_down_to_defined_element() {
-        assertEquals(QuantumElement.OXYGEN, FusionRules.nearestDefinedElementAtOrBelow(9))
-        val product = FusionRules.mergeProduct(Tile(1, 9, TileKind.ELECTRON), Tile(2, 9, TileKind.PROTON))!!
-        assertEquals(QuantumElement.OXYGEN, product.tiles.single().element)
+        assertEquals(QuantumElement.SODIUM, FusionRules.nearestDefinedElementAtOrBelow(12))
+        val product = FusionRules.mergeProduct(Tile(1, 12, TileKind.ELECTRON), Tile(2, 12, TileKind.PROTON))!!
+        assertEquals(QuantumElement.SODIUM, product.tiles.single().element)
     }
 
     @Test fun non_matching_categories_do_not_merge() {
         assertNull(FusionRules.mergeProduct(Tile(1, 2, TileKind.ELECTRON), Tile(2, 4, TileKind.ELECTRON)))
+    }
+
+    @Test fun quantum_spawn_uses_proton_injection_chance() {
+        val proton = GameEngine(FixedRandom()).spawn(GameState(mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM))
+        val electron = GameEngine(object : RandomProvider {
+            override fun nextInt(bound: Int) = 0
+            override fun nextDouble() = FusionRules.protonInjectionSpawnChance + 0.01
+        }).spawn(GameState(mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM))
+
+        assertEquals(TileKind.PROTON, proton.cells.filterNotNull().single().kind)
+        assertEquals(1, proton.cells.filterNotNull().single().value)
+        assertEquals(TileKind.ELECTRON, electron.cells.filterNotNull().single().kind)
     }
 }

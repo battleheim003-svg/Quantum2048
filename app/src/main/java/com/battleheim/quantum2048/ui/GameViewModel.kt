@@ -56,6 +56,8 @@ data class GameUiState(
     val labTileIds: List<Long> = emptyList(),
     val message: String? = null,
     val feedback: GameFeedback? = null,
+    val isBoardShaking: Boolean = false,
+    val quantumUnlockEventVisible: Boolean = false,
     val animations: List<MoveAnimation> = emptyList(),
     val duel: DuelState? = null,
     val tunnelingTileId: Long? = null,
@@ -90,8 +92,16 @@ class GameViewModel(
     private var activeCatalog: LevelCatalog? = null
     private var activeLevelEngine: GameEngine? = null
     private var activeLevelTerminalRecorded = false
+    private var isQuantumUnlocked = false
 
-    init { load(Difficulty.QUANTUM, requestedSize) }
+    init {
+        viewModelScope.launch {
+            profileRepository.observe().collect { profile ->
+                isQuantumUnlocked = profile.isQuantumUnlocked
+            }
+        }
+        load(Difficulty.QUANTUM, requestedSize)
+    }
 
     fun swipe(direction: Direction) {
         if (inputLocked || _ui.value.loading) return
@@ -115,12 +125,17 @@ class GameViewModel(
             }
             val nextGame = _ui.value.duel?.activeBoard ?: result.state
             val nextLevel = evaluateActiveLevel(nextGame)
+            val shouldShake = result.state.status != GameStatus.PLAYING ||
+                result.entanglementCollapseCount > 0 ||
+                result.gainedScore >= HIGH_VALUE_MERGE_SCORE
+            val shouldUnlockQuantum = shouldTriggerQuantumUnlock(before, nextGame)
             _ui.value = _ui.value.copy(
                 game = nextGame,
                 canUndo = undo.canUndo && FusionRules.isUndoEnabled(before.difficulty),
                 message = when {
                     nextLevel?.status == LevelRunStatus.COMPLETE -> "Periodic Path cleared: ${nextLevel.stars} stars"
                     nextLevel?.status == LevelRunStatus.FAILED -> "Attempt failed. Mercy assist may unlock after repeated tries."
+                    result.synthesizedCompound != null -> "Auto-synthesized ${result.synthesizedCompound.symbol}"
                     result.energyOverflowBonus > 0 -> "Energy overflow +${result.energyOverflowBonus}"
                     result.reactionCount > 0 -> "Particle reaction complete"
                     else -> null
@@ -128,19 +143,30 @@ class GameViewModel(
                 feedback = when {
                     result.state.status == GameStatus.WON -> GameFeedback.GAME_OVER
                     result.state.status == GameStatus.LOST -> GameFeedback.GAME_OVER
+                    result.synthesizedCompound != null -> GameFeedback.COMPOUND
                     result.entanglementCollapseCount > 0 -> GameFeedback.REACTION
                     result.reactionCount > 0 -> GameFeedback.REACTION
                     result.mergeCount > 0 -> GameFeedback.MERGE
                     else -> GameFeedback.MOVE
                 },
                 animations = result.animations,
+                isBoardShaking = shouldShake || shouldUnlockQuantum,
+                quantumUnlockEventVisible = shouldUnlockQuantum,
                 level = nextLevel ?: _ui.value.level,
             )
+            if (shouldUnlockQuantum) {
+                inputLocked = true
+                isQuantumUnlocked = true
+                viewModelScope.launch { profileRepository.unlockQuantumModes() }
+            }
+            result.synthesizedCompound?.let { compound ->
+                viewModelScope.launch { collectionRepository.record(compound, nextGame.difficulty) }
+            }
             persist()
             viewModelScope.launch {
                 delay(MOVE_LOCK_MS)
                 runBotTurnIfNeeded()
-                inputLocked = false
+                if (!_ui.value.quantumUnlockEventVisible) inputLocked = false
             }
         } else {
             _ui.value = _ui.value.copy(game = result.state)
@@ -160,6 +186,7 @@ class GameViewModel(
             game = nextDuel.activeBoard,
             animations = result?.animations ?: emptyList(),
             message = nextDuel.winner?.let { "${it.label()} wins" },
+            isBoardShaking = nextDuel.winner != null || (result?.gainedScore ?: 0) >= HIGH_VALUE_MERGE_SCORE,
             feedback = result?.let {
                 when {
                     it.reactionCount > 0 -> GameFeedback.REACTION
@@ -205,7 +232,7 @@ class GameViewModel(
     }
 
     fun tapBoardCell(index: Int) {
-        if (inputLocked || _ui.value.loading || _ui.value.duel != null) return
+        if (inputLocked || _ui.value.loading) return
         val state = _ui.value.game
         val tile = state.cells.getOrNull(index)
         val tunneling = _ui.value.tunnelingTileId
@@ -235,10 +262,12 @@ class GameViewModel(
                 val nextLevel = evaluateActiveLevel(result.state)
                 _ui.value = _ui.value.copy(
                     game = result.state,
+                    duel = updateActiveDuelBoard(result.state),
                     canUndo = undo.canUndo,
                     tunnelingTileId = null,
                     message = "Tile tunneled",
                     feedback = GameFeedback.TUNNEL,
+                    isBoardShaking = true,
                     animations = listOf(result.animation),
                     level = nextLevel ?: _ui.value.level,
                 )
@@ -268,10 +297,12 @@ class GameViewModel(
                 val nextLevel = evaluateActiveLevel(result.state)
                 _ui.value = _ui.value.copy(
                     game = result.state,
+                    duel = updateActiveDuelBoard(result.state),
                     canUndo = undo.canUndo,
                     superpositionTileId = null,
                     message = if (choiceIndex == 0) "Low collapse stabilized" else "High collapse stabilized",
                     feedback = if (choiceIndex == 0) GameFeedback.COLLAPSE_LOW else GameFeedback.COLLAPSE_HIGH,
+                    isBoardShaking = choiceIndex != 0,
                     animations = listOf(result.animation),
                     level = nextLevel ?: _ui.value.level,
                 )
@@ -296,12 +327,13 @@ class GameViewModel(
     }
 
     fun observeTile(tileId: Long) {
-        if (inputLocked || _ui.value.loading || _ui.value.duel != null) return
+        if (inputLocked || _ui.value.loading) return
         val before = _ui.value.game
         when (val result = currentEngine().observeSuperposition(before, tileId)) {
             is ObserverResult.Success -> {
                 _ui.value = _ui.value.copy(
                     game = result.state,
+                    duel = updateActiveDuelBoard(result.state),
                     observerPreview = ObserverPreview(tileId, result.previewValue),
                     message = "Observer preview: ${result.previewValue}",
                 )
@@ -338,10 +370,12 @@ class GameViewModel(
                 val nextLevel = evaluateActiveLevel(result.state)
                 _ui.value = _ui.value.copy(
                     game = result.state,
+                    duel = updateActiveDuelBoard(result.state),
                     canUndo = undo.canUndo,
                     labTileIds = emptyList(),
                     message = "Discovered ${result.recipe.output.symbol}",
                     feedback = GameFeedback.COMPOUND,
+                    isBoardShaking = result.recipe.output.scoreValue >= HIGH_VALUE_MERGE_SCORE,
                     level = nextLevel ?: _ui.value.level,
                 )
                 viewModelScope.launch { collectionRepository.record(result.recipe.output, before.difficulty) }
@@ -545,6 +579,15 @@ class GameViewModel(
         _ui.value = _ui.value.copy(feedback = null)
     }
 
+    fun consumeBoardShake() {
+        _ui.value = _ui.value.copy(isBoardShaking = false)
+    }
+
+    fun dismissQuantumUnlockEvent() {
+        _ui.value = _ui.value.copy(quantumUnlockEventVisible = false, isBoardShaking = false)
+        inputLocked = false
+    }
+
     fun completeTutorial() {
         _ui.value = _ui.value.copy(game = _ui.value.game.copy(tutorialCompleted = true))
         persist()
@@ -631,12 +674,29 @@ class GameViewModel(
         }
     }
 
+    private fun updateActiveDuelBoard(board: GameState): DuelState? {
+        val duel = _ui.value.duel ?: return null
+        return when (duel.currentPlayer) {
+            DuelPlayer.PLAYER_ONE -> duel.copy(playerOne = board)
+            DuelPlayer.PLAYER_TWO -> duel.copy(playerTwo = board)
+        }
+    }
+
     private fun rememberUndoIfAllowed(state: GameState) {
         if (FusionRules.isUndoEnabled(state.difficulty)) {
             undo.remember(state)
         } else {
             undo.clear()
         }
+    }
+
+    private fun shouldTriggerQuantumUnlock(before: GameState, after: GameState): Boolean {
+        if (before.mode != GameMode.CLASSIC || after.mode != GameMode.CLASSIC) return false
+        if (_ui.value.quantumUnlockEventVisible) return false
+        val beforeBest = before.cells.mapNotNull { it?.let(FusionRules::gameValueOf) }.maxOrNull() ?: 0
+        val afterBest = after.cells.mapNotNull { it?.let(FusionRules::gameValueOf) }.maxOrNull() ?: 0
+        if (beforeBest >= QUANTUM_UNLOCK_TILE || afterBest < QUANTUM_UNLOCK_TILE) return false
+        return !isQuantumUnlocked
     }
 
     private fun logTerminalStateIfNeeded(state: GameState) {
@@ -650,6 +710,8 @@ class GameViewModel(
     private companion object {
         const val MOVE_LOCK_MS = 390L
         const val OBSERVER_PREVIEW_MS = 2400L
+        const val HIGH_VALUE_MERGE_SCORE = 512
+        const val QUANTUM_UNLOCK_TILE = 256
     }
 }
 

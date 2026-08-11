@@ -36,28 +36,29 @@ class GameEngine(
 
     fun move(state: GameState, direction: Direction): MoveResult {
         if (state.status != GameStatus.PLAYING) return MoveResult(state, false)
-        val output = MutableList<Tile?>(state.cells.size) { null }
+        val normalizedState = clearSynthesisHighlights(state)
+        val output = MutableList<Tile?>(normalizedState.cells.size) { null }
         var gainedScore = 0
         var mergeCount = 0
         var reactionCount = 0
         var entanglementCollapseCount = 0
         var nextId = state.nextTileId
         val animations = mutableListOf<MoveAnimation>()
-        val priorIds = state.cells.mapNotNull { it?.id }.toSet()
+        val priorIds = normalizedState.cells.mapNotNull { it?.id }.toSet()
         val entanglementCollapses = mutableMapOf<Long, Tile>()
 
-        for (line in 0 until state.size) {
-            val tiles = (0 until state.size).mapNotNull { p ->
-                val sourceIndex = index(state.size, direction, line, p)
-                state.cells[sourceIndex]?.let { IndexedTile(it, sourceIndex) }
+        for (line in 0 until normalizedState.size) {
+            val tiles = (0 until normalizedState.size).mapNotNull { p ->
+                val sourceIndex = index(normalizedState.size, direction, line, p)
+                normalizedState.cells[sourceIndex]?.let { IndexedTile(it, sourceIndex) }
             }
             val merged = mutableListOf<IndexedTile>()
             var i = 0
-            while (i < tiles.size && merged.size < state.size) {
+            while (i < tiles.size && merged.size < normalizedState.size) {
                 val first = tiles[i]
                 val second = tiles.getOrNull(i + 1)
-                val fusion = second?.let { mergeProduct(first.tile, it.tile, state.difficulty) }
-                if (fusion != null && merged.size + fusion.tiles.size <= state.size) {
+                val fusion = second?.let { mergeProduct(first.tile, it.tile, normalizedState.difficulty) }
+                if (fusion != null && merged.size + fusion.tiles.size <= normalizedState.size) {
                     val animationKind = if (fusion.isReaction) MoveAnimationKind.REACTION else MoveAnimationKind.MERGE
                     val products = fusion.tiles.map { it.copy(id = nextId++, entanglementGroupId = null) }
                     products.forEach { merged += IndexedTile(it, first.sourceIndex, animationKind) }
@@ -76,7 +77,7 @@ class GameEngine(
                 }
             }
             merged.forEachIndexed { p, indexed ->
-                val to = index(state.size, direction, line, p)
+                val to = index(normalizedState.size, direction, line, p)
                 output[to] = indexed.tile
                 val kind = when {
                     indexed.kind != null -> indexed.kind
@@ -97,22 +98,22 @@ class GameEngine(
             }
         }
 
-        val changed = state.cells != output
-        if (!changed) return MoveResult(state.copy(status = evaluate(state)), false)
+        val changed = normalizedState.cells != output
+        if (!changed) return MoveResult(normalizedState.copy(status = evaluate(normalizedState)), false)
 
-        val gainedEnergy = if (state.mode == GameMode.QUANTUM) FusionRules.energyGainForMergeCount(mergeCount) else 0
-        val overflowBonus = if (state.mode == GameMode.QUANTUM) FusionRules.overflowScoreBonus(state.energy, gainedEnergy, state.difficulty) else 0
-        val nextEnergy = if (state.mode == GameMode.QUANTUM) minOf(FusionRules.maxEnergyFor(state.difficulty), state.energy + gainedEnergy) else state.energy
-        val nextScore = state.score + gainedScore + overflowBonus
-        var next = state.copy(
+        val gainedEnergy = if (normalizedState.mode == GameMode.QUANTUM) FusionRules.energyGainForMergeCount(mergeCount) else 0
+        val overflowBonus = if (normalizedState.mode == GameMode.QUANTUM) FusionRules.overflowScoreBonus(normalizedState.energy, gainedEnergy, normalizedState.difficulty) else 0
+        val nextEnergy = if (normalizedState.mode == GameMode.QUANTUM) minOf(FusionRules.maxEnergyFor(normalizedState.difficulty), normalizedState.energy + gainedEnergy) else normalizedState.energy
+        val nextScore = normalizedState.score + gainedScore + overflowBonus
+        var next = normalizedState.copy(
             cells = output,
             score = nextScore,
-            bestScore = maxOf(state.bestScore, nextScore),
-            dailyBestScore = if (state.difficulty == Difficulty.DAILY) maxOf(state.dailyBestScore, nextScore) else state.dailyBestScore,
-            moveCount = state.moveCount + 1,
+            bestScore = maxOf(normalizedState.bestScore, nextScore),
+            dailyBestScore = if (normalizedState.difficulty == Difficulty.DAILY) maxOf(normalizedState.dailyBestScore, nextScore) else normalizedState.dailyBestScore,
+            moveCount = normalizedState.moveCount + 1,
             nextTileId = nextId,
             energy = nextEnergy,
-            totalChainMergeCount = state.totalChainMergeCount + maxOf(0, mergeCount - 1),
+            totalChainMergeCount = normalizedState.totalChainMergeCount + maxOf(0, mergeCount - 1),
         )
         val beforeSpawn = next
         if (next.difficulty != Difficulty.PUZZLE) {
@@ -123,8 +124,49 @@ class GameEngine(
         if (spawnedIndex != null && spawnedTile != null) {
             animations += MoveAnimation(spawnedTile.id, spawnedIndex, spawnedIndex, MoveAnimationKind.SPAWN)
         }
-        next = finalizeState(next.copy(status = evaluate(next)), state.status)
-        return MoveResult(next, true, gainedScore, mergeCount, reactionCount, entanglementCollapseCount, overflowBonus, animations)
+        val scan = scanBoard(next)
+        val scoredState = scan.state
+        val totalGainedScore = gainedScore + (scan.synthesizedCompound?.scoreValue ?: 0)
+        next = finalizeState(scoredState.copy(status = evaluate(scoredState)), normalizedState.status)
+        return MoveResult(next, true, totalGainedScore, mergeCount, reactionCount, entanglementCollapseCount, overflowBonus, scan.synthesizedCompound, animations)
+    }
+
+    fun scanBoard(state: GameState): BoardScanResult {
+        if (state.mode != GameMode.QUANTUM || state.status != GameStatus.PLAYING) {
+            return BoardScanResult(clearSynthesisHighlights(state))
+        }
+        val match = findSynthesisMatch(state) ?: return BoardScanResult(clearSynthesisHighlights(state))
+        return when (state.difficulty) {
+            Difficulty.MEDIUM -> {
+                val consumed = match.tileIndices.toSet()
+                val cells = state.cells.mapIndexed { index, tile ->
+                    if (index in consumed) null else tile?.copy(isHighlightedForSynthesis = false)
+                }
+                val score = state.score + match.recipe.output.scoreValue
+                BoardScanResult(
+                    state = state.copy(
+                        cells = cells,
+                        score = score,
+                        bestScore = maxOf(state.bestScore, score),
+                        dailyBestScore = if (state.difficulty == Difficulty.DAILY) maxOf(state.dailyBestScore, score) else state.dailyBestScore,
+                    ),
+                    highlightedTileIds = match.tileIds,
+                    synthesizedCompound = match.recipe.output,
+                )
+            }
+            Difficulty.HARD -> {
+                val highlighted = match.tileIds.toSet()
+                BoardScanResult(
+                    state = state.copy(
+                        cells = state.cells.map { tile ->
+                            tile?.copy(isHighlightedForSynthesis = tile.id in highlighted)
+                        },
+                    ),
+                    highlightedTileIds = match.tileIds,
+                )
+            }
+            else -> BoardScanResult(clearSynthesisHighlights(state))
+        }
     }
 
     fun combineCompound(state: GameState, tileIds: List<Long>): CompoundResult {
@@ -239,7 +281,7 @@ class GameEngine(
         val at = empty[random.nextInt(empty.size)]
         val cells = state.cells.toMutableList()
         cells[at] = if (state.mode == GameMode.QUANTUM) {
-            val kind = if (random.nextDouble() < 0.5) TileKind.ELECTRON else TileKind.PROTON
+            val kind = if (random.nextDouble() < FusionRules.protonInjectionSpawnChance) TileKind.PROTON else TileKind.ELECTRON
             val values = if (FusionRules.canSpawnSuperposition(state) && random.nextDouble() < FusionRules.superpositionSpawnChance) {
                 FusionRules.superpositionValuesFor(1)
             } else {
@@ -283,6 +325,38 @@ class GameEngine(
             } else null
         }
         return FusionRules.mergeProduct(a, b)
+    }
+
+    private fun clearSynthesisHighlights(state: GameState): GameState =
+        if (state.cells.none { it?.isHighlightedForSynthesis == true }) {
+            state
+        } else {
+            state.copy(cells = state.cells.map { tile -> tile?.copy(isHighlightedForSynthesis = false) })
+        }
+
+    private fun findSynthesisMatch(state: GameState): SynthesisMatch? {
+        val indexedElements = state.cells.mapIndexedNotNull { index, tile ->
+            val element = tile?.element ?: return@mapIndexedNotNull null
+            IndexedElement(index, tile.id, element.atomicNumber)
+        }
+        if (indexedElements.size < 2) return null
+        return FusionRules.compoundRecipes
+            .filter { it.unlockLevel.ordinal <= CompoundRecipeLevel.HARD.ordinal }
+            .asSequence()
+            .mapNotNull { recipe -> matchRecipe(indexedElements, recipe) }
+            .firstOrNull()
+    }
+
+    private fun matchRecipe(elements: List<IndexedElement>, recipe: CompoundRecipe): SynthesisMatch? {
+        val available = elements.groupBy { it.atomicNumber }.mapValues { (_, value) -> value.toMutableList() }
+        val indices = mutableListOf<Int>()
+        val ids = mutableListOf<Long>()
+        recipe.atomicNumbers.sorted().forEach { atomicNumber ->
+            val tile = available[atomicNumber]?.removeFirstOrNull() ?: return null
+            indices += tile.index
+            ids += tile.tileId
+        }
+        return SynthesisMatch(recipe, indices, ids)
     }
 
     private fun evaluate(state: GameState): GameStatus {
@@ -334,4 +408,12 @@ class GameEngine(
     }
 
     private data class IndexedTile(val tile: Tile, val sourceIndex: Int, val kind: MoveAnimationKind? = null)
+    private data class IndexedElement(val index: Int, val tileId: Long, val atomicNumber: Int)
+    private data class SynthesisMatch(val recipe: CompoundRecipe, val tileIndices: List<Int>, val tileIds: List<Long>)
 }
+
+data class BoardScanResult(
+    val state: GameState,
+    val highlightedTileIds: List<Long> = emptyList(),
+    val synthesizedCompound: Compound? = null,
+)

@@ -34,6 +34,16 @@ class DuelBotTest {
         assertTrue(duel.playerOne.size == 4 && duel.playerTwo.size == 4)
     }
 
+    @Test fun duel_sandbox_forces_quantum_unlock_bypass() {
+        val duel = DuelEngine(SeededRandomProvider(4)).newDuel(
+            DuelConfig(difficulty = Difficulty.HARDCORE, opponent = DuelOpponent.PASS_AND_PLAY, sandboxUnlocksQuantum = false),
+        )
+
+        assertTrue(duel.config.sandboxUnlocksQuantum)
+        assertTrue(duel.playerOne.mode == GameMode.QUANTUM && duel.playerTwo.mode == GameMode.QUANTUM)
+        assertTrue(duel.config.difficulty == Difficulty.HARDCORE)
+    }
+
     private fun averageBotScore(difficulty: BotDifficulty): Double {
         var total = 0L
         repeat(200) { seed ->

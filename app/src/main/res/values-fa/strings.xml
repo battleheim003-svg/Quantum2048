@@ -80,6 +80,7 @@
     <string name="score_line">امتیاز: %1$s</string>
     <string name="moves_line">حرکت‌ها: %1$s</string>
     <string name="best_element_line">بهترین عنصر: %1$s</string>
+    <string name="share_result">اشتراک</string>
     <string name="none">هیچ‌کدام</string>
     <string name="sound">صدا</string>
     <string name="music">موسیقی</string>

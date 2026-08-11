@@ -1,5 +1,6 @@
 package com.battleheim.quantum2048.ui
 
+import android.content.Intent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -53,12 +54,12 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.battleheim.quantum2048.audio.GameAudio
@@ -127,44 +128,46 @@ fun GameScreen(
         }
     }
     LaunchedEffect(ui.feedback) {
-        when (ui.feedback) {
+        val feedback = ui.feedback
+        when (feedback) {
             GameFeedback.MOVE -> {
                 if (settings.soundEnabled) audio.move()
-                if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }
             GameFeedback.MERGE -> {
                 if (settings.soundEnabled) audio.merge()
-                if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             }
             GameFeedback.REACTION -> {
                 if (settings.soundEnabled) audio.reaction()
-                if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }
             GameFeedback.COMPOUND -> {
                 if (settings.soundEnabled) audio.merge()
-                if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             }
             GameFeedback.TUNNEL -> {
                 if (settings.soundEnabled) audio.tunnel()
-                if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }
             GameFeedback.COLLAPSE_LOW -> {
                 if (settings.soundEnabled) audio.collapseLow()
-                if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }
             GameFeedback.COLLAPSE_HIGH -> {
                 if (settings.soundEnabled) audio.collapseHigh()
-                if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             }
             GameFeedback.GAME_OVER -> {
                 if (settings.soundEnabled) {
                     if (ui.game.status == GameStatus.WON) audio.win() else audio.gameOver()
                 }
-                if (settings.hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             }
             null -> Unit
         }
-        if (ui.feedback != null) vm.consumeFeedback()
+        if (feedback != null && settings.hapticsEnabled) {
+            HapticFeedbackManager.perform(haptics, feedback.hapticPattern())
+        }
+        if (feedback != null) vm.consumeFeedback()
+    }
+    LaunchedEffect(ui.isBoardShaking) {
+        if (ui.isBoardShaking) {
+            delay(360)
+            vm.consumeBoardShake()
+        }
     }
     val duel = ui.duel
     var turnSecondsLeft by remember(duel?.turnNumber) { mutableIntStateOf(duel?.config?.turnSeconds ?: 0) }
@@ -208,13 +211,13 @@ fun GameScreen(
                     FusionGuide(ui.game.difficulty)
                     CompoundLab(ui.game, ui.labTileIds, vm::clearCompoundLab)
                 }
-                Board(ui.game, ui.labTileIds, ui.tunnelingTileId, ui.observerPreview, ui.animations, settings.reducedMotion, vm::swipe, vm::sendToCompoundLab, vm::tapBoardCell, vm::observeTile)
+                Board(ui.game, ui.labTileIds, ui.tunnelingTileId, ui.observerPreview, ui.animations, settings.reducedMotion, ui.isBoardShaking, vm::swipe, vm::sendToCompoundLab, vm::tapBoardCell, vm::observeTile)
                 duel?.let { OpponentBoardSummary(it.inactiveBoard, it.currentPlayer) }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     QuantumActionButton(text = stringResource(R.string.new_game), onClick = vm::newGame, modifier = Modifier.weight(1f), accent = RadiantGold, filled = true, icon = "+")
                     QuantumActionButton(text = stringResource(R.string.undo), onClick = vm::undo, enabled = ui.canUndo, modifier = Modifier.weight(1f), accent = Cyan, icon = "↶")
                 }
-                if (ui.game.mode == GameMode.QUANTUM && duel == null) {
+                if (ui.game.mode == GameMode.QUANTUM) {
                     QuantumActionButton(
                         text = stringResource(if (ui.tunnelingTileId == null) R.string.tunnel else R.string.cancel_tunnel),
                         onClick = vm::toggleTunneling,
@@ -245,6 +248,42 @@ fun GameScreen(
                 SuperpositionDialog(tile, vm::dismissSuperposition, vm::collapseSuperposition)
             }
         }
+        if (ui.quantumUnlockEventVisible) {
+            QuantumUnlockEffect(onDismiss = vm::dismissQuantumUnlockEvent)
+        }
+    }
+}
+
+@Composable
+private fun QuantumUnlockEffect(onDismiss: () -> Unit) {
+    val flash = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        flash.snapTo(0.92f)
+        flash.animateTo(0f, tween(700, easing = FastOutSlowInEasing))
+    }
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(
+                Brush.radialGradient(
+                    listOf(
+                        Color.White.copy(alpha = flash.value),
+                        Electric.copy(alpha = flash.value * 0.62f),
+                        NeonPink.copy(alpha = flash.value * 0.36f),
+                        Color.Transparent,
+                    ),
+                ),
+            ),
+    )
+    QuantumDialog(
+        title = "Quantum Anomaly Detected!",
+        onDismiss = onDismiss,
+        accent = RadiantGold,
+        confirmText = "Unlocked",
+        onConfirm = onDismiss,
+    ) {
+        Text("New Mode Unlocked.", color = Color.White, fontWeight = FontWeight.Black)
+        Text("Quantum modes are now available from New Game.", color = TextSecondary, fontSize = 13.sp)
     }
 }
 
@@ -436,9 +475,29 @@ private fun Header(game: GameState, onPause: () -> Unit) {
 
 @Composable
 private fun HudReadout(label: String, value: String, accent: Color) {
+    val valueScale = remember { Animatable(1f) }
+    LaunchedEffect(value) {
+        valueScale.snapTo(1.16f)
+        valueScale.animateTo(
+            1f,
+            spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow,
+            ),
+        )
+    }
     Column(horizontalAlignment = Alignment.Start) {
         Text(label, color = accent, fontSize = 11.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
-        Text(value, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Black)
+        Text(
+            value,
+            color = Color.White,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Black,
+            modifier = Modifier.graphicsLayer {
+                scaleX = valueScale.value
+                scaleY = valueScale.value
+            },
+        )
     }
 }
 
@@ -510,6 +569,7 @@ private fun Board(
     observerPreview: ObserverPreview?,
     animations: List<MoveAnimation>,
     reducedMotion: Boolean,
+    isBoardShaking: Boolean,
     onSwipe: (Direction) -> Unit,
     onTileDragToLab: (Long) -> Unit,
     onCellTap: (Int) -> Unit,
@@ -524,6 +584,7 @@ private fun Board(
         Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
+            .shake(isShaking = isBoardShaking, reducedMotion = reducedMotion)
             .background(
                 Brush.linearGradient(
                     listOf(
@@ -775,6 +836,7 @@ private fun TileCell(
                 when {
                     animation?.kind == MoveAnimationKind.COLLAPSE_LOW -> Modifier.border(2.dp, Color(0xFF56E0B5), RoundedCornerShape(14.dp))
                     animation?.kind == MoveAnimationKind.COLLAPSE_HIGH -> Modifier.border(3.dp, RadiantGold, RoundedCornerShape(14.dp))
+                    tile?.isHighlightedForSynthesis == true -> Modifier.border(3.dp, Electric, RoundedCornerShape(14.dp))
                     selectedForTunnel -> Modifier.border(3.dp, RadiantGold, RoundedCornerShape(14.dp))
                     tile?.entanglementGroupId != null -> Modifier.border(2.dp, NeonPink, RoundedCornerShape(14.dp))
                     tile?.kind == TileKind.ELEMENT -> Modifier.border(if (selectedForLab) 2.dp else 1.dp, if (selectedForLab) Cyan else Color.White.copy(alpha = 0.22f), RoundedCornerShape(14.dp))
@@ -941,6 +1003,7 @@ private fun DuelPlayer.opponent(): DuelPlayer = when (this) {
 @Composable
 private fun EndDialog(game: GameState, continueGame: () -> Unit, newGame: () -> Unit) {
     val status = game.status
+    val context = LocalContext.current
     val bestElement = game.cells.mapNotNull { it?.element }.maxByOrNull { it.rank }
     QuantumDialog(
         title = if (status == GameStatus.WON) stringResource(R.string.target_reached) else stringResource(R.string.game_over),
@@ -955,5 +1018,24 @@ private fun EndDialog(game: GameState, continueGame: () -> Unit, newGame: () -> 
         if (game.difficulty == Difficulty.DAILY) Text(stringResource(R.string.daily_best_line, formatNumber(game.dailyBestScore)), color = TextSecondary)
         Text(stringResource(R.string.moves_line, formatNumber(game.moveCount)), color = TextSecondary)
         Text(stringResource(R.string.best_element_line, bestElement?.symbol ?: stringResource(R.string.none)), color = TextSecondary)
+        QuantumActionButton(
+            text = stringResource(R.string.share_result),
+            onClick = { shareGameResult(context, game) },
+            modifier = Modifier.fillMaxWidth(),
+            accent = Electric,
+        )
     }
+}
+
+private fun shareGameResult(context: android.content.Context, game: GameState) {
+    val imageUri = createShareImageUri(context, game)
+    val sendIntent = Intent(Intent.ACTION_SEND).apply {
+        type = "image/png"
+        putExtra(Intent.EXTRA_STREAM, imageUri)
+        putExtra(Intent.EXTRA_TEXT, sharePromptFor(game))
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(
+        Intent.createChooser(sendIntent, context.getString(R.string.share_result)),
+    )
 }

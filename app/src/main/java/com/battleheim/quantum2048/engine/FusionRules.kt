@@ -14,6 +14,7 @@ object FusionRules {
     // with one adjacent unpaired quantum tile. When either member fuses, the partner
     // collapses into the primary fusion output and the bond is consumed.
     const val entanglementSpawnChance: Double = 0.12
+    const val protonInjectionSpawnChance: Double = 0.18
 
     const val tunnelingEnergyCost: Int = 42
 
@@ -126,17 +127,23 @@ object FusionRules {
         QuantumElement.HYDROGEN,
         QuantumElement.HELIUM,
         QuantumElement.BERYLLIUM,
+        QuantumElement.CARBON,
+        QuantumElement.NITROGEN,
         QuantumElement.OXYGEN,
+        QuantumElement.FLUORINE,
         QuantumElement.NEON,
+        QuantumElement.SODIUM,
         QuantumElement.SILICON,
+        QuantumElement.PHOSPHORUS,
+        QuantumElement.SULFUR,
+        QuantumElement.CHLORINE,
+        QuantumElement.CALCIUM,
         QuantumElement.IRON,
+        QuantumElement.COPPER,
         QuantumElement.GOLD,
     )
 
-    val compoundRecipes: List<CompoundRecipe> = listOf(
-        CompoundRecipe("water", listOf(QuantumElement.HYDROGEN, QuantumElement.HYDROGEN, QuantumElement.OXYGEN), Compound("H2O", "Water", "Water", 240), CompoundRecipeLevel.MEDIUM),
-        CompoundRecipe("silicon_dioxide", listOf(QuantumElement.SILICON, QuantumElement.OXYGEN, QuantumElement.OXYGEN), Compound("SiO2", "Silicon dioxide", "Silicon dioxide", 720), CompoundRecipeLevel.QUANTUM),
-    )
+    val compoundRecipes: List<CompoundRecipe> = ChemistryDictionary.recipes()
 
     fun gameValueOf(tile: Tile): Int = when (tile.kind) {
         TileKind.CLASSIC -> tile.value
@@ -174,10 +181,22 @@ object FusionRules {
             val product = Tile(0, next.atomicNumber, TileKind.ELEMENT, next)
             return FusionProduct(listOf(product), gameValueOf(product), false)
         }
+        protonInjectionProduct(a, b)?.let { return it }
         if ((a.kind == TileKind.ELECTRON && b.kind == TileKind.PROTON) || (a.kind == TileKind.PROTON && b.kind == TileKind.ELECTRON)) {
             return particleReaction(a, b)
         }
         return null
+    }
+
+    private fun protonInjectionProduct(a: Tile, b: Tile): FusionProduct? {
+        val proton = listOf(a, b).singleOrNull { it.kind == TileKind.PROTON && it.value == 1 } ?: return null
+        val target = if (proton == a) b else a
+        if (target.kind != TileKind.ELEMENT) return null
+        val targetElement = target.element ?: return null
+        val injectedAtomicNumber = targetElement.atomicNumber + 1
+        val injectedElement = elementsByAtomicNumber[injectedAtomicNumber] ?: return null
+        val product = Tile(0, injectedAtomicNumber, TileKind.ELEMENT, injectedElement)
+        return FusionProduct(listOf(product), gameValueOf(product), true)
     }
 
     private fun particleReaction(a: Tile, b: Tile): FusionProduct? {

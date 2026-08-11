@@ -40,11 +40,20 @@ enum class QuantumElement(
     HYDROGEN("H", "Hydrogen", 1, 1),
     HELIUM("He", "Helium", 2, 2),
     BERYLLIUM("Be", "Beryllium", 4, 3),
-    OXYGEN("O", "Oxygen", 8, 4),
-    NEON("Ne", "Neon", 10, 5),
-    SILICON("Si", "Silicon", 14, 6),
-    IRON("Fe", "Iron", 26, 7),
-    GOLD("Au", "Gold", 79, 8);
+    CARBON("C", "Carbon", 6, 4),
+    NITROGEN("N", "Nitrogen", 7, 5),
+    OXYGEN("O", "Oxygen", 8, 6),
+    FLUORINE("F", "Fluorine", 9, 7),
+    NEON("Ne", "Neon", 10, 8),
+    SODIUM("Na", "Sodium", 11, 9),
+    SILICON("Si", "Silicon", 14, 10),
+    PHOSPHORUS("P", "Phosphorus", 15, 11),
+    SULFUR("S", "Sulfur", 16, 12),
+    CHLORINE("Cl", "Chlorine", 17, 13),
+    CALCIUM("Ca", "Calcium", 20, 14),
+    IRON("Fe", "Iron", 26, 15),
+    COPPER("Cu", "Copper", 29, 16),
+    GOLD("Au", "Gold", 79, 17);
 }
 
 @Serializable
@@ -55,6 +64,7 @@ data class Tile(
     val element: QuantumElement? = null,
     val entanglementGroupId: Long? = null,
     val superpositionValues: List<Int> = emptyList(),
+    val isHighlightedForSynthesis: Boolean = false,
 ) {
     init {
         require(value > 0)
@@ -100,6 +110,7 @@ data class MoveResult(
     val reactionCount: Int = 0,
     val entanglementCollapseCount: Int = 0,
     val energyOverflowBonus: Int = 0,
+    val synthesizedCompound: Compound? = null,
     val animations: List<MoveAnimation> = emptyList(),
 )
 
@@ -153,6 +164,7 @@ data class DuelConfig(
     val botDifficulty: BotDifficulty = BotDifficulty.NORMAL,
     val boardSize: Int = 4,
     val turnSeconds: Int = 12,
+    val sandboxUnlocksQuantum: Boolean = true,
 )
 
 data class DuelState(

@@ -34,6 +34,15 @@ class DataStoreProfileRepository(private val context: Context) : ProfileReposito
         }
     }
 
+    override suspend fun unlockQuantumModes() {
+        context.profileDataStore.edit { prefs ->
+            val current = prefs[key]?.let { encoded ->
+                runCatching { json.decodeFromString<ProfileSnapshot>(encoded).state }.getOrNull()
+            } ?: ProfileState()
+            prefs[key] = json.encodeToString(ProfileSnapshot(state = current.copy(isQuantumUnlocked = true)))
+        }
+    }
+
     override suspend fun clear() {
         context.profileDataStore.edit { prefs -> prefs.remove(key) }
     }

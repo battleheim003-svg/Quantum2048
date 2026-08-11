@@ -23,6 +23,7 @@ data class DailyScoreEntry(
 @Serializable
 data class ProfileState(
     val bestScores: Map<Difficulty, Long> = emptyMap(),
+    val isQuantumUnlocked: Boolean = false,
     val bestDailyScores: List<DailyScoreEntry> = emptyList(),
     val dailyBestScores: Map<String, Long> = emptyMap(),
     val bestDailyScore: Long = derivedBestDailyScore(bestDailyScores, dailyBestScores),
@@ -126,5 +127,6 @@ private fun normalizedDailyScoreEntries(
 interface ProfileRepository {
     fun observe(): Flow<ProfileState>
     suspend fun record(game: GameState)
+    suspend fun unlockQuantumModes()
     suspend fun clear()
 }

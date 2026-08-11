@@ -1,5 +1,13 @@
 package com.battleheim.quantum2048.ui
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
@@ -45,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -171,7 +180,14 @@ fun QuantumAppShell(
         return
     }
 
-    NavHost(navController = nav, startDestination = Routes.MainMenu) {
+    NavHost(
+        navController = nav,
+        startDestination = Routes.MainMenu,
+        enterTransition = { quantumEnterTransition() },
+        exitTransition = { quantumExitTransition() },
+        popEnterTransition = { quantumPopEnterTransition() },
+        popExitTransition = { quantumPopExitTransition() },
+    ) {
         composable(Routes.MainMenu) {
             MainMenuScreen(
                 vm = gameViewModel,
@@ -209,6 +225,7 @@ fun QuantumAppShell(
         composable(Routes.LevelSelect) {
             LevelSelectScreen(
                 vm = gameViewModel,
+                profileRepository = profileRepository,
                 onBack = { nav.popBackStack() },
                 onSelect = { difficulty, size, duel, opponent, botDifficulty ->
                     if (duel) {
@@ -708,8 +725,14 @@ private fun DataReadout(label: String, value: String, accent: Color, modifier: M
 }
 
 @Composable
-private fun LevelSelectScreen(vm: GameViewModel, onBack: () -> Unit, onSelect: (Difficulty, Int, Boolean, DuelOpponent, BotDifficulty) -> Unit) {
+private fun LevelSelectScreen(
+    vm: GameViewModel,
+    profileRepository: ProfileRepository,
+    onBack: () -> Unit,
+    onSelect: (Difficulty, Int, Boolean, DuelOpponent, BotDifficulty) -> Unit,
+) {
     var saves by remember { mutableStateOf(emptySet<SavedGameKey>()) }
+    val profile by profileRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.ProfileState())
     var selectedSize by remember { mutableStateOf(4) }
     var duel by remember { mutableStateOf(false) }
     var opponent by remember { mutableStateOf(DuelOpponent.BOT) }
@@ -725,11 +748,13 @@ private fun LevelSelectScreen(vm: GameViewModel, onBack: () -> Unit, onSelect: (
         Difficulty.entries.chunked(2).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 row.forEach { difficulty ->
+                    val locked = !duel && difficulty.mode != com.battleheim.quantum2048.engine.GameMode.CLASSIC && !profile.isQuantumUnlocked
                     DifficultyCard(
                         difficulty = difficulty,
                         size = selectedSize,
                         hasSave = SavedGameKey(difficulty, selectedSize) in saves,
                         description = difficultyDescription(difficulty),
+                        locked = locked,
                         onClick = { onSelect(difficulty, selectedSize, duel, opponent, botDifficulty) },
                         modifier = Modifier.weight(1f),
                     )
@@ -791,13 +816,22 @@ private fun BotDifficulty.label(): String = when (this) {
 }
 
 @Composable
-private fun DifficultyCard(difficulty: Difficulty, size: Int, hasSave: Boolean, description: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun DifficultyCard(
+    difficulty: Difficulty,
+    size: Int,
+    hasSave: Boolean,
+    description: String,
+    locked: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Card(
-        onClick = onClick,
+        onClick = { if (!locked) onClick() },
         colors = CardDefaults.cardColors(containerColor = difficultySurface(difficulty)),
         shape = RoundedCornerShape(8.dp),
         modifier = modifier
-            .border(1.dp, difficultyAccent(difficulty), RoundedCornerShape(8.dp))
+            .graphicsLayer { alpha = if (locked) 0.52f else 1f }
+            .border(1.dp, if (locked) TextMuted.copy(alpha = 0.55f) else difficultyAccent(difficulty), RoundedCornerShape(8.dp))
             .testTag("level_${difficulty.name.lowercase()}"),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -806,9 +840,19 @@ private fun DifficultyCard(difficulty: Difficulty, size: Int, hasSave: Boolean, 
                     Box(Modifier.size(14.dp).background(difficultyAccent(difficulty), RoundedCornerShape(3.dp)))
                     Text(difficulty.localizedLabel(), fontWeight = FontWeight.Black)
                 }
-                Text(if (hasSave) stringResource(R.string.saved_size, size) else stringResource(R.string.board_size, size), color = difficultyAccent(difficulty), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    if (locked) "LOCKED" else if (hasSave) stringResource(R.string.saved_size, size) else stringResource(R.string.board_size, size),
+                    color = if (locked) TextMuted else difficultyAccent(difficulty),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                )
             }
-            Text(description, color = TextSecondary, fontSize = 11.sp, lineHeight = 14.sp)
+            Text(
+                if (locked) "Reach tile 256 in Classic to unlock Quantum modes." else description,
+                color = if (locked) TextMuted else TextSecondary,
+                fontSize = 11.sp,
+                lineHeight = 14.sp,
+            )
         }
     }
 }
@@ -1031,6 +1075,42 @@ private fun MonetizationSection(
 private fun playMenu(audio: ToneGameAudio, settings: AppSettings) {
     if (settings.soundEnabled) audio.menu()
 }
+
+private fun quantumEnterTransition(): EnterTransition =
+    slideInHorizontally(
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow,
+        ),
+        initialOffsetX = { it / 5 },
+    ) + fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow))
+
+private fun quantumExitTransition(): ExitTransition =
+    slideOutHorizontally(
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        targetOffsetX = { -it / 8 },
+    ) + fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMedium))
+
+private fun quantumPopEnterTransition(): EnterTransition =
+    slideInHorizontally(
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow,
+        ),
+        initialOffsetX = { -it / 6 },
+    ) + fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow))
+
+private fun quantumPopExitTransition(): ExitTransition =
+    slideOutHorizontally(
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        targetOffsetX = { it / 8 },
+    ) + fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMedium))
 
 private fun playSelect(audio: ToneGameAudio, settings: AppSettings) {
     if (settings.soundEnabled) audio.select()

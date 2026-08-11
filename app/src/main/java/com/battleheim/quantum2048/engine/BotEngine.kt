@@ -84,10 +84,10 @@ class DuelEngine(
 ) {
     fun newDuel(config: DuelConfig): DuelState {
         val size = 4
-        val normalized = config.copy(boardSize = size)
+        val normalized = config.copy(boardSize = size, sandboxUnlocksQuantum = true)
         return DuelState(
-            playerOne = gameEngine.newGame(config.difficulty, size),
-            playerTwo = gameEngine.newGame(config.difficulty, size),
+            playerOne = gameEngine.newGame(normalized.difficulty, size),
+            playerTwo = gameEngine.newGame(normalized.difficulty, size),
             config = normalized,
         )
     }

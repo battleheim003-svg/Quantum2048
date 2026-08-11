@@ -180,18 +180,27 @@ fun elementColor(element: QuantumElement?): Color = when (element) {
     QuantumElement.HYDROGEN -> Color(0xFF72F7FF)
     QuantumElement.HELIUM -> Violet
     QuantumElement.BERYLLIUM -> AcidGreen
+    QuantumElement.CARBON -> Color(0xFF9CA3AF)
+    QuantumElement.NITROGEN -> Color(0xFF7C83FF)
     QuantumElement.OXYGEN -> OxygenRed
+    QuantumElement.FLUORINE -> Color(0xFFB7FF4A)
     QuantumElement.NEON -> NeonPink
+    QuantumElement.SODIUM -> Color(0xFFFFD166)
     QuantumElement.SILICON -> Electric
+    QuantumElement.PHOSPHORUS -> Color(0xFFFF8A3D)
+    QuantumElement.SULFUR -> Color(0xFFFFE45E)
+    QuantumElement.CHLORINE -> Color(0xFF7DFF8A)
+    QuantumElement.CALCIUM -> Color(0xFFD8F3FF)
     QuantumElement.IRON -> Color(0xFFFFB74A)
+    QuantumElement.COPPER -> Color(0xFFFF8F5A)
     QuantumElement.GOLD -> RadiantGold
     null -> PanelSoft
 }
 
 fun elementFamily(element: QuantumElement): String = when (element) {
     QuantumElement.HELIUM, QuantumElement.NEON -> "Noble gas"
-    QuantumElement.BERYLLIUM -> "Alkaline earth"
+    QuantumElement.BERYLLIUM, QuantumElement.CALCIUM -> "Alkaline earth"
     QuantumElement.SILICON -> "Metalloid"
-    QuantumElement.IRON, QuantumElement.GOLD -> "Metal"
-    QuantumElement.HYDROGEN, QuantumElement.OXYGEN -> "Nonmetal"
+    QuantumElement.SODIUM, QuantumElement.IRON, QuantumElement.COPPER, QuantumElement.GOLD -> "Metal"
+    QuantumElement.HYDROGEN, QuantumElement.CARBON, QuantumElement.NITROGEN, QuantumElement.OXYGEN, QuantumElement.FLUORINE, QuantumElement.PHOSPHORUS, QuantumElement.SULFUR, QuantumElement.CHLORINE -> "Nonmetal"
 }

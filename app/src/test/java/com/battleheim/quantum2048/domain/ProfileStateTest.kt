@@ -10,6 +10,7 @@ class ProfileStateTest {
     @Test
     fun recordMergesAchievementsAndKeepsLargestCounters() {
         val profile = ProfileState(
+            isQuantumUnlocked = true,
             successfulCollapseCount = 3,
             lowCollapseCount = 2,
             highCollapseCount = 1,
@@ -35,7 +36,17 @@ class ProfileStateTest {
         assertEquals(70, recorded.totalWinEnergy)
         assertEquals(2, recorded.winEnergySamples)
         assertEquals(6, recorded.totalChainMergeCount)
+        assertTrue(recorded.isQuantumUnlocked)
         assertTrue(FusionRules.achievementNoUndoWin in recorded.unlockedAchievements)
+    }
+
+    @Test
+    fun quantumModesStartLockedUntilProfileUnlocksThem() {
+        assertEquals(false, ProfileState().isQuantumUnlocked)
+
+        val recorded = ProfileState(isQuantumUnlocked = true).record(GameState(score = 32))
+
+        assertTrue(recorded.isQuantumUnlocked)
     }
 
     @Test
