@@ -36,6 +36,9 @@
     <string name="back">Back</string>
     <string name="pause">Pause</string>
     <string name="best_score">Best %1$s</string>
+    <string name="hud_score">SCORE</string>
+    <string name="hud_high">HIGH</string>
+    <string name="hud_energy">ENERGY %1$s%%</string>
     <string name="synthesis_lab">SYNTHESIS LAB</string>
     <string name="classic_board">CLASSIC BOARD</string>
     <string name="fusion_guide">e-/p+ chains, e- + p+ -&gt; element</string>

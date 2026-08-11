@@ -2,6 +2,7 @@ package com.battleheim.quantum2048.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -17,12 +19,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,11 +41,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -57,9 +66,14 @@ import com.battleheim.quantum2048.ads.RewardPlacement
 import com.battleheim.quantum2048.analytics.AnalyticsGateway
 import com.battleheim.quantum2048.analytics.NoOpAnalyticsGateway
 import com.battleheim.quantum2048.audio.ToneGameAudio
+import com.battleheim.quantum2048.designsystem.BoardGlass
 import com.battleheim.quantum2048.designsystem.Cyan
+import com.battleheim.quantum2048.designsystem.Electric
+import com.battleheim.quantum2048.designsystem.GlassPanel
+import com.battleheim.quantum2048.designsystem.NeonPink
 import com.battleheim.quantum2048.designsystem.PanelRaised
 import com.battleheim.quantum2048.designsystem.Panel
+import com.battleheim.quantum2048.designsystem.RadiantGold
 import com.battleheim.quantum2048.designsystem.TextMuted
 import com.battleheim.quantum2048.designsystem.TextSecondary
 import com.battleheim.quantum2048.designsystem.Void
@@ -265,17 +279,28 @@ private fun MainMenuScreen(
             },
         )
         SectionTitle(stringResource(R.string.app_title), stringResource(R.string.fusion_lab))
-        Button(
+        NeonMenuButton(
+            text = stringResource(R.string.continue_game),
             onClick = { onContinue(continueSave) },
             enabled = saves.isNotEmpty(),
             modifier = Modifier.fillMaxWidth().testTag("continue_button"),
-        ) { Text(stringResource(R.string.continue_game)) }
-        Button(onClick = onNewGame, modifier = Modifier.fillMaxWidth().testTag("new_game_button")) { Text(stringResource(R.string.new_game)) }
-        OutlinedButton(onClick = onCollection, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.collection)) }
-        OutlinedButton(onClick = onStatistics, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.statistics)) }
-        OutlinedButton(onClick = onTutorial, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.tutorial)) }
-        OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings)) }
-        TextButton(onClick = { playMenu(audio, settings); scope.launch { saves = vm.savedGames() } }) { Text(stringResource(R.string.refresh_saves)) }
+            accent = Cyan,
+            filled = true,
+        )
+        NeonMenuButton(
+            text = stringResource(R.string.new_game),
+            onClick = onNewGame,
+            modifier = Modifier.fillMaxWidth().testTag("new_game_button"),
+            accent = RadiantGold,
+            filled = true,
+        )
+        NeonMenuButton(text = stringResource(R.string.collection), onClick = onCollection, modifier = Modifier.fillMaxWidth(), accent = NeonPink)
+        NeonMenuButton(text = stringResource(R.string.statistics), onClick = onStatistics, modifier = Modifier.fillMaxWidth(), accent = Electric)
+        NeonMenuButton(text = stringResource(R.string.tutorial), onClick = onTutorial, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+        NeonMenuButton(text = stringResource(R.string.settings), onClick = onSettings, modifier = Modifier.fillMaxWidth(), accent = RadiantGold)
+        TextButton(onClick = { playMenu(audio, settings); scope.launch { saves = vm.savedGames() } }) {
+            Text(stringResource(R.string.refresh_saves), color = Cyan, fontWeight = FontWeight.Black)
+        }
     }
 }
 
@@ -294,12 +319,8 @@ private fun SplashScreen() {
 @Composable
 private fun QuickSettingsRow(settings: AppSettings, onLanguage: () -> Unit, onTheme: () -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-        OutlinedButton(onClick = onLanguage, modifier = Modifier.testTag("quick_language")) {
-            Text(settings.language.shortLabel(), fontSize = 12.sp)
-        }
-        OutlinedButton(onClick = onTheme, modifier = Modifier.padding(start = 8.dp).testTag("quick_theme")) {
-            Text(settings.themeMode.iconLabel(), fontSize = 14.sp)
-        }
+        NeonPillButton(settings.language.shortLabel(), onClick = onLanguage, modifier = Modifier.testTag("quick_language"))
+        NeonPillButton(settings.themeMode.iconLabel(), onClick = onTheme, modifier = Modifier.padding(start = 8.dp).testTag("quick_theme"), accent = RadiantGold)
     }
 }
 
@@ -373,26 +394,63 @@ private fun StatisticsScreen(profileRepository: ProfileRepository, socialReposit
     val today = LocalDate.now()
     MenuScaffold {
         SectionTitle(stringResource(R.string.statistics), stringResource(R.string.profile))
-        StatRow(stringResource(R.string.stat_today_date), formatDate(today))
-        StatRow(stringResource(R.string.stat_daily_best_today), formatNumber(profile.dailyBestScore(today.toString())))
-        StatRow(stringResource(R.string.stat_best_daily_score), formatNumber(profile.bestDailyScore))
-        StatRow(stringResource(R.string.stat_daily_challenge_count), formatNumber(profile.dailyChallengeCount))
-        StatRow(stringResource(R.string.stat_daily_current_streak), formatNumber(social.dailyStreak.currentStreak))
-        StatRow(stringResource(R.string.stat_daily_best_streak), formatNumber(social.dailyStreak.bestStreak))
-        StatRow(stringResource(R.string.stat_best_duel_streak), formatNumber(social.duelRecord.bestWinStreak))
-        StatRow(stringResource(R.string.stat_leaderboard_entries), formatNumber(social.leaderboards.size))
-        StatRow(stringResource(R.string.stat_collapse_ratio), formatPercent(profile.collapseLowRatio))
-        StatRow(stringResource(R.string.stat_average_win_energy), formatDecimal(profile.averageWinEnergy))
-        StatRow(stringResource(R.string.stat_chain_merges), formatNumber(profile.totalChainMergeCount))
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }
+        ProfileDataHeader(
+            date = formatDate(today),
+            dailyBest = formatNumber(profile.dailyBestScore(today.toString())),
+            bestDaily = formatNumber(profile.bestDailyScore),
+        )
+        NeonPanel(title = stringResource(R.string.statistics), accent = Electric) {
+            StatRow(stringResource(R.string.stat_daily_challenge_count), formatNumber(profile.dailyChallengeCount))
+            StatRow(stringResource(R.string.stat_daily_current_streak), formatNumber(social.dailyStreak.currentStreak))
+            StatRow(stringResource(R.string.stat_daily_best_streak), formatNumber(social.dailyStreak.bestStreak))
+            StatRow(stringResource(R.string.stat_best_duel_streak), formatNumber(social.duelRecord.bestWinStreak))
+            StatRow(stringResource(R.string.stat_leaderboard_entries), formatNumber(social.leaderboards.size))
+            StatRow(stringResource(R.string.stat_collapse_ratio), formatPercent(profile.collapseLowRatio))
+            StatRow(stringResource(R.string.stat_average_win_energy), formatDecimal(profile.averageWinEnergy))
+            StatRow(stringResource(R.string.stat_chain_merges), formatNumber(profile.totalChainMergeCount))
+        }
+        NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
     }
 }
 
 @Composable
 private fun StatRow(label: String, value: String) {
-    Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)).padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, color = TextSecondary, fontSize = 13.sp)
-        Text(value, color = Cyan, fontWeight = FontWeight.Black)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(Color.White.copy(alpha = 0.045f), RoundedCornerShape(10.dp))
+            .border(1.dp, Cyan.copy(alpha = 0.16f), RoundedCornerShape(10.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Text(value, color = Cyan, fontSize = 17.sp, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
+    }
+}
+
+@Composable
+private fun ProfileDataHeader(date: String, dailyBest: String, bestDaily: String) {
+    NeonPanel(title = stringResource(R.string.profile), accent = Cyan) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DataReadout(label = stringResource(R.string.stat_today_date), value = date, accent = TextSecondary, modifier = Modifier.weight(1f))
+            DataReadout(label = stringResource(R.string.stat_daily_best_today), value = dailyBest, accent = Cyan, modifier = Modifier.weight(1f))
+        }
+        DataReadout(label = stringResource(R.string.stat_best_daily_score), value = bestDaily, accent = RadiantGold, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+@Composable
+private fun DataReadout(label: String, value: String, accent: Color, modifier: Modifier = Modifier) {
+    Column(
+        modifier
+            .background(Color.Black.copy(alpha = 0.22f), RoundedCornerShape(10.dp))
+            .border(1.dp, accent.copy(alpha = 0.42f), RoundedCornerShape(10.dp))
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(label.uppercase(), color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.8.sp)
+        Text(value, color = accent, fontSize = 19.sp, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
     }
 }
 
@@ -566,25 +624,33 @@ private fun SettingsScreen(
 
     MenuScaffold {
         SectionTitle(stringResource(R.string.settings), stringResource(R.string.fusion_lab))
-        SettingsToggle(stringResource(R.string.sound), settings.soundEnabled) { playMenu(audio, settings); saveSettings(settings.copy(soundEnabled = it), analytics, settingsRepository, scope) }
-        SettingsToggle(stringResource(R.string.music), settings.musicEnabled) { playMenu(audio, settings); saveSettings(settings.copy(musicEnabled = it), analytics, settingsRepository, scope) }
-        SettingsToggle(stringResource(R.string.haptics), settings.hapticsEnabled) { playMenu(audio, settings); saveSettings(settings.copy(hapticsEnabled = it), analytics, settingsRepository, scope) }
-        SettingsToggle(stringResource(R.string.reduced_motion), settings.reducedMotion) { playMenu(audio, settings); saveSettings(settings.copy(reducedMotion = it), analytics, settingsRepository, scope) }
-        OutlinedButton(
-            onClick = {
-                playMenu(audio, settings)
-                saveSettings(settings.copy(language = settings.language.next()), analytics, settingsRepository, scope)
-            },
-            modifier = Modifier.fillMaxWidth().testTag("settings_language"),
-        ) { Text(stringResource(R.string.language_button, settings.language.displayLabel())) }
-        OutlinedButton(
-            onClick = {
-                playMenu(audio, settings)
-                saveSettings(settings.copy(themeMode = settings.themeMode.next()), analytics, settingsRepository, scope)
-            },
-            modifier = Modifier.fillMaxWidth().testTag("settings_theme"),
-        ) { Text(stringResource(R.string.theme_button, settings.themeMode.displayLabel())) }
-        Text(stringResource(R.string.language_note), color = TextSecondary, fontSize = 12.sp)
+        NeonPanel(title = stringResource(R.string.settings), accent = Cyan) {
+            SettingsToggle(stringResource(R.string.sound), settings.soundEnabled) { playMenu(audio, settings); saveSettings(settings.copy(soundEnabled = it), analytics, settingsRepository, scope) }
+            SettingsToggle(stringResource(R.string.music), settings.musicEnabled) { playMenu(audio, settings); saveSettings(settings.copy(musicEnabled = it), analytics, settingsRepository, scope) }
+            SettingsToggle(stringResource(R.string.haptics), settings.hapticsEnabled) { playMenu(audio, settings); saveSettings(settings.copy(hapticsEnabled = it), analytics, settingsRepository, scope) }
+            SettingsToggle(stringResource(R.string.reduced_motion), settings.reducedMotion) { playMenu(audio, settings); saveSettings(settings.copy(reducedMotion = it), analytics, settingsRepository, scope) }
+        }
+        NeonPanel(title = stringResource(R.string.language_note), accent = Electric) {
+            NeonMenuButton(
+                text = stringResource(R.string.language_button, settings.language.displayLabel()),
+                onClick = {
+                    playMenu(audio, settings)
+                    saveSettings(settings.copy(language = settings.language.next()), analytics, settingsRepository, scope)
+                },
+                modifier = Modifier.fillMaxWidth().testTag("settings_language"),
+                accent = Electric,
+            )
+            NeonMenuButton(
+                text = stringResource(R.string.theme_button, settings.themeMode.displayLabel()),
+                onClick = {
+                    playMenu(audio, settings)
+                    saveSettings(settings.copy(themeMode = settings.themeMode.next()), analytics, settingsRepository, scope)
+                },
+                modifier = Modifier.fillMaxWidth().testTag("settings_theme"),
+                accent = RadiantGold,
+            )
+            Text(stringResource(R.string.language_note), color = TextSecondary, fontSize = 12.sp)
+        }
         MonetizationSection(
             entitlements = entitlements,
             adGateway = adGateway,
@@ -607,12 +673,14 @@ private fun SettingsScreen(
             onReset = { scope.launch { billingRepository.clear() } },
         )
         SocialRetentionSection(socialRepository)
-        OutlinedButton(onClick = { playMenu(audio, settings); confirmResetCollection = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.reset_collection)) }
-        OutlinedButton(onClick = { playMenu(audio, settings); confirmResetProfile = true }, modifier = Modifier.fillMaxWidth().testTag("reset_profile")) { Text(stringResource(R.string.reset_profile)) }
-        Difficulty.entries.forEach { difficulty ->
-            OutlinedButton(onClick = { playMenu(audio, settings); confirmResetDifficulty = difficulty }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.reset_progress, difficulty.name.lowercase())) }
+        NeonPanel(title = stringResource(R.string.reset_profile), accent = NeonPink) {
+            NeonMenuButton(text = stringResource(R.string.reset_collection), onClick = { playMenu(audio, settings); confirmResetCollection = true }, modifier = Modifier.fillMaxWidth(), accent = NeonPink)
+            NeonMenuButton(text = stringResource(R.string.reset_profile), onClick = { playMenu(audio, settings); confirmResetProfile = true }, modifier = Modifier.fillMaxWidth().testTag("reset_profile"), accent = NeonPink)
+            Difficulty.entries.forEach { difficulty ->
+                NeonMenuButton(text = stringResource(R.string.reset_progress, difficulty.name.lowercase()), onClick = { playMenu(audio, settings); confirmResetDifficulty = difficulty }, modifier = Modifier.fillMaxWidth(), accent = TextMuted)
+            }
         }
-        OutlinedButton(onClick = { playMenu(audio, settings); onBack() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }
+        NeonMenuButton(text = stringResource(R.string.back), onClick = { playMenu(audio, settings); onBack() }, modifier = Modifier.fillMaxWidth(), accent = Cyan)
     }
 
     if (confirmResetCollection) {
@@ -654,16 +722,13 @@ private fun SettingsScreen(
 private fun SocialRetentionSection(socialRepository: SocialRepository) {
     val social by socialRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.SocialState())
     val scope = rememberCoroutineScope()
-    Card(colors = CardDefaults.cardColors(containerColor = PanelRaised), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.social_retention), fontWeight = FontWeight.Black)
-            StatRow(stringResource(R.string.stat_best_duel_streak), formatNumber(social.duelRecord.bestWinStreak))
-            StatRow(stringResource(R.string.stat_daily_current_streak), formatNumber(social.dailyStreak.currentStreak))
-            StatRow(stringResource(R.string.stat_leaderboard_entries), formatNumber(social.leaderboards.size))
-            Text(stringResource(R.string.play_games_offline_note), color = TextMuted, fontSize = 11.sp)
-            TextButton(onClick = { scope.launch { socialRepository.clear() } }, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.reset_social_progress))
-            }
+    NeonPanel(title = stringResource(R.string.social_retention), accent = Electric) {
+        StatRow(stringResource(R.string.stat_best_duel_streak), formatNumber(social.duelRecord.bestWinStreak))
+        StatRow(stringResource(R.string.stat_daily_current_streak), formatNumber(social.dailyStreak.currentStreak))
+        StatRow(stringResource(R.string.stat_leaderboard_entries), formatNumber(social.leaderboards.size))
+        Text(stringResource(R.string.play_games_offline_note), color = TextMuted, fontSize = 11.sp)
+        TextButton(onClick = { scope.launch { socialRepository.clear() } }, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.reset_social_progress), color = NeonPink, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -678,31 +743,30 @@ private fun MonetizationSection(
     onRewardDaily: () -> Unit,
     onReset: () -> Unit,
 ) {
-    Card(colors = CardDefaults.cardColors(containerColor = PanelRaised), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.monetization), fontWeight = FontWeight.Black)
-            Text(
-                stringResource(if (entitlements.removeAds) R.string.remove_ads_owned else R.string.remove_ads_not_owned),
-                color = if (entitlements.removeAds) Cyan else TextSecondary,
-                fontSize = 12.sp,
-            )
-            StatRow(stringResource(R.string.reward_extra_undo), formatNumber(entitlements.rewardedExtraUndoCredits))
-            StatRow(stringResource(R.string.reward_revive), formatNumber(entitlements.rewardedReviveCredits))
-            StatRow(stringResource(R.string.reward_daily_attempt), formatNumber(entitlements.rewardedDailyAttemptCredits))
-            Button(onClick = onRemoveAds, enabled = !entitlements.removeAds, modifier = Modifier.fillMaxWidth().testTag("grant_remove_ads")) {
-                Text(stringResource(R.string.test_grant_remove_ads))
-            }
-            OutlinedButton(onClick = onRewardUndo, enabled = adGateway.isRewardedReady, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.watch_for_extra_undo))
-            }
-            OutlinedButton(onClick = onRewardRevive, enabled = adGateway.isRewardedReady, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.watch_for_revive))
-            }
-            OutlinedButton(onClick = onRewardDaily, enabled = adGateway.isRewardedReady, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.watch_for_daily_attempt))
-            }
-            Text(stringResource(R.string.monetization_offline_note), color = TextMuted, fontSize = 11.sp)
-            TextButton(onClick = onReset, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.reset_entitlements)) }
+    NeonPanel(title = stringResource(R.string.monetization), accent = RadiantGold) {
+        Text(
+            stringResource(if (entitlements.removeAds) R.string.remove_ads_owned else R.string.remove_ads_not_owned),
+            color = if (entitlements.removeAds) Cyan else TextSecondary,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+        )
+        StatRow(stringResource(R.string.reward_extra_undo), formatNumber(entitlements.rewardedExtraUndoCredits))
+        StatRow(stringResource(R.string.reward_revive), formatNumber(entitlements.rewardedReviveCredits))
+        StatRow(stringResource(R.string.reward_daily_attempt), formatNumber(entitlements.rewardedDailyAttemptCredits))
+        NeonMenuButton(
+            text = stringResource(R.string.test_grant_remove_ads),
+            onClick = onRemoveAds,
+            enabled = !entitlements.removeAds,
+            modifier = Modifier.fillMaxWidth().testTag("grant_remove_ads"),
+            accent = RadiantGold,
+            filled = !entitlements.removeAds,
+        )
+        NeonMenuButton(text = stringResource(R.string.watch_for_extra_undo), onClick = onRewardUndo, enabled = adGateway.isRewardedReady, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+        NeonMenuButton(text = stringResource(R.string.watch_for_revive), onClick = onRewardRevive, enabled = adGateway.isRewardedReady, modifier = Modifier.fillMaxWidth(), accent = Electric)
+        NeonMenuButton(text = stringResource(R.string.watch_for_daily_attempt), onClick = onRewardDaily, enabled = adGateway.isRewardedReady, modifier = Modifier.fillMaxWidth(), accent = NeonPink)
+        Text(stringResource(R.string.monetization_offline_note), color = TextMuted, fontSize = 11.sp)
+        TextButton(onClick = onReset, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.reset_entitlements), color = NeonPink, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -787,9 +851,28 @@ private fun PauseScreen(vm: GameViewModel, onResume: () -> Unit, onMainMenu: () 
 
 @Composable
 private fun SettingsToggle(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)).padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, fontWeight = FontWeight.Bold)
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(Color.White.copy(alpha = 0.045f), RoundedCornerShape(12.dp))
+            .border(1.dp, if (checked) Cyan.copy(alpha = 0.45f) else TextMuted.copy(alpha = 0.22f), RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, color = if (checked) Color.White else TextSecondary, fontWeight = FontWeight.Black, fontSize = 14.sp, letterSpacing = 0.3.sp)
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = Cyan.copy(alpha = 0.74f),
+                checkedBorderColor = Cyan,
+                uncheckedThumbColor = TextMuted,
+                uncheckedTrackColor = BoardGlass,
+                uncheckedBorderColor = TextMuted.copy(alpha = 0.45f),
+            ),
+        )
     }
 }
 
@@ -806,26 +889,221 @@ private fun ConfirmDialog(title: String, body: String, onDismiss: () -> Unit, on
 
 @Composable
 private fun MenuScaffold(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
-        Column(
+    Scaffold(containerColor = Void) { padding ->
+        Box(
             modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color(0xFF111A45),
+                            Void,
+                            Color.Black,
+                        ),
+                    ),
+                )
+                .padding(padding),
         ) {
-            content()
+            SpaceLabBackdrop()
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 22.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                content()
+            }
         }
     }
 }
 
 @Composable
 private fun SectionTitle(title: String, subtitle: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(title, fontSize = 30.sp, fontWeight = FontWeight.Black)
-        Text(subtitle, color = Cyan, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            Modifier
+                .padding(end = 12.dp)
+                .size(width = 4.dp, height = 82.dp)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.85f),
+                            Cyan.copy(alpha = 0.45f),
+                            NeonPink.copy(alpha = 0.22f),
+                        ),
+                    ),
+                    RoundedCornerShape(12.dp),
+                ),
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                title,
+                color = Color(0xFFF6FBFF),
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.6.sp,
+                lineHeight = 34.sp,
+            )
+            Text(
+                subtitle.uppercase(),
+                color = Cyan,
+                fontWeight = FontWeight.Black,
+                fontSize = 13.sp,
+                letterSpacing = 1.2.sp,
+            )
+            Box(
+                Modifier
+                    .fillMaxWidth(0.58f)
+                    .height(1.dp)
+                    .background(Brush.horizontalGradient(listOf(Cyan.copy(alpha = 0.8f), Color.Transparent))),
+            )
+        }
+    }
+}
+
+@Composable
+private fun NeonPanel(title: String, accent: Color = Cyan, content: @Composable ColumnScope.() -> Unit) {
+    val shape = RoundedCornerShape(18.dp)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.085f),
+                        GlassPanel,
+                        BoardGlass.copy(alpha = 0.72f),
+                    ),
+                ),
+                shape,
+            )
+            .border(1.2.dp, accent.copy(alpha = 0.58f), shape)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                title.uppercase(),
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp,
+            )
+            Box(
+                Modifier
+                    .size(width = 46.dp, height = 2.dp)
+                    .background(Brush.horizontalGradient(listOf(accent, Color.Transparent)), RoundedCornerShape(2.dp)),
+            )
+        }
+        content()
+    }
+}
+
+@Composable
+private fun SpaceLabBackdrop() {
+    Canvas(Modifier.fillMaxSize()) {
+        val orbitCenter = androidx.compose.ui.geometry.Offset(size.width * 0.56f, size.height * 0.2f)
+        repeat(3) { index ->
+            rotate(degrees = -22f + index * 32f, pivot = orbitCenter) {
+                drawOval(
+                    color = Cyan.copy(alpha = 0.055f - index * 0.01f),
+                    topLeft = androidx.compose.ui.geometry.Offset(
+                        orbitCenter.x - size.width * 0.34f,
+                        orbitCenter.y - size.height * (0.035f + index * 0.014f),
+                    ),
+                    size = androidx.compose.ui.geometry.Size(
+                        size.width * 0.68f,
+                        size.height * (0.07f + index * 0.028f),
+                    ),
+                    style = Stroke(width = 1.1f),
+                )
+            }
+        }
+        listOf(
+            androidx.compose.ui.geometry.Offset(size.width * 0.16f, size.height * 0.22f) to Cyan,
+            androidx.compose.ui.geometry.Offset(size.width * 0.72f, size.height * 0.24f) to NeonPink,
+            androidx.compose.ui.geometry.Offset(size.width * 0.87f, size.height * 0.42f) to RadiantGold,
+            androidx.compose.ui.geometry.Offset(size.width * 0.26f, size.height * 0.63f) to Electric,
+            androidx.compose.ui.geometry.Offset(size.width * 0.62f, size.height * 0.78f) to Cyan,
+        ).forEachIndexed { index, particle ->
+            drawCircle(
+                color = particle.second.copy(alpha = if (index == 2) 0.2f else 0.14f),
+                radius = 1.6f + index % 2,
+                center = particle.first,
+            )
+        }
+        drawLine(
+            color = Electric.copy(alpha = 0.08f),
+            start = androidx.compose.ui.geometry.Offset(size.width * 0.08f, size.height * 0.52f),
+            end = androidx.compose.ui.geometry.Offset(size.width * 0.92f, size.height * 0.36f),
+            strokeWidth = 0.8f,
+            cap = StrokeCap.Round,
+        )
+    }
+}
+
+@Composable
+private fun NeonMenuButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    accent: Color = Cyan,
+    filled: Boolean = false,
+) {
+    val shape = RoundedCornerShape(28.dp)
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        shape = shape,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (filled) accent else GlassPanel,
+            contentColor = if (filled) Color(0xFF061016) else accent,
+            disabledContainerColor = BoardGlass.copy(alpha = 0.5f),
+            disabledContentColor = TextMuted,
+        ),
+        modifier = modifier
+            .height(58.dp)
+            .background(
+                Brush.horizontalGradient(
+                    listOf(
+                        accent.copy(alpha = if (enabled) 0.18f else 0.04f),
+                        Color.Transparent,
+                        NeonPink.copy(alpha = if (enabled && !filled) 0.12f else 0.02f),
+                    ),
+                ),
+                shape,
+            )
+            .border(1.2.dp, accent.copy(alpha = if (enabled) 0.78f else 0.25f), shape),
+    ) {
+        Text(
+            text,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 0.4.sp,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun NeonPillButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    accent: Color = Cyan,
+) {
+    val shape = RoundedCornerShape(24.dp)
+    Button(
+        onClick = onClick,
+        shape = shape,
+        colors = ButtonDefaults.buttonColors(containerColor = GlassPanel, contentColor = accent),
+        modifier = modifier
+            .height(48.dp)
+            .border(1.1.dp, accent.copy(alpha = 0.62f), shape),
+    ) {
+        Text(text, fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.8.sp)
     }
 }
 

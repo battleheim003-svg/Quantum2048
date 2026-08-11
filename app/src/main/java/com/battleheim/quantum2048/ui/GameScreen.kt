@@ -1,6 +1,5 @@
 package com.battleheim.quantum2048.ui
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -66,13 +65,15 @@ import androidx.compose.ui.unit.sp
 import com.battleheim.quantum2048.audio.GameAudio
 import com.battleheim.quantum2048.audio.SilentGameAudio
 import com.battleheim.quantum2048.designsystem.Cyan
+import com.battleheim.quantum2048.designsystem.BoardGlass
 import com.battleheim.quantum2048.designsystem.Electric
+import com.battleheim.quantum2048.designsystem.GlassPanel
 import com.battleheim.quantum2048.designsystem.NeonPink
 import com.battleheim.quantum2048.designsystem.PanelRaised
-import com.battleheim.quantum2048.designsystem.Panel
 import com.battleheim.quantum2048.designsystem.TextMuted
 import com.battleheim.quantum2048.designsystem.TextSecondary
 import com.battleheim.quantum2048.designsystem.Void
+import com.battleheim.quantum2048.designsystem.RadiantGold
 import com.battleheim.quantum2048.designsystem.difficultyAccent
 import com.battleheim.quantum2048.designsystem.difficultySurface
 import com.battleheim.quantum2048.designsystem.elementColor
@@ -298,21 +299,74 @@ private fun OpponentBoardSummary(board: GameState, current: DuelPlayer) {
 
 @Composable
 private fun Header(game: GameState, onPause: () -> Unit) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Column {
-            Text(stringResource(R.string.app_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-            Text("${game.difficulty.label()} - ${if (game.mode == GameMode.QUANTUM) stringResource(R.string.synthesis_lab) else stringResource(R.string.classic_board)}", color = difficultyAccent(game.difficulty), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedButton(onClick = onPause) { Text(stringResource(R.string.pause)) }
-            Surface(shape = RoundedCornerShape(12.dp), color = difficultySurface(game.difficulty)) {
-                Column(Modifier.padding(horizontal = 14.dp, vertical = 9.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(formatNumber(game.score), fontWeight = FontWeight.Black)
-                    Text(stringResource(R.string.best_score, formatNumber(game.bestScore)), color = TextSecondary, fontSize = 11.sp)
-                    if (game.mode == GameMode.QUANTUM) Text(stringResource(R.string.energy_line, formatNumber(game.energy)), color = Cyan, fontSize = 11.sp)
-                    if (game.difficulty == Difficulty.DAILY) Text(stringResource(R.string.daily_best_line, formatNumber(game.dailyBestScore)), color = TextSecondary, fontSize = 11.sp)
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(9.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            stringResource(R.string.app_name).uppercase(),
+            color = Color(0xFFD8FBFF),
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 1.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = GlassPanel,
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, Cyan.copy(alpha = 0.42f), RoundedCornerShape(12.dp)),
+        ) {
+            Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    HudReadout(stringResource(R.string.hud_score), formatNumber(game.score), Cyan)
+                    HudReadout(stringResource(R.string.hud_high), formatNumber(game.bestScore), Color.White)
+                    OutlinedButton(onClick = onPause) { Text(stringResource(R.string.pause)) }
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "${game.difficulty.label()} / ${if (game.mode == GameMode.QUANTUM) stringResource(R.string.synthesis_lab) else stringResource(R.string.classic_board)}",
+                        color = difficultyAccent(game.difficulty),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    if (game.difficulty == Difficulty.DAILY) {
+                        Text(stringResource(R.string.daily_best_line, formatNumber(game.dailyBestScore)), color = TextSecondary, fontSize = 11.sp)
+                    }
+                }
+                if (game.mode == GameMode.QUANTUM) {
+                    EnergyMeter(game.energy)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun HudReadout(label: String, value: String, accent: Color) {
+    Column(horizontalAlignment = Alignment.Start) {
+        Text(label, color = accent, fontSize = 11.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+        Text(value, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Black)
+    }
+}
+
+@Composable
+private fun EnergyMeter(energy: Int) {
+    val capped = energy.coerceIn(0, 100)
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(R.string.hud_energy, formatNumber(capped)), color = Cyan, fontSize = 12.sp, fontWeight = FontWeight.Black)
+        Box(
+            Modifier
+                .weight(1f)
+                .height(12.dp)
+                .background(Color.Black.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                .border(1.dp, Cyan.copy(alpha = 0.45f), RoundedCornerShape(8.dp)),
+        ) {
+            Box(
+                Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth((capped / 100f).coerceAtLeast(0.01f))
+                    .background(Brush.horizontalGradient(listOf(Electric, Cyan, Color.White.copy(alpha = 0.92f))), RoundedCornerShape(8.dp)),
+            )
         }
     }
 }
@@ -367,8 +421,17 @@ private fun Board(
         Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
-            .background(Panel, RoundedCornerShape(12.dp))
-            .border(1.dp, difficultyAccent(game.difficulty).copy(alpha = 0.42f), RoundedCornerShape(12.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.08f),
+                        BoardGlass,
+                        Color.Black.copy(alpha = 0.36f),
+                    ),
+                ),
+                RoundedCornerShape(18.dp),
+            )
+            .border(1.4.dp, difficultyAccent(game.difficulty).copy(alpha = 0.72f), RoundedCornerShape(18.dp))
             .padding(boardPadding)
             .pointerInput(game.mode) {
                 detectDragGestures(
@@ -400,13 +463,32 @@ private fun Board(
         val stepPx = cellPx + gapPx
         val cellDp = with(density) { cellPx.toDp() }
 
+        Canvas(Modifier.fillMaxSize()) {
+            val accent = difficultyAccent(game.difficulty)
+            drawRoundRect(
+                color = accent.copy(alpha = 0.08f),
+                style = Stroke(width = 2.2f),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(22f, 22f),
+            )
+            repeat(9) { index ->
+                val x = size.width * (index + 1) / 10f
+                drawLine(
+                    color = if (index % 2 == 0) Cyan.copy(alpha = 0.05f) else NeonPink.copy(alpha = 0.035f),
+                    start = androidx.compose.ui.geometry.Offset(x, 0f),
+                    end = androidx.compose.ui.geometry.Offset(x + 36f, size.height),
+                    strokeWidth = 0.8f,
+                )
+            }
+        }
+
         repeat(game.size) { row ->
             repeat(game.size) { column ->
                 Box(
                     Modifier
                         .offset { IntOffset((column * stepPx).roundToInt(), (row * stepPx).roundToInt()) }
                         .size(cellDp)
-                        .background(Color(0xFF171D38), RoundedCornerShape(8.dp))
+                        .background(Color(0x6617203D), RoundedCornerShape(12.dp))
+                        .border(1.dp, Color.White.copy(alpha = 0.035f), RoundedCornerShape(12.dp))
                         .clickable(enabled = tunnelingTileId != null) { onCellTap(row * game.size + column) },
                 )
             }
@@ -459,12 +541,14 @@ private fun TileCell(
 ) {
     val scale = remember(tile?.id) { Animatable(1f) }
     val alpha = remember(tile?.id) { Animatable(1f) }
+    val burst = remember(tile?.id) { Animatable(0f) }
     val translationX = remember(tile?.id) { Animatable(0f) }
     val translationY = remember(tile?.id) { Animatable(0f) }
     LaunchedEffect(tile?.id, animation, reducedMotion, stepPx) {
         if (tile == null || reducedMotion) {
             scale.snapTo(1f)
             alpha.snapTo(1f)
+            burst.snapTo(0f)
             translationX.snapTo(0f)
             translationY.snapTo(0f)
             return@LaunchedEffect
@@ -486,12 +570,16 @@ private fun TileCell(
         when (animation?.kind) {
             MoveAnimationKind.MERGE -> {
                 scale.snapTo(0.88f)
+                burst.snapTo(0f)
+                launch { burst.animateTo(1f, tween(280, easing = FastOutSlowInEasing)) }
                 scale.animateTo(1.1f, tween(90, easing = FastOutSlowInEasing))
                 scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
             }
             MoveAnimationKind.REACTION -> {
                 scale.snapTo(0.82f)
                 alpha.snapTo(0.72f)
+                burst.snapTo(0f)
+                launch { burst.animateTo(1f, tween(360, easing = FastOutSlowInEasing)) }
                 scale.animateTo(1.16f, tween(110, easing = FastOutSlowInEasing))
                 alpha.animateTo(1f, tween(120, easing = FastOutSlowInEasing))
                 scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
@@ -499,6 +587,8 @@ private fun TileCell(
             MoveAnimationKind.ENTANGLEMENT -> {
                 scale.snapTo(0.76f)
                 alpha.snapTo(0.66f)
+                burst.snapTo(0f)
+                launch { burst.animateTo(1f, tween(360, easing = FastOutSlowInEasing)) }
                 scale.animateTo(1.18f, tween(120, easing = FastOutSlowInEasing))
                 alpha.animateTo(1f, tween(130, easing = FastOutSlowInEasing))
                 scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
@@ -506,6 +596,8 @@ private fun TileCell(
             MoveAnimationKind.TUNNEL -> {
                 scale.snapTo(0.7f)
                 alpha.snapTo(0.5f)
+                burst.snapTo(0f)
+                launch { burst.animateTo(1f, tween(300, easing = FastOutSlowInEasing)) }
                 alpha.animateTo(1f, tween(130, easing = FastOutSlowInEasing))
                 scale.animateTo(1.08f, tween(120, easing = FastOutSlowInEasing))
                 scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
@@ -513,6 +605,8 @@ private fun TileCell(
             MoveAnimationKind.COLLAPSE_LOW -> {
                 scale.snapTo(0.86f)
                 alpha.snapTo(0.76f)
+                burst.snapTo(0f)
+                launch { burst.animateTo(1f, tween(260, easing = FastOutSlowInEasing)) }
                 alpha.animateTo(1f, tween(90, easing = FastOutSlowInEasing))
                 scale.animateTo(1.06f, tween(90, easing = FastOutSlowInEasing))
                 scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioLowBouncy))
@@ -520,6 +614,8 @@ private fun TileCell(
             MoveAnimationKind.COLLAPSE_HIGH -> {
                 scale.snapTo(0.72f)
                 alpha.snapTo(0.55f)
+                burst.snapTo(0f)
+                launch { burst.animateTo(1f, tween(380, easing = FastOutSlowInEasing)) }
                 alpha.animateTo(1f, tween(150, easing = FastOutSlowInEasing))
                 scale.animateTo(1.2f, tween(130, easing = FastOutSlowInEasing))
                 scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
@@ -556,11 +652,7 @@ private fun TileCell(
                 this.alpha = alpha.value
                 this.translationX = translationX.value
                 this.translationY = translationY.value
-                shadowElevation = if (
-                    animation?.kind == MoveAnimationKind.REACTION ||
-                    animation?.kind == MoveAnimationKind.TUNNEL ||
-                    animation?.kind == MoveAnimationKind.COLLAPSE_HIGH
-                ) 18f else 0f
+                shadowElevation = if (animation?.kind != null) 24f else 8f
             }
             .background(
                 Brush.linearGradient(
@@ -570,16 +662,16 @@ private fun TileCell(
                         Color.Black.copy(alpha = 0.18f),
                     ),
                 ),
-                RoundedCornerShape(8.dp),
+                RoundedCornerShape(14.dp),
             )
-            .border(1.dp, color.copy(alpha = 0.86f), RoundedCornerShape(8.dp))
+            .border(1.5.dp, color.copy(alpha = 0.92f), RoundedCornerShape(14.dp))
             .then(
                 when {
-                    animation?.kind == MoveAnimationKind.COLLAPSE_LOW -> Modifier.border(2.dp, Color(0xFF56E0B5), RoundedCornerShape(8.dp))
-                    animation?.kind == MoveAnimationKind.COLLAPSE_HIGH -> Modifier.border(3.dp, Color(0xFFFFD166), RoundedCornerShape(8.dp))
-                    selectedForTunnel -> Modifier.border(3.dp, Color(0xFFFFD166), RoundedCornerShape(8.dp))
-                    tile?.entanglementGroupId != null -> Modifier.border(2.dp, Color(0xFFFF7CE5), RoundedCornerShape(8.dp))
-                    tile?.kind == TileKind.ELEMENT -> Modifier.border(if (selectedForLab) 2.dp else 1.dp, if (selectedForLab) Cyan else Color.White.copy(alpha = 0.18f), RoundedCornerShape(8.dp))
+                    animation?.kind == MoveAnimationKind.COLLAPSE_LOW -> Modifier.border(2.dp, Color(0xFF56E0B5), RoundedCornerShape(14.dp))
+                    animation?.kind == MoveAnimationKind.COLLAPSE_HIGH -> Modifier.border(3.dp, RadiantGold, RoundedCornerShape(14.dp))
+                    selectedForTunnel -> Modifier.border(3.dp, RadiantGold, RoundedCornerShape(14.dp))
+                    tile?.entanglementGroupId != null -> Modifier.border(2.dp, NeonPink, RoundedCornerShape(14.dp))
+                    tile?.kind == TileKind.ELEMENT -> Modifier.border(if (selectedForLab) 2.dp else 1.dp, if (selectedForLab) Cyan else Color.White.copy(alpha = 0.22f), RoundedCornerShape(14.dp))
                     else -> Modifier
                 },
             )
@@ -614,6 +706,13 @@ private fun TileCell(
             ),
         contentAlignment = Alignment.Center,
     ) {
+        if (burst.value > 0f && tile != null) {
+            ParticleBurst(
+                progress = burst.value,
+                color = if (tile.kind == TileKind.ELEMENT) elementColor(tile.element) else color,
+                intense = animation?.kind == MoveAnimationKind.REACTION || animation?.kind == MoveAnimationKind.COLLAPSE_HIGH,
+            )
+        }
         if (tile?.kind == TileKind.ELEMENT) {
             Canvas(Modifier.fillMaxSize()) {
                 val glow = elementColor(tile.element).copy(alpha = 0.22f)
@@ -640,6 +739,47 @@ private fun TileCell(
             mode == GameMode.QUANTUM -> QuantumTileLabel(tile, boardSize, observerValue)
             else -> Text(formatNumber(tile.value), fontSize = if (tile.value < 1000) 26.sp else 20.sp, fontWeight = FontWeight.Black, color = Color.White)
         }
+    }
+}
+
+@Composable
+private fun ParticleBurst(progress: Float, color: Color, intense: Boolean) {
+    Canvas(Modifier.fillMaxSize()) {
+        val center = androidx.compose.ui.geometry.Offset(size.width * 0.5f, size.height * 0.5f)
+        val rayCount = if (intense) 18 else 12
+        val maxRadius = size.minDimension * if (intense) 0.72f else 0.54f
+        val alpha = (1f - progress).coerceIn(0f, 1f)
+        repeat(rayCount) { index ->
+            val angle = (index.toFloat() / rayCount.toFloat()) * 6.28318f
+            val startRadius = maxRadius * progress * 0.22f
+            val endRadius = maxRadius * progress
+            val start = androidx.compose.ui.geometry.Offset(
+                center.x + cos(angle) * startRadius,
+                center.y + sin(angle) * startRadius,
+            )
+            val end = androidx.compose.ui.geometry.Offset(
+                center.x + cos(angle) * endRadius,
+                center.y + sin(angle) * endRadius,
+            )
+            drawLine(
+                color = color.copy(alpha = alpha * 0.8f),
+                start = start,
+                end = end,
+                strokeWidth = if (intense) 2.2f else 1.4f,
+                cap = StrokeCap.Round,
+            )
+            drawCircle(
+                color = Color.White.copy(alpha = alpha * 0.72f),
+                radius = if (intense) 2.3f else 1.5f,
+                center = end,
+            )
+        }
+        drawCircle(
+            color = color.copy(alpha = alpha * 0.22f),
+            radius = maxRadius * progress,
+            center = center,
+            style = Stroke(width = if (intense) 4f else 2.4f),
+        )
     }
 }
 

@@ -29,6 +29,9 @@
     <string name="back">بازگشت</string>
     <string name="pause">مکث</string>
     <string name="best_score">بهترین %1$s</string>
+    <string name="hud_score">امتیاز</string>
+    <string name="hud_high">رکورد</string>
+    <string name="hud_energy">انرژی %1$s%%</string>
     <string name="synthesis_lab">آزمایشگاه سنتز</string>
     <string name="classic_board">صفحه کلاسیک</string>
     <string name="fusion_guide">زنجیره e-/p+، واکنش e- + p+ به عنصر</string>
