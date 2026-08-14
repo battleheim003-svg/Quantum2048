@@ -2,6 +2,7 @@ package com.battleheim.quantum2048.engine
 
 class GameEngine(
     private val random: RandomProvider,
+    private val entanglementEnabled: Boolean = FeatureFlags.ENTANGLEMENT_ENABLED,
 ) {
     fun newGame(mode: GameMode = GameMode.CLASSIC, size: Int = 4): GameState =
         newGame(Difficulty.fromMode(mode), size)
@@ -48,7 +49,7 @@ class GameEngine(
         var nextId = state.nextTileId
         val animations = mutableListOf<MoveAnimation>()
         val priorIds = normalizedState.cells.mapNotNull { it?.id }.toSet()
-        val entanglementCollapses = mutableMapOf<Long, Tile>()
+        val consumedEntangledTileIds = mutableSetOf<Long>()
 
         for (line in 0 until normalizedState.size) {
             val tiles = (0 until normalizedState.size).mapNotNull { p ->
@@ -65,11 +66,11 @@ class GameEngine(
                     val animationKind = if (fusion.isReaction) MoveAnimationKind.REACTION else MoveAnimationKind.MERGE
                     val products = fusion.tiles.map { it.copy(id = nextId++, entanglementGroupId = null) }
                     products.forEach { merged += IndexedTile(it, first.sourceIndex, animationKind) }
-                    val primaryProduct = products.first()
-                    listOf(first.tile, second.tile)
-                        .mapNotNull { it.entanglementGroupId }
-                        .distinct()
-                        .forEach { groupId -> entanglementCollapses[groupId] = primaryProduct }
+                    if (entanglementEnabled) {
+                        consumedEntangledTileIds += listOf(first.tile, second.tile)
+                            .filter { it.entanglementGroupId != null }
+                            .map { it.id }
+                    }
                     gainedScore += fusion.score
                     mergeCount++
                     if (fusion.isReaction) reactionCount++
@@ -91,25 +92,35 @@ class GameEngine(
             }
         }
 
-        if (entanglementCollapses.isNotEmpty()) {
-            for (index in output.indices) {
-                val tile = output[index] ?: continue
-                val product = tile.entanglementGroupId?.let { entanglementCollapses[it] } ?: continue
-                output[index] = product.copy(id = tile.id, entanglementGroupId = null)
-                animations += MoveAnimation(tile.id, index, index, MoveAnimationKind.ENTANGLEMENT)
-                entanglementCollapseCount++
-            }
-        }
-
         val changed = normalizedState.cells != output
         if (!changed) return MoveResult(normalizedState.copy(status = evaluate(normalizedState)), false)
+        val invalidatedPairs = if (entanglementEnabled) {
+            normalizedState.entangledPairs.filter { pair ->
+                pair.firstTileId in consumedEntangledTileIds || pair.secondTileId in consumedEntangledTileIds
+            }
+        } else {
+            emptyList()
+        }
+        val nextPairs = if (entanglementEnabled) {
+            normalizedState.entangledPairs - invalidatedPairs.toSet()
+        } else {
+            normalizedState.entangledPairs
+        }
+        val clearedEntanglementTileIds = invalidatedPairs.flatMap { listOf(it.firstTileId, it.secondTileId) }.toSet()
+        val nextOutput = if (entanglementEnabled && clearedEntanglementTileIds.isNotEmpty()) {
+            output.map { tile ->
+                if (tile?.id in clearedEntanglementTileIds) tile?.copy(entanglementGroupId = null) else tile
+            }
+        } else {
+            output
+        }
 
         val gainedEnergy = if (normalizedState.mode == GameMode.QUANTUM) FusionRules.energyGainForMergeCount(mergeCount) else 0
         val overflowBonus = if (normalizedState.mode == GameMode.QUANTUM) FusionRules.overflowScoreBonus(normalizedState.energy, gainedEnergy, normalizedState.difficulty) else 0
         val nextEnergy = if (normalizedState.mode == GameMode.QUANTUM) minOf(FusionRules.maxEnergyFor(normalizedState.difficulty), normalizedState.energy + gainedEnergy) else normalizedState.energy
         val nextScore = normalizedState.score + gainedScore + overflowBonus
         var next = normalizedState.copy(
-            cells = output,
+            cells = nextOutput,
             score = nextScore,
             bestScore = maxOf(normalizedState.bestScore, nextScore),
             dailyBestScore = if (normalizedState.difficulty == Difficulty.DAILY) maxOf(normalizedState.dailyBestScore, nextScore) else normalizedState.dailyBestScore,
@@ -117,6 +128,7 @@ class GameEngine(
             nextTileId = nextId,
             energy = nextEnergy,
             totalChainMergeCount = normalizedState.totalChainMergeCount + maxOf(0, mergeCount - 1),
+            entangledPairs = nextPairs,
         )
         val beforeSpawn = next
         if (next.difficulty != Difficulty.PUZZLE) {
@@ -241,19 +253,25 @@ class GameEngine(
         if (choiceIndex !in tile.superpositionValues.indices || choiceIndex !in FusionRules.superpositionCollapseEnergyCosts.indices) {
             return SuperpositionResult.Failure(state, SuperpositionFailure.INVALID_CHOICE)
         }
-        val cost = FusionRules.superpositionCollapseEnergyCosts[choiceIndex]
+        val cost = FusionRules.superpositionCollapseEnergyCosts[choiceIndex] + entangledPartnerCost(state, tile, choiceIndex)
         if (state.energy < cost) return SuperpositionResult.Failure(state, SuperpositionFailure.INSUFFICIENT_SCORE)
 
         val resolved = tile.copy(value = tile.superpositionValues[choiceIndex], superpositionValues = emptyList())
         val cells = state.cells.toMutableList()
         cells[sourceIndex] = resolved
+        val collapse = if (entanglementEnabled) {
+            collapseEntangledPartner(state, cells, tile, choiceIndex)
+        } else {
+            EntangledCollapseUpdate(cells, state.entangledPairs, 0, null)
+        }
         val next = finalizeState(state.copy(
-            cells = cells,
+            cells = collapse.cells,
             energy = state.energy - cost,
-            successfulCollapseCount = state.successfulCollapseCount + 1,
+            successfulCollapseCount = state.successfulCollapseCount + 1 + collapse.extraCollapseCount,
             lowCollapseCount = state.lowCollapseCount + if (choiceIndex == 0) 1 else 0,
             highCollapseCount = state.highCollapseCount + if (choiceIndex == 0) 0 else 1,
-            status = evaluate(state.copy(cells = cells)),
+            status = evaluate(state.copy(cells = collapse.cells)),
+            entangledPairs = collapse.pairs,
         ), state.status)
         return SuperpositionResult.Success(
             state = next,
@@ -294,21 +312,78 @@ class GameEngine(
         } else {
             Tile(state.nextTileId, if (random.nextDouble() < 0.9) 2 else 4)
         }
-        val pairedCells = if (state.mode == GameMode.QUANTUM) maybeEntangle(cells, state.size, at, state.nextTileId + 1) else cells
-        return state.copy(cells = pairedCells, nextTileId = state.nextTileId + 1)
+        val entangled = if (entanglementEnabled && state.mode == GameMode.QUANTUM) {
+            maybeEntangle(cells, state, at, state.nextTileId + 1)
+        } else {
+            EntanglementSpawnUpdate(cells, state.entangledPairs)
+        }
+        return state.copy(cells = entangled.cells, nextTileId = state.nextTileId + 1, entangledPairs = entangled.pairs)
     }
 
-    private fun maybeEntangle(cells: MutableList<Tile?>, size: Int, spawnedIndex: Int, groupId: Long): List<Tile?> {
-        val spawned = cells[spawnedIndex] ?: return cells
-        if (!FusionRules.canEntangle(spawned) || random.nextDouble() >= FusionRules.entanglementSpawnChance) return cells
-        val candidates = adjacentIndices(size, spawnedIndex)
+    private fun maybeEntangle(cells: MutableList<Tile?>, state: GameState, spawnedIndex: Int, groupId: Long): EntanglementSpawnUpdate {
+        val spawned = cells[spawnedIndex] ?: return EntanglementSpawnUpdate(cells, state.entangledPairs)
+        if (!FusionRules.canEntangle(spawned) || random.nextDouble() >= QuantumBalance.entangledSpawnChance) {
+            return EntanglementSpawnUpdate(cells, state.entangledPairs)
+        }
+        val candidates = adjacentIndices(state.size, spawnedIndex)
             .mapNotNull { index -> cells[index]?.takeIf(FusionRules::canEntangle)?.let { index to it } }
-        if (candidates.isEmpty()) return cells
+        if (candidates.isEmpty()) return EntanglementSpawnUpdate(cells, state.entangledPairs)
         val (partnerIndex, partner) = candidates[random.nextInt(candidates.size)]
         cells[spawnedIndex] = spawned.copy(entanglementGroupId = groupId)
         cells[partnerIndex] = partner.copy(entanglementGroupId = groupId)
-        return cells
+        val pair = EntangledPair(
+            id = groupId,
+            firstTileId = spawned.id,
+            secondTileId = partner.id,
+            relation = QuantumBalance.defaultEntanglementRelation,
+        )
+        return EntanglementSpawnUpdate(cells, state.entangledPairs + pair)
     }
+
+    private fun entangledPartnerCost(state: GameState, tile: Tile, choiceIndex: Int): Int {
+        if (!entanglementEnabled || QuantumBalance.entanglementCollapseEnergyPolicy == EntanglementEnergyPolicy.SINGLE_COST) return 0
+        val pair = state.entangledPairs.firstOrNull { it.firstTileId == tile.id || it.secondTileId == tile.id } ?: return 0
+        val partner = partnerTile(state, pair, tile.id) ?: return 0
+        if (partner.superpositionValues.isEmpty()) return 0
+        val partnerChoice = pair.partnerChoiceIndex(choiceIndex, partner.superpositionValues.lastIndex)
+        return FusionRules.superpositionCollapseEnergyCosts.getOrNull(partnerChoice) ?: 0
+    }
+
+    private fun collapseEntangledPartner(
+        state: GameState,
+        cells: MutableList<Tile?>,
+        tile: Tile,
+        choiceIndex: Int,
+    ): EntangledCollapseUpdate {
+        val pair = state.entangledPairs.firstOrNull { it.firstTileId == tile.id || it.secondTileId == tile.id }
+            ?: return EntangledCollapseUpdate(cells, state.entangledPairs, 0, null)
+        val partnerIndex = cells.indexOfFirst { it?.id == pair.partnerId(tile.id) }
+        val partner = cells.getOrNull(partnerIndex) ?: return EntangledCollapseUpdate(cells, state.entangledPairs - pair, 0, null)
+        if (partner.superpositionValues.isEmpty()) return EntangledCollapseUpdate(cells, state.entangledPairs - pair, 0, null)
+        val partnerChoice = pair.partnerChoiceIndex(choiceIndex, partner.superpositionValues.lastIndex)
+        cells[partnerIndex] = partner.copy(
+            value = partner.superpositionValues[partnerChoice],
+            superpositionValues = emptyList(),
+            entanglementGroupId = null,
+        )
+        val sourceIndex = cells.indexOfFirst { it?.id == tile.id }
+        if (sourceIndex >= 0) {
+            cells[sourceIndex] = cells[sourceIndex]?.copy(entanglementGroupId = null)
+        }
+        return EntangledCollapseUpdate(cells, state.entangledPairs - pair, 1, partner.id)
+    }
+
+    private fun partnerTile(state: GameState, pair: EntangledPair, sourceTileId: Long): Tile? =
+        state.cells.firstOrNull { it?.id == pair.partnerId(sourceTileId) }
+
+    private fun EntangledPair.partnerId(sourceTileId: Long): Long =
+        if (sourceTileId == firstTileId) secondTileId else firstTileId
+
+    private fun EntangledPair.partnerChoiceIndex(sourceChoiceIndex: Int, partnerLastIndex: Int): Int =
+        when (relation) {
+            EntanglementRelation.SAME_CHOICE -> sourceChoiceIndex.coerceIn(0, partnerLastIndex)
+            EntanglementRelation.INVERSE_CHOICE -> (partnerLastIndex - sourceChoiceIndex).coerceIn(0, partnerLastIndex)
+        }
 
     private fun adjacentIndices(size: Int, index: Int): List<Int> {
         val row = index / size
@@ -413,6 +488,13 @@ class GameEngine(
     private data class IndexedTile(val tile: Tile, val sourceIndex: Int, val kind: MoveAnimationKind? = null)
     private data class IndexedElement(val index: Int, val tileId: Long, val atomicNumber: Int)
     private data class SynthesisMatch(val recipe: CompoundRecipe, val tileIndices: List<Int>, val tileIds: List<Long>)
+    private data class EntanglementSpawnUpdate(val cells: List<Tile?>, val pairs: List<EntangledPair>)
+    private data class EntangledCollapseUpdate(
+        val cells: List<Tile?>,
+        val pairs: List<EntangledPair>,
+        val extraCollapseCount: Int,
+        val partnerTileId: Long?,
+    )
 }
 
 data class BoardScanResult(

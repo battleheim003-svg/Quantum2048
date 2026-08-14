@@ -31,6 +31,20 @@ enum class Difficulty(val mode: GameMode) {
 enum class TileKind { CLASSIC, ELECTRON, PROTON, ELEMENT }
 
 @Serializable
+enum class EntanglementRelation { SAME_CHOICE, INVERSE_CHOICE }
+
+@Serializable
+enum class EntanglementEnergyPolicy { SINGLE_COST, COST_PER_TILE }
+
+@Serializable
+data class EntangledPair(
+    val id: Long,
+    val firstTileId: Long,
+    val secondTileId: Long,
+    val relation: EntanglementRelation = QuantumBalance.defaultEntanglementRelation,
+)
+
+@Serializable
 enum class QuantumElement(
     val symbol: String,
     val title: String,
@@ -97,6 +111,7 @@ data class GameState(
     val usedUndo: Boolean = false,
     val unlockedAchievements: Set<String> = emptySet(),
     val tutorialCompleted: Boolean = false,
+    val entangledPairs: List<EntangledPair> = emptyList(),
 ) {
     init { require(size >= 2 && cells.size == size * size) }
     operator fun get(row: Int, column: Int): Tile? = cells[row * size + column]
