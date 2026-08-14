@@ -13,4 +13,5 @@ interface GameRepository {
     suspend fun clear(mode: GameMode)
     suspend fun clear(difficulty: Difficulty)
     suspend fun clear(difficulty: Difficulty, size: Int)
+    suspend fun clearAll()
 }

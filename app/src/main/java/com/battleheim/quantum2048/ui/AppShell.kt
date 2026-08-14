@@ -32,6 +32,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -108,7 +109,9 @@ import com.battleheim.quantum2048.domain.LevelDefinition
 import com.battleheim.quantum2048.domain.LevelProgressRepository
 import com.battleheim.quantum2048.domain.MainGameModeRoute
 import com.battleheim.quantum2048.domain.MainMenuState
+import com.battleheim.quantum2048.domain.LocalProgressResetRepository
 import com.battleheim.quantum2048.domain.PlayerProgress
+import com.battleheim.quantum2048.domain.ProgressResetRepository
 import com.battleheim.quantum2048.domain.ProfileRepository
 import com.battleheim.quantum2048.domain.ProductIds
 import com.battleheim.quantum2048.domain.RewardEntitlement
@@ -345,6 +348,13 @@ fun QuantumAppShell(
                 profileRepository = profileRepository,
                 socialRepository = socialRepository,
                 billingRepository = billingRepository,
+                progressResetRepository = LocalProgressResetRepository(
+                    gameRepository = gameRepository,
+                    collectionRepository = collectionRepository,
+                    profileRepository = profileRepository,
+                    socialRepository = socialRepository,
+                    levelProgressRepository = levelProgressRepository,
+                ),
                 settings = settings,
                 entitlements = billingRepository.observe().collectAsState(initial = EntitlementState()).value,
                 adGateway = adGateway,
@@ -1125,6 +1135,7 @@ private fun SettingsScreen(
     profileRepository: ProfileRepository,
     socialRepository: SocialRepository,
     billingRepository: BillingRepository,
+    progressResetRepository: ProgressResetRepository,
     settings: AppSettings,
     entitlements: EntitlementState,
     adGateway: AdGateway,
@@ -1135,9 +1146,13 @@ private fun SettingsScreen(
     onBack: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val ui by vm.ui.collectAsState()
     var confirmResetCollection by remember { mutableStateOf(false) }
     var confirmResetProfile by remember { mutableStateOf(false) }
     var confirmResetDifficulty by remember { mutableStateOf<Difficulty?>(null) }
+    var confirmResetProgress by remember { mutableStateOf(false) }
+    var confirmResetProgressFinal by remember { mutableStateOf(false) }
+    var irreversibleChecked by remember { mutableStateOf(false) }
 
     MenuScaffold {
         SectionTitle(stringResource(R.string.settings), stringResource(R.string.fusion_lab))
@@ -1150,7 +1165,7 @@ private fun SettingsScreen(
             SettingsToggle(stringResource(R.string.haptics), settings.hapticsEnabled) { playMenu(audio, settings); saveSettings(settings.copy(hapticsEnabled = it), analytics, settingsRepository, scope) }
             SettingsToggle(stringResource(R.string.reduced_motion), settings.reducedMotion) { playMenu(audio, settings); saveSettings(settings.copy(reducedMotion = it), analytics, settingsRepository, scope) }
         }
-        NeonPanel(title = stringResource(R.string.language_note), accent = Electric) {
+        NeonPanel(title = stringResource(R.string.language), accent = Electric) {
             NeonMenuButton(
                 text = stringResource(R.string.language_button, settings.language.displayLabel()),
                 onClick = {
@@ -1211,6 +1226,13 @@ private fun SettingsScreen(
             Difficulty.entries.forEach { difficulty ->
                 NeonMenuButton(text = stringResource(R.string.reset_progress, difficulty.name.lowercase()), onClick = { playMenu(audio, settings); confirmResetDifficulty = difficulty }, modifier = Modifier.fillMaxWidth(), accent = TextMuted)
             }
+            NeonMenuButton(
+                text = stringResource(R.string.reset_all_progress),
+                onClick = { playMenu(audio, settings); confirmResetProgress = true },
+                modifier = Modifier.fillMaxWidth().testTag("reset_all_progress"),
+                accent = NeonPink,
+                filled = true,
+            )
         }
         NeonMenuButton(text = stringResource(R.string.back), onClick = { playMenu(audio, settings); onBack() }, modifier = Modifier.fillMaxWidth(), accent = Cyan)
     }
@@ -1247,6 +1269,49 @@ private fun SettingsScreen(
                 confirmResetDifficulty = null
             },
         )
+    }
+    if (confirmResetProgress) {
+        ConfirmDialog(
+            title = stringResource(R.string.reset_all_progress_title),
+            body = stringResource(R.string.reset_all_progress_body),
+            onDismiss = { confirmResetProgress = false },
+            onConfirm = {
+                irreversibleChecked = false
+                confirmResetProgress = false
+                confirmResetProgressFinal = true
+            },
+        )
+    }
+    if (confirmResetProgressFinal) {
+        QuantumDialog(
+            title = stringResource(R.string.reset_all_progress_final_title),
+            onDismiss = {
+                irreversibleChecked = false
+                confirmResetProgressFinal = false
+            },
+            accent = NeonPink,
+            confirmText = stringResource(R.string.reset_all_progress_confirm),
+            onConfirm = {
+                if (irreversibleChecked) {
+                    scope.launch {
+                        progressResetRepository.resetAllProgress()
+                        vm.newGame(ui.game.difficulty, ui.game.size)
+                    }
+                    irreversibleChecked = false
+                    confirmResetProgressFinal = false
+                }
+            },
+            dismissText = stringResource(R.string.cancel),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = irreversibleChecked,
+                    onCheckedChange = { irreversibleChecked = it },
+                    modifier = Modifier.testTag("reset_all_progress_irreversible"),
+                )
+                Text(stringResource(R.string.reset_all_progress_irreversible), color = TextSecondary, fontSize = 13.sp)
+            }
+        }
     }
 }
 

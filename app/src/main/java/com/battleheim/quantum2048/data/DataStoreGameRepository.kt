@@ -66,6 +66,16 @@ class DataStoreGameRepository(private val context: Context) : GameRepository {
         context.gameDataStore.edit { it.remove(key(difficulty, size)) }
     }
 
+    override suspend fun clearAll() {
+        context.gameDataStore.edit { prefs ->
+            GameMode.entries.forEach { mode -> prefs.remove(key(mode)) }
+            Difficulty.entries.forEach { difficulty ->
+                prefs.remove(key(difficulty))
+                BOARD_SIZES.forEach { size -> prefs.remove(key(difficulty, size)) }
+            }
+        }
+    }
+
     private fun String.decodeState(): GameState? =
         runCatching { json.decodeFromString<Snapshot>(this).state }.getOrNull()
 

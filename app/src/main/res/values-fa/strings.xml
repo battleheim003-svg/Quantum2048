@@ -89,7 +89,8 @@
     <string name="music">موسیقی</string>
     <string name="haptics">لرزش</string>
     <string name="reduced_motion">کاهش حرکت</string>
-    <string name="language_note">زبان از تنظیمات دستگاه پیروی می‌کند.</string>
+    <string name="language">زبان</string>
+    <string name="language_note">تغییر زبان بلافاصله اعمال می‌شود و روی همین دستگاه ذخیره می‌ماند.</string>
     <string name="language_button">زبان: %1$s</string>
     <string name="theme_button">تم: %1$s</string>
     <string name="reset_collection">ریست کلکسیون</string>
@@ -97,6 +98,12 @@
     <string name="reset_profile_title">پروفایل ریست شود؟</string>
     <string name="reset_profile_body">اچیومنت‌ها و آمار سراسری پاک می‌شوند.</string>
     <string name="reset_progress">ریست پیشرفت %1$s</string>
+    <string name="reset_all_progress">ریست همه پیشرفت‌ها</string>
+    <string name="reset_all_progress_title">همه پیشرفت‌ها ریست شود؟</string>
+    <string name="reset_all_progress_body">سیوهای بازی، مجموعه، آمار، دستاوردها، رکوردهای روزانه و پیشرفت مرحله‌ها پاک می‌شود. تنظیمات دست‌نخورده می‌ماند.</string>
+    <string name="reset_all_progress_final_title">تأیید نهایی</string>
+    <string name="reset_all_progress_irreversible">می‌دانم این کار قابل بازگشت نیست.</string>
+    <string name="reset_all_progress_confirm">ریست پیشرفت</string>
     <string name="main_menu">منوی اصلی</string>
     <string name="resume">ادامه</string>
     <string name="confirm">تأیید</string>

@@ -115,7 +115,8 @@
     <string name="music">Music</string>
     <string name="haptics">Haptics</string>
     <string name="reduced_motion">Reduced motion</string>
-    <string name="language_note">Language follows the device locale.</string>
+    <string name="language">Language</string>
+    <string name="language_note">Language changes apply immediately and stay saved on this device.</string>
     <string name="language_button">Language: %1$s</string>
     <string name="theme_button">Theme: %1$s</string>
     <string name="reset_collection">Reset collection</string>
@@ -123,6 +124,12 @@
     <string name="reset_profile_title">Reset profile?</string>
     <string name="reset_profile_body">Achievements and global statistics will be cleared.</string>
     <string name="reset_progress">Reset %1$s progress</string>
+    <string name="reset_all_progress">Reset all progress</string>
+    <string name="reset_all_progress_title">Reset all progress?</string>
+    <string name="reset_all_progress_body">Saved games, collection progress, statistics, achievements, daily records, and level progress will be cleared. Settings stay unchanged.</string>
+    <string name="reset_all_progress_final_title">Final confirmation</string>
+    <string name="reset_all_progress_irreversible">I understand this cannot be undone.</string>
+    <string name="reset_all_progress_confirm">Reset progress</string>
     <string name="main_menu">Main menu</string>
     <string name="resume">Resume</string>
     <string name="confirm">Confirm</string>
