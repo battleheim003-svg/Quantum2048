@@ -335,10 +335,17 @@ class GameEngine(
             id = groupId,
             firstTileId = spawned.id,
             secondTileId = partner.id,
-            relation = QuantumBalance.defaultEntanglementRelation,
+            relation = nextEntanglementRelation(),
         )
         return EntanglementSpawnUpdate(cells, state.entangledPairs + pair)
     }
+
+    private fun nextEntanglementRelation(): EntanglementRelation =
+        if (random.nextDouble() < QuantumBalance.inverseEntanglementRelationChance) {
+            EntanglementRelation.INVERSE_CHOICE
+        } else {
+            QuantumBalance.defaultEntanglementRelation
+        }
 
     private fun entangledPartnerCost(state: GameState, tile: Tile, choiceIndex: Int): Int {
         if (!entanglementEnabled || QuantumBalance.entanglementCollapseEnergyPolicy == EntanglementEnergyPolicy.SINGLE_COST) return 0
