@@ -1,48 +1,52 @@
-# Quantum 2048: Collapse — Phase 2 Quantum Core
+# Quantum 2048: Fusion
 
-Battleheim Studio's offline Android puzzle game. This build contains two independently saved modes: deterministic Classic 2048 and the first complete Quantum ruleset.
+Quantum 2048: Fusion is an offline Android puzzle game that starts with the clean rhythm of 2048 and opens into a stranger lab of particles, energy, and Collapse choices.
 
-## Phase 2 gameplay contract
+Classic mode is here for fast, familiar merge play. Quantum mode adds unstable tiles, particle reactions, manual Collapse, energy management, daily seeded challenges, local achievements, and a growing collection of discovered compounds.
 
-- A quantum tile displays two ordered possibilities such as `8 | 16`.
-- An unresolved quantum tile cannot merge. Tap it to open Collapse and stabilize one value.
-- Low-value Collapse costs 18 energy; high-value Collapse costs 30.
-- Each merge earns 6 energy. Multiple merges in one swipe add a 3-energy chain bonus per extra merge.
-- Energy is capped at 100 and Quantum games start with 30.
-- Quantum spawn chance is 18%. After a valid move, automatic Collapse has an 8% chance and favors the lower result 65/35. It never consumes energy.
-- Manual Collapse does not count as a move and does not spawn a tile. It is a single atomic state transaction.
-- Undo restores the entire prior state, including energy and superposition. Undo remains one-level and session-only.
+## What Makes It Different
 
-All values are centralized in `engine/QuantumBalance.kt`. All randomness passes through `RandomProvider`; `SeededRandomProvider` makes replays deterministic.
+Most 2048 variants ask one question: can you merge higher?
 
-## Architecture
+Quantum 2048 asks another one too: when a tile has multiple possible futures, when do you spend energy to force one outcome? Collapse turns a simple board into a puzzle about timing, risk, and control.
 
-- `engine`: immutable state, Classic/Quantum movement, energy, Collapse, status rules, injected randomness
-- `domain`: repository and fair one-level undo contracts
-- `data`: schema-v2 JSON snapshots in Preferences DataStore, separate keys per mode, phase-1-compatible defaults
-- `ui`: StateFlow ViewModel, mode switching, atomic input lock, Collapse dialog, energy UI and non-blocking pulse animation
-- `designsystem`, `audio`, `ads`: replaceable visual and service boundaries
+## Features
 
-## Verified Windows/Iran-compatible toolchain
+- Classic 2048 merge play with saved progress.
+- Quantum puzzle rules with particles, reactions, superposition, Collapse, and energy.
+- Daily challenge with a deterministic UTC seed and local 7-day history.
+- Achievements with visible progress bars.
+- Statistics for Classic and Quantum modes.
+- Persian and English UI with RTL support.
+- Fully offline local saves using Android DataStore.
 
-- JDK 17, AGP 8.9.1, Gradle 8.11.1
-- Android SDK 35 (`minSdk 26`, `targetSdk 35`)
-- Activity Compose 1.10.1
-- Aliyun/Huawei dependency mirrors and Tencent Gradle distribution mirror
+## Download
 
-Open in Android Studio, then run:
+[Coming soon on Google Play]
+
+## Build
+
+Requirements:
+
+- JDK 17
+- Android SDK 35
+- Gradle wrapper included in this repository
+
+Run:
 
 ```powershell
-.\gradlew.bat testDebugUnitTest --console=plain
-.\gradlew.bat assembleDebug --console=plain
+.\gradlew.bat testDebugUnitTest
+.\gradlew.bat assembleDebug
 ```
 
-Debug APK: `app/build/outputs/apk/debug/app-debug.apk`.
+Debug APK:
 
-## Persistence
+```text
+app/build/outputs/apk/debug/app-debug.apk
+```
 
-Snapshots now use `schemaVersion = 2`. New quantum fields have safe defaults, so existing phase-1 Classic saves remain readable. Classic and Quantum records and active games are stored independently.
+For deeper architecture notes, persistence details, and historical phase context, see [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
-## Phase boundary
+## Screenshots
 
-Phase 3 will add navigation/menu, interactive tutorial, settings, sound/haptics, statistics, full Persian/English resources, polished motion and accessibility. Entanglement, black holes, daily challenges and monetization remain intentionally disabled.
+Gameplay screenshots and store-ready promotional art still need to be captured from a real device or final emulator build before public release.

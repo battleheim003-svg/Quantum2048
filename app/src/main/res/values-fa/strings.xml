@@ -85,6 +85,12 @@
     <string name="moves_line">حرکت‌ها: %1$s</string>
     <string name="best_element_line">بهترین عنصر: %1$s</string>
     <string name="share_result">اشتراک</string>
+    <string name="share_prompt">من به سطح انرژی کوانتومی %1$d رسیدم! می‌تونی رکوردم را بزنی؟</string>
+    <string name="share_run_report">گزارش ران فروپاشی</string>
+    <string name="share_final_score">امتیاز نهایی</string>
+    <string name="share_highest_element">بهترین عنصر: %1$s</string>
+    <string name="share_no_element">بدون عنصر</string>
+    <string name="share_watermark_tagline">۲۰۴۸ کوانتومی - ران پازل ویژه</string>
     <string name="none">هیچ‌کدام</string>
     <string name="sound">صدا</string>
     <string name="music">موسیقی</string>
@@ -182,6 +188,14 @@
     <string name="studio_name">Battleheim Labs</string>
     <string name="notice">NOTICE</string>
     <string name="notice_body">برای جزئیات مجوزها و انتساب‌ها فایل NOTICE ریپازیتوری را ببینید.</string>
+    <string name="privacy_policy">حریم خصوصی</string>
+    <string name="privacy_policy_subtitle">داده‌های آفلاین و ذخیره‌سازی محلی</string>
+    <string name="privacy_policy_offline_title">بازی آفلاین</string>
+    <string name="privacy_policy_offline_body">۲۰۴۸ کوانتومی در نسخه فعلی آفلاین اجرا می‌شود. داده‌های گیم‌پلی توسط این اپ به سرور ارسال نمی‌شود.</string>
+    <string name="privacy_policy_local_title">داده‌های محلی</string>
+    <string name="privacy_policy_local_body">سیو بازی، تنظیمات، آمار، اچیومنت‌ها، تاریخچه چالش روزانه، پیشرفت کلکسیون و پیشرفت مرحله‌ها فقط روی همین دستگاه و با Android DataStore ذخیره می‌شوند.</string>
+    <string name="privacy_policy_ads_title">تبلیغات و سرویس‌ها</string>
+    <string name="privacy_policy_ads_body">نسخه فعلی از آداپترهای آفلاین و بدون‌عمل برای تبلیغات و سرویس‌ها استفاده می‌کند. اگر در انتشار آینده تبلیغات واقعی، پرداخت، آنالیتیکس یا همگام‌سازی ابری فعال شود، این سیاست باید پیش از انتشار به‌روزرسانی شود.</string>
     <string name="profile">پروفایل</string>
     <string name="stat_collapse_ratio">نسبت فروپاشی کم</string>
     <string name="stat_average_win_energy">میانگین انرژی برد</string>

@@ -31,6 +31,14 @@
     <string name="studio_name">Battleheim Labs</string>
     <string name="notice">NOTICE</string>
     <string name="notice_body">Open the repository NOTICE file for license and attribution details.</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="privacy_policy_subtitle">Offline data and local storage</string>
+    <string name="privacy_policy_offline_title">Offline play</string>
+    <string name="privacy_policy_offline_body">Quantum 2048 currently runs offline. Gameplay data is not sent to a server by this app.</string>
+    <string name="privacy_policy_local_title">Local data</string>
+    <string name="privacy_policy_local_body">Saved games, settings, statistics, achievements, daily challenge history, collection progress, and level progress are stored locally on this device using Android DataStore.</string>
+    <string name="privacy_policy_ads_title">Ads and services</string>
+    <string name="privacy_policy_ads_body">The current build uses offline no-op ad and service adapters. If real ads, billing, analytics, or cloud sync are enabled in a future release, this policy must be updated before publication.</string>
     <string name="profile">Profile</string>
     <string name="tutorial">Tutorial</string>
     <string name="refresh_saves">Refresh saves</string>
@@ -111,6 +119,12 @@
     <string name="moves_line">Moves: %1$s</string>
     <string name="best_element_line">Best element: %1$s</string>
     <string name="share_result">Share</string>
+    <string name="share_prompt">I reached Quantum Energy Level %1$d! Can you beat my score?</string>
+    <string name="share_run_report">Collapse run report</string>
+    <string name="share_final_score">FINAL SCORE</string>
+    <string name="share_highest_element">Highest element: %1$s</string>
+    <string name="share_no_element">No element</string>
+    <string name="share_watermark_tagline">Quantum 2048 - premium puzzle run</string>
     <string name="none">none</string>
     <string name="sound">Sound</string>
     <string name="music">Music</string>

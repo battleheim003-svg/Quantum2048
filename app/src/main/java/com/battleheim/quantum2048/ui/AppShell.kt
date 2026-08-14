@@ -12,7 +12,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,7 +52,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -62,7 +60,6 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -140,7 +137,6 @@ import com.battleheim.quantum2048.engine.TutorialEngine
 import com.battleheim.quantum2048.engine.TutorialLessonState
 import com.battleheim.quantum2048.engine.TutorialStep
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 
 private object Routes {
     const val MainMenu = "menu"
@@ -150,6 +146,7 @@ private object Routes {
     const val Statistics = "stats"
     const val DailyChallenge = "daily_challenge"
     const val About = "about"
+    const val PrivacyPolicy = "privacy-policy"
     const val PeriodicPath = "periodic_path"
     const val PeriodicGame = "periodic_level/{levelId}"
     const val Tutorial = "tutorial"
@@ -214,7 +211,6 @@ fun QuantumAppShell(
     val ui by gameViewModel.ui.collectAsState()
     val settings by settingsRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.AppSettings())
     var tutorialPrompted by remember { mutableStateOf(false) }
-    var showSplash by remember { mutableStateOf(true) }
     DisposableEffect(lifecycleOwner, audio) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
@@ -238,15 +234,6 @@ fun QuantumAppShell(
             if (ui.duel == null && ui.game.moveCount == 0) audio.menuMusic() else audio.gameMusic()
         }
     }
-    LaunchedEffect(Unit) {
-        delay(SPLASH_MS)
-        showSplash = false
-    }
-    if (showSplash) {
-        SplashScreen()
-        return
-    }
-
     NavHost(
         navController = nav,
         startDestination = Routes.MainMenu,
@@ -381,7 +368,13 @@ fun QuantumAppShell(
             StatisticsScreen(statisticsRepository, dailyChallengeRepository, onBack = { nav.popBackStack() })
         }
         composable(Routes.About) {
-            AboutScreen(onBack = { nav.popBackStack() })
+            AboutScreen(
+                onPrivacy = { nav.navigate(Routes.PrivacyPolicy) },
+                onBack = { nav.popBackStack() },
+            )
+        }
+        composable(Routes.PrivacyPolicy) {
+            PrivacyPolicyScreen(onBack = { nav.popBackStack() })
         }
         composable(Routes.Tutorial) {
             val scope = rememberCoroutineScope()
@@ -625,18 +618,6 @@ private fun RefreshSavesButton(onClick: () -> Unit) {
         contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
     ) {
         Text("↻", fontSize = 22.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
-    }
-}
-
-@Composable
-private fun SplashScreen() {
-    Box(Modifier.fillMaxSize().background(Color(0xFFFF9800)), contentAlignment = Alignment.Center) {
-        Image(
-            painter = painterResource(R.drawable.splash_logo),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-        )
     }
 }
 
@@ -1062,7 +1043,7 @@ private fun StatisticsScreen(
 }
 
 @Composable
-private fun AboutScreen(onBack: () -> Unit) {
+private fun AboutScreen(onPrivacy: () -> Unit, onBack: () -> Unit) {
     MenuScaffold(modifier = Modifier.testTag("about_screen")) {
         SectionTitle(stringResource(R.string.about_game), stringResource(R.string.app_title))
         NeonPanel(title = stringResource(R.string.about_version), accent = Cyan) {
@@ -1072,6 +1053,24 @@ private fun AboutScreen(onBack: () -> Unit) {
         NeonPanel(title = stringResource(R.string.notice), accent = RadiantGold) {
             Text(stringResource(R.string.notice_body), color = TextSecondary, fontSize = 13.sp)
             Text(stringResource(R.string.notice), color = Cyan, fontSize = 16.sp, fontWeight = FontWeight.Black, modifier = Modifier.testTag("notice_link"))
+        }
+        NeonMenuButton(text = stringResource(R.string.privacy_policy), onClick = onPrivacy, modifier = Modifier.fillMaxWidth(), accent = Electric)
+        NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+    }
+}
+
+@Composable
+private fun PrivacyPolicyScreen(onBack: () -> Unit) {
+    MenuScaffold {
+        SectionTitle(stringResource(R.string.privacy_policy), stringResource(R.string.privacy_policy_subtitle))
+        NeonPanel(title = stringResource(R.string.privacy_policy_offline_title), accent = Cyan) {
+            Text(stringResource(R.string.privacy_policy_offline_body), color = TextSecondary, fontSize = 13.sp)
+        }
+        NeonPanel(title = stringResource(R.string.privacy_policy_local_title), accent = RadiantGold) {
+            Text(stringResource(R.string.privacy_policy_local_body), color = TextSecondary, fontSize = 13.sp)
+        }
+        NeonPanel(title = stringResource(R.string.privacy_policy_ads_title), accent = Electric) {
+            Text(stringResource(R.string.privacy_policy_ads_body), color = TextSecondary, fontSize = 13.sp)
         }
         NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
     }
@@ -2010,5 +2009,3 @@ private fun difficultyDescription(difficulty: Difficulty): String = when (diffic
     Difficulty.PUZZLE -> stringResource(R.string.puzzle_description)
     Difficulty.DAILY -> stringResource(R.string.daily_description)
 }
-
-private const val SPLASH_MS = 2600L

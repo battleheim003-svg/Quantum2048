@@ -1013,7 +1013,7 @@ private fun shareGameResult(context: android.content.Context, game: GameState) {
     val sendIntent = Intent(Intent.ACTION_SEND).apply {
         type = "image/png"
         putExtra(Intent.EXTRA_STREAM, imageUri)
-        putExtra(Intent.EXTRA_TEXT, sharePromptFor(game))
+        putExtra(Intent.EXTRA_TEXT, sharePromptFor(context, game))
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
     context.startActivity(

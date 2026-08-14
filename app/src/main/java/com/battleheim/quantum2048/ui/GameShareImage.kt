@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,6 +54,7 @@ import com.battleheim.quantum2048.engine.FusionRules
 import com.battleheim.quantum2048.engine.GameState
 import com.battleheim.quantum2048.engine.Tile
 import androidx.compose.ui.unit.Density
+import com.battleheim.quantum2048.R
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.math.cos
@@ -76,11 +78,11 @@ fun createShareImageUri(context: Context, game: GameState): Uri {
     )
 }
 
-fun sharePromptFor(game: GameState): String {
+fun sharePromptFor(context: Context, game: GameState): String {
     val energyLevel = game.cells
         .mapNotNull { it?.let(FusionRules::gameValueOf) }
         .maxOrNull() ?: 0
-    return "I reached Quantum Energy Level $energyLevel! Can you beat my score?"
+    return context.getString(R.string.share_prompt, energyLevel)
 }
 
 object ShareBannerBuilder {
@@ -108,7 +110,7 @@ object ShareBannerBuilder {
 @Composable
 private fun ShareBanner(game: GameState) {
     val highestTile = game.cells.filterNotNull().maxByOrNull { FusionRules.gameValueOf(it) }
-    val highestLabel = highestTile?.let(::highestElementLabel) ?: "No element"
+    val highestLabel = highestTile?.let { highestElementLabel(it) } ?: stringResource(R.string.share_no_element)
     val stars = starRating(game.score)
     Box(
         Modifier
@@ -126,7 +128,10 @@ private fun ShareBanner(game: GameState) {
             ScoreHero(score = game.score, highestLabel = highestLabel, stars = stars)
             BoardPreview(game)
             Spacer(Modifier.weight(1f))
-            PremiumWatermark()
+            PremiumWatermark(
+                studio = stringResource(R.string.studio_name),
+                tagline = stringResource(R.string.share_watermark_tagline),
+            )
         }
     }
 }
@@ -136,7 +141,7 @@ private fun BannerHeader(game: GameState) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("QUANTUM 2048", color = Cyan, fontSize = 28.sp, fontWeight = FontWeight.Black)
-            Text("Collapse run report", color = TextSecondary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.share_run_report), color = TextSecondary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
         Text(
             "${game.difficulty.name}\n${game.size}x${game.size}",
@@ -163,10 +168,10 @@ private fun ScoreHero(score: Long, highestLabel: String, stars: Int) {
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("FINAL SCORE", color = TextMuted, fontSize = 18.sp, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.share_final_score), color = TextMuted, fontSize = 18.sp, fontWeight = FontWeight.Black)
         Text(formatNumber(score), color = Color.White, fontSize = 86.sp, fontWeight = FontWeight.Black, lineHeight = 88.sp)
         StarRatingRow(stars)
-        Text("Highest element: $highestLabel", color = RadiantGold, fontSize = 25.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+        Text(stringResource(R.string.share_highest_element, highestLabel), color = RadiantGold, fontSize = 25.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
     }
 }
 
@@ -275,9 +280,8 @@ private fun ShareBannerBackdrop() {
 }
 
 @Composable
-private fun PremiumWatermark() {
+private fun PremiumWatermark(studio: String, tagline: String) {
     Canvas(Modifier.fillMaxWidth().height(92.dp)) {
-        val text = "Battleheim Studio"
         val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
             textAlign = android.graphics.Paint.Align.CENTER
             typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
@@ -285,11 +289,11 @@ private fun PremiumWatermark() {
             color = android.graphics.Color.WHITE
             setShadowLayer(18f, 0f, 0f, android.graphics.Color.argb(220, 78, 242, 228))
         }
-        drawContext.canvas.nativeCanvas.drawText(text, size.width / 2f, size.height * 0.56f, paint)
+        drawContext.canvas.nativeCanvas.drawText(studio, size.width / 2f, size.height * 0.56f, paint)
         paint.clearShadowLayer()
         paint.textSize = 22f
         paint.color = android.graphics.Color.argb(220, 183, 195, 230)
-        drawContext.canvas.nativeCanvas.drawText("Quantum 2048 - premium puzzle run", size.width / 2f, size.height * 0.90f, paint)
+        drawContext.canvas.nativeCanvas.drawText(tagline, size.width / 2f, size.height * 0.90f, paint)
     }
 }
 
@@ -301,7 +305,7 @@ private fun starRating(score: Long): Int = when {
 }
 
 private fun highestElementLabel(tile: Tile): String =
-    tile.element?.let { "${it.symbol} (${it.title})" } ?: "Level ${FusionRules.gameValueOf(tile)}"
+    tile.element?.let { "${it.symbol} (${it.title})" } ?: FusionRules.gameValueOf(tile).toString()
 
 private fun starPath(rect: Rect, points: Int): Path {
     val center = rect.center
