@@ -40,11 +40,13 @@ class AndroidHapticPerformer(context: Context) : HapticPerformer {
             HapticEvent.EnergyFull -> 160
             HapticEvent.GameOver -> 190
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator?.vibrate(VibrationEffect.createOneShot(duration, amplitude))
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator?.vibrate(duration)
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator?.vibrate(VibrationEffect.createOneShot(duration, amplitude))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(duration)
+            }
         }
     }
 }
