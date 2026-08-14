@@ -103,6 +103,8 @@ import com.battleheim.quantum2048.designsystem.Void
 import com.battleheim.quantum2048.designsystem.difficultyAccent
 import com.battleheim.quantum2048.domain.CollectionRepository
 import com.battleheim.quantum2048.domain.BillingRepository
+import com.battleheim.quantum2048.domain.DailyChallengeRepository
+import com.battleheim.quantum2048.domain.DailyChallengeStatus
 import com.battleheim.quantum2048.domain.EntitlementState
 import com.battleheim.quantum2048.domain.GameRepository
 import com.battleheim.quantum2048.domain.AppLanguage
@@ -124,6 +126,7 @@ import com.battleheim.quantum2048.domain.SettingsRepository
 import com.battleheim.quantum2048.domain.SocialRepository
 import com.battleheim.quantum2048.domain.StatisticsRepository
 import com.battleheim.quantum2048.engine.Difficulty
+import com.battleheim.quantum2048.engine.DailyChallengeSeedProvider
 import com.battleheim.quantum2048.engine.Direction
 import com.battleheim.quantum2048.engine.FusionRules
 import com.battleheim.quantum2048.engine.GameEngine
@@ -141,6 +144,7 @@ private object Routes {
     const val LevelSelect = "level_select"
     const val Collection = "collection"
     const val Statistics = "stats"
+    const val DailyChallenge = "daily_challenge"
     const val About = "about"
     const val PeriodicPath = "periodic_path"
     const val PeriodicGame = "periodic_level/{levelId}"
@@ -165,6 +169,7 @@ fun QuantumAppShell(
     settingsRepository: SettingsRepository,
     socialRepository: SocialRepository,
     statisticsRepository: StatisticsRepository,
+    dailyChallengeRepository: DailyChallengeRepository,
     billingRepository: BillingRepository,
     levelCatalogRepository: LevelCatalogRepository,
     levelProgressRepository: LevelProgressRepository,
@@ -193,6 +198,7 @@ fun QuantumAppShell(
             levelCatalogRepository = levelCatalogRepository,
             levelProgressRepository = levelProgressRepository,
             statisticsRepository = statisticsRepository,
+            dailyChallengeRepository = dailyChallengeRepository,
             engine = engine,
             analytics = analytics,
             soundEvents = gameSoundPlayer,
@@ -256,6 +262,7 @@ fun QuantumAppShell(
                 onNewGame = { playSelect(audio, settings); nav.navigate(Routes.LevelSelect) },
                 onCollection = { playMenu(audio, settings); nav.navigate(Routes.Collection) },
                 onStatistics = { playMenu(audio, settings); nav.navigate(Routes.Statistics) },
+                onDailyChallenge = { playSelect(audio, settings); nav.navigate(Routes.DailyChallenge) },
                 onAbout = { playMenu(audio, settings); nav.navigate(Routes.About) },
                 onPeriodicPath = { playSelect(audio, settings); nav.navigate(Routes.PeriodicPath) },
                 onTutorial = { playMenu(audio, settings); nav.navigate(Routes.Tutorial) },
@@ -344,8 +351,24 @@ fun QuantumAppShell(
         composable(Routes.Collection) {
             CollectionScreen(collectionRepository, profileRepository, onBack = { nav.popBackStack() })
         }
+        composable(Routes.DailyChallenge) {
+            DailyChallengeScreen(
+                dailyChallengeRepository = dailyChallengeRepository,
+                onBack = { nav.popBackStack() },
+                onStart = { date ->
+                    playSelect(audio, settings)
+                    eventScope.launch { dailyChallengeRepository.markStarted(date) }
+                    gameViewModel.startDailyChallenge(date)
+                    nav.navigate(Routes.savedGame(Difficulty.DAILY, 4))
+                },
+                onContinue = {
+                    playSelect(audio, settings)
+                    nav.navigate(Routes.savedGame(Difficulty.DAILY, 4))
+                },
+            )
+        }
         composable(Routes.Statistics) {
-            StatisticsScreen(statisticsRepository, onBack = { nav.popBackStack() })
+            StatisticsScreen(statisticsRepository, dailyChallengeRepository, onBack = { nav.popBackStack() })
         }
         composable(Routes.About) {
             AboutScreen(onBack = { nav.popBackStack() })
@@ -373,6 +396,7 @@ fun QuantumAppShell(
                     socialRepository = socialRepository,
                     statisticsRepository = statisticsRepository,
                     levelProgressRepository = levelProgressRepository,
+                    dailyChallengeRepository = dailyChallengeRepository,
                 ),
                 settings = settings,
                 entitlements = billingRepository.observe().collectAsState(initial = EntitlementState()).value,
@@ -402,6 +426,7 @@ private fun MainMenuScreen(
     onNewGame: () -> Unit,
     onCollection: () -> Unit,
     onStatistics: () -> Unit,
+    onDailyChallenge: () -> Unit,
     onAbout: () -> Unit,
     onPeriodicPath: () -> Unit,
     onTutorial: () -> Unit,
@@ -462,6 +487,14 @@ private fun MainMenuScreen(
                 filled = true,
             )
         }
+        NeonMenuButton(
+            text = stringResource(R.string.daily_challenge),
+            onClick = onDailyChallenge,
+            modifier = Modifier.fillMaxWidth().testTag("daily_challenge_button"),
+            accent = RadiantGold,
+            filled = true,
+            icon = "!",
+        )
         NeonMenuButton(
             text = stringResource(R.string.more_modes),
             onClick = onNewGame,
@@ -823,11 +856,84 @@ private fun com.battleheim.quantum2048.engine.Tile.tutorialLabel(): String =
     }
 
 @Composable
-private fun StatisticsScreen(statisticsRepository: StatisticsRepository, onBack: () -> Unit) {
+private fun DailyChallengeScreen(
+    dailyChallengeRepository: DailyChallengeRepository,
+    onBack: () -> Unit,
+    onStart: (String) -> Unit,
+    onContinue: () -> Unit,
+) {
+    val today = remember { DailyChallengeSeedProvider.todayUtc() }
+    val state by dailyChallengeRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.DailyChallengeState())
+    val status = state.statusFor(today)
+    val todayResult = state.resultFor(today)
+    MenuScaffold {
+        SectionTitle(stringResource(R.string.daily_challenge), stringResource(R.string.daily_challenge_subtitle))
+        NeonPanel(title = stringResource(R.string.daily_today), accent = RadiantGold) {
+            StatRow(stringResource(R.string.stat_today_date), today)
+            StatRow(
+                stringResource(R.string.daily_status),
+                stringResource(
+                    when (status) {
+                        DailyChallengeStatus.AVAILABLE -> R.string.daily_status_available
+                        DailyChallengeStatus.IN_PROGRESS -> R.string.daily_status_in_progress
+                        DailyChallengeStatus.COMPLETED -> R.string.daily_status_completed
+                    },
+                ),
+            )
+            if (todayResult != null) {
+                StatRow(stringResource(R.string.daily_score_today), formatNumber(todayResult.score))
+            }
+            StatRow(stringResource(R.string.daily_personal_best), formatNumber(state.bestScore))
+            StatRow(stringResource(R.string.daily_average_score), formatNumber(state.averageScore))
+        }
+        when (status) {
+            DailyChallengeStatus.AVAILABLE -> NeonMenuButton(
+                text = stringResource(R.string.daily_start),
+                onClick = { onStart(today) },
+                modifier = Modifier.fillMaxWidth(),
+                accent = RadiantGold,
+                filled = true,
+            )
+            DailyChallengeStatus.IN_PROGRESS -> NeonMenuButton(
+                text = stringResource(R.string.daily_continue),
+                onClick = onContinue,
+                modifier = Modifier.fillMaxWidth(),
+                accent = Cyan,
+                filled = true,
+            )
+            DailyChallengeStatus.COMPLETED -> NeonPanel(title = stringResource(R.string.daily_locked_title), accent = Electric) {
+                Text(stringResource(R.string.daily_locked_body), color = TextSecondary, fontSize = 13.sp)
+            }
+        }
+        DailyHistoryPanel(state)
+        NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+    }
+}
+
+@Composable
+private fun DailyHistoryPanel(state: com.battleheim.quantum2048.domain.DailyChallengeState) {
+    NeonPanel(title = stringResource(R.string.daily_recent_history), accent = Electric) {
+        if (state.recentResults.isEmpty()) {
+            Text(stringResource(R.string.daily_history_empty), color = TextSecondary, fontSize = 13.sp)
+        } else {
+            state.recentResults.forEach { result ->
+                StatRow(result.date, formatNumber(result.score))
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatisticsScreen(
+    statisticsRepository: StatisticsRepository,
+    dailyChallengeRepository: DailyChallengeRepository,
+    onBack: () -> Unit,
+) {
     var selectedMode by remember { mutableStateOf(GameMode.CLASSIC) }
     val stats by statisticsRepository.observeStatistics(selectedMode).collectAsState(
         initial = com.battleheim.quantum2048.domain.StatsSnapshot(selectedMode),
     )
+    val dailyState by dailyChallengeRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.DailyChallengeState())
     MenuScaffold {
         SectionTitle(stringResource(R.string.statistics), stringResource(R.string.stats_by_mode))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -862,6 +968,15 @@ private fun StatisticsScreen(statisticsRepository: StatisticsRepository, onBack:
                     StatRow(stringResource(R.string.stat_manual_collapse_high), formatNumber(stats.manualCollapseHigh))
                     StatRow(stringResource(R.string.stat_auto_collapse), formatNumber(stats.autoCollapseCount))
                 }
+            }
+        }
+        NeonPanel(title = stringResource(R.string.daily_challenge), accent = RadiantGold) {
+            if (dailyState.results.isEmpty()) {
+                Text(stringResource(R.string.daily_history_empty), color = TextSecondary, fontSize = 13.sp)
+            } else {
+                StatRow(stringResource(R.string.stat_daily_challenge_count), formatNumber(dailyState.results.size))
+                StatRow(stringResource(R.string.stat_best_daily_score), formatNumber(dailyState.bestScore))
+                StatRow(stringResource(R.string.stat_daily_current_streak), formatNumber(dailyState.participationStreak))
             }
         }
         NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)

@@ -1,7 +1,6 @@
 package com.battleheim.quantum2048.engine
 
 import kotlin.math.min
-import java.time.LocalDate
 
 /** Central rule table for all numeric, particle, element, spawn, and reaction behavior. */
 object FusionRules {
@@ -92,8 +91,8 @@ object FusionRules {
     fun isPuzzleFailed(state: GameState): Boolean =
         state.difficulty == Difficulty.PUZZLE && state.moveCount >= puzzleMoveLimit && !isPuzzleSolved(state)
 
-    fun dailySeed(date: LocalDate): Long =
-        date.toString().fold(2_048L) { acc, char -> acc * 31L + char.code }
+    fun dailySeed(date: java.time.LocalDate): Long =
+        DailyChallengeSeedProvider.seedForDate(date.toString())
 
     fun unlockedAchievementsFor(state: GameState): Set<String> {
         val unlocked = state.unlockedAchievements.toMutableSet()

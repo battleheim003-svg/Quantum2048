@@ -7,7 +7,7 @@ class GameEngine(
         newGame(Difficulty.fromMode(mode), size)
 
     fun newGame(difficulty: Difficulty, size: Int = 4): GameState {
-        if (difficulty == Difficulty.DAILY) return newDailyChallenge(java.time.LocalDate.now(), size)
+        if (difficulty == Difficulty.DAILY) return newDailyChallenge(DailyChallengeSeedProvider.todayUtc(), size)
         if (difficulty == Difficulty.PUZZLE) return puzzleGame(size)
         var state = GameState(
             size = size,
@@ -20,14 +20,17 @@ class GameEngine(
         return state
     }
 
-    fun newDailyChallenge(date: java.time.LocalDate, size: Int = 4): GameState {
-        val dailyEngine = GameEngine(SeededRandomProvider(FusionRules.dailySeed(date)))
+    fun newDailyChallenge(date: java.time.LocalDate, size: Int = 4): GameState =
+        newDailyChallenge(date.toString(), size)
+
+    fun newDailyChallenge(date: String, size: Int = 4): GameState {
+        val dailyEngine = GameEngine(SeededRandomProvider(DailyChallengeSeedProvider.seedForDate(date)))
         var state = GameState(
             size = size,
             cells = List(size * size) { null },
             mode = GameMode.QUANTUM,
             difficulty = Difficulty.DAILY,
-            dailyChallengeDate = date.toString(),
+            dailyChallengeDate = date,
             energy = FusionRules.initialEnergyFor(Difficulty.DAILY),
         )
         repeat(FusionRules.spawnCount(size)) { state = dailyEngine.spawn(state) }

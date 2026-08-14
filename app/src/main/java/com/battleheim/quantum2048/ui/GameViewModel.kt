@@ -14,6 +14,7 @@ import com.battleheim.quantum2048.audio.SoundEventSink
 import com.battleheim.quantum2048.audio.hapticEventsForMove
 import com.battleheim.quantum2048.audio.soundEventsForMove
 import com.battleheim.quantum2048.domain.CollectionRepository
+import com.battleheim.quantum2048.domain.DailyChallengeRepository
 import com.battleheim.quantum2048.domain.GameRepository
 import com.battleheim.quantum2048.domain.LevelCatalog
 import com.battleheim.quantum2048.domain.LevelCatalogRepository
@@ -29,6 +30,7 @@ import com.battleheim.quantum2048.domain.StatisticsRepository
 import com.battleheim.quantum2048.domain.UndoBuffer
 import com.battleheim.quantum2048.engine.CompoundFailure
 import com.battleheim.quantum2048.engine.CompoundResult
+import com.battleheim.quantum2048.engine.DailyChallengeSeedProvider
 import com.battleheim.quantum2048.engine.Difficulty
 import com.battleheim.quantum2048.engine.Direction
 import com.battleheim.quantum2048.engine.BotDifficulty
@@ -57,7 +59,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 data class GameUiState(
     val game: GameState = GameState(mode = GameMode.QUANTUM),
@@ -89,6 +90,7 @@ class GameViewModel(
     private val levelCatalogRepository: LevelCatalogRepository? = null,
     private val levelProgressRepository: LevelProgressRepository? = null,
     private val statisticsRepository: StatisticsRepository? = null,
+    private val dailyChallengeRepository: DailyChallengeRepository? = null,
     private val engine: GameEngine,
     private val analytics: AnalyticsGateway = NoOpAnalyticsGateway,
     private val soundEvents: SoundEventSink = NoOpSoundEventSink,
@@ -106,6 +108,7 @@ class GameViewModel(
     private var activeLevelEngine: GameEngine? = null
     private var activeLevelTerminalRecorded = false
     private var isQuantumUnlocked = false
+    private val recordedDailyResults = mutableSetOf<String>()
 
     init {
         viewModelScope.launch {
@@ -486,6 +489,27 @@ class GameViewModel(
         persist()
     }
 
+    fun startDailyChallenge(date: String, size: Int = 4) {
+        undo.clear()
+        clearActiveLevel()
+        requestedSize = size
+        recordedDailyResults.remove(date)
+        val nextGame = engine.newDailyChallenge(date, size)
+        analytics.logLevelStart(nextGame)
+        _ui.value = _ui.value.copy(
+            game = nextGame,
+            canUndo = false,
+            labTileIds = emptyList(),
+            tunnelingTileId = null,
+            superpositionTileId = null,
+            observerPreview = null,
+            animations = emptyList(),
+            loading = false,
+            level = null,
+        )
+        persist()
+    }
+
     fun startPeriodicLevel(levelId: String) {
         val catalogRepository = levelCatalogRepository ?: return
         undo.clear()
@@ -629,7 +653,7 @@ class GameViewModel(
         clearActiveLevel()
         _ui.value = _ui.value.copy(loading = true)
         viewModelScope.launch {
-            val today = LocalDate.now().toString()
+            val today = DailyChallengeSeedProvider.todayUtc()
             val restored = repository.observe(difficulty, size).first()
             val game = if (difficulty == Difficulty.DAILY && restored?.dailyChallengeDate != today) {
                 engine.newGame(difficulty, size)
@@ -654,6 +678,7 @@ class GameViewModel(
         if (activeLevel == null) repository.save(_ui.value.game)
         profileRepository.record(_ui.value.game)
         socialRepository?.recordGame(_ui.value.game)
+        recordDailyResultIfTerminal(_ui.value.game)
     }
 
     private fun evaluateActiveLevel(state: GameState): LevelRunUiState? {
@@ -734,6 +759,13 @@ class GameViewModel(
                 repository.recordGameEnded(before.mode, result.state)
             }
         }
+    }
+
+    private suspend fun recordDailyResultIfTerminal(state: GameState) {
+        if (state.difficulty != Difficulty.DAILY || state.status == GameStatus.PLAYING) return
+        val date = state.dailyChallengeDate ?: return
+        if (!recordedDailyResults.add(date)) return
+        dailyChallengeRepository?.recordResult(date, maxOf(state.score, state.bestScore, state.dailyBestScore))
     }
 
     private fun shouldTriggerQuantumUnlock(before: GameState, after: GameState): Boolean {

@@ -20,9 +20,10 @@ class ProgressResetRepositoryTest {
         val social = FakeSocialRepository()
         val statistics = FakeStatisticsRepository()
         val levels = FakeLevelProgressRepository()
+        val daily = FakeDailyChallengeRepository()
         val settings = AppSettings(language = AppLanguage.PERSIAN, soundEnabled = false, hapticsEnabled = false)
 
-        LocalProgressResetRepository(game, collection, profile, social, statistics, levels).resetAllProgress()
+        LocalProgressResetRepository(game, collection, profile, social, statistics, levels, daily).resetAllProgress()
 
         assertTrue(game.clearAllCalled)
         assertTrue(collection.clearCalled)
@@ -30,6 +31,7 @@ class ProgressResetRepositoryTest {
         assertTrue(social.clearCalled)
         assertTrue(statistics.clearCalled)
         assertTrue(levels.clearCalled)
+        assertEquals(false, daily.clearHistoryCalled)
         assertEquals(AppLanguage.PERSIAN, settings.language)
         assertEquals(false, settings.soundEnabled)
         assertEquals(false, settings.hapticsEnabled)
@@ -104,6 +106,17 @@ class ProgressResetRepositoryTest {
         override suspend fun recordGameEnded(mode: com.battleheim.quantum2048.engine.GameMode, state: GameState) = Unit
         override suspend fun clear() {
             clearCalled = true
+        }
+    }
+
+    private class FakeDailyChallengeRepository : DailyChallengeRepository {
+        var clearHistoryCalled = false
+        override fun observe(): Flow<DailyChallengeState> = MutableStateFlow(DailyChallengeState())
+        override suspend fun markStarted(date: String) = Unit
+        override suspend fun recordResult(date: String, score: Long) = Unit
+        override suspend fun clearActiveRun(date: String) = Unit
+        override suspend fun clearHistory() {
+            clearHistoryCalled = true
         }
     }
 }
