@@ -9,6 +9,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import com.battleheim.quantum2048.designsystem.QuantumTheme
 import com.battleheim.quantum2048.domain.AppLanguage
 import com.battleheim.quantum2048.engine.GameEngine
@@ -27,7 +29,10 @@ class MainActivity : ComponentActivity() {
             val app = application as QuantumApp
             val settings by app.settingsRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.AppSettings())
             val localized = LocalContext.current.localized(settings.language)
-            CompositionLocalProvider(LocalContext provides localized) {
+            CompositionLocalProvider(
+                LocalContext provides localized,
+                LocalLayoutDirection provides settings.language.layoutDirection(),
+            ) {
                 QuantumTheme(themeMode = settings.themeMode) {
                 QuantumAppShell(
                     gameRepository = app.repository,
@@ -57,6 +62,11 @@ class MainActivity : ComponentActivity() {
         app.analyticsGateway.logSessionEnd()
         super.onStop()
     }
+}
+
+private fun AppLanguage.layoutDirection(): LayoutDirection = when (this) {
+    AppLanguage.ENGLISH -> LayoutDirection.Ltr
+    AppLanguage.PERSIAN -> LayoutDirection.Rtl
 }
 
 private fun Context.localized(language: AppLanguage): Context {

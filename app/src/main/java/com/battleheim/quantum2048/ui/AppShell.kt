@@ -1198,15 +1198,15 @@ private fun SettingsScreen(
         NeonPanel(title = stringResource(R.string.settings), accent = Cyan) {
             SettingsToggle(stringResource(R.string.sound), settings.soundEnabled) { playMenu(audio, settings); saveSettings(settings.copy(soundEnabled = it), analytics, settingsRepository, scope) }
             SettingsToggle(stringResource(R.string.music), settings.musicEnabled) { playMenu(audio, settings); saveSettings(settings.copy(musicEnabled = it), analytics, settingsRepository, scope) }
-            SettingsSlider("Master", settings.masterVolume) { saveSettings(settings.copy(masterVolume = it), analytics, settingsRepository, scope) }
-            SettingsSlider("Music", settings.musicVolume) { saveSettings(settings.copy(musicVolume = it), analytics, settingsRepository, scope) }
-            SettingsSlider("SFX", settings.sfxVolume) { saveSettings(settings.copy(sfxVolume = it), analytics, settingsRepository, scope) }
+            SettingsSlider(stringResource(R.string.master_volume), settings.masterVolume) { saveSettings(settings.copy(masterVolume = it), analytics, settingsRepository, scope) }
+            SettingsSlider(stringResource(R.string.music_volume), settings.musicVolume) { saveSettings(settings.copy(musicVolume = it), analytics, settingsRepository, scope) }
+            SettingsSlider(stringResource(R.string.sfx_volume), settings.sfxVolume) { saveSettings(settings.copy(sfxVolume = it), analytics, settingsRepository, scope) }
             SettingsToggle(stringResource(R.string.haptics), settings.hapticsEnabled) { playMenu(audio, settings); saveSettings(settings.copy(hapticsEnabled = it), analytics, settingsRepository, scope) }
             SettingsToggle(stringResource(R.string.reduced_motion), settings.reducedMotion) { playMenu(audio, settings); saveSettings(settings.copy(reducedMotion = it), analytics, settingsRepository, scope) }
         }
         NeonPanel(title = stringResource(R.string.language), accent = Electric) {
             NeonMenuButton(
-                text = stringResource(R.string.language_button, settings.language.displayLabel()),
+                text = stringResource(R.string.language_button, stringResource(settings.language.labelRes())),
                 onClick = {
                     playMenu(audio, settings)
                     saveSettings(settings.copy(language = settings.language.next()), analytics, settingsRepository, scope)
@@ -1215,7 +1215,7 @@ private fun SettingsScreen(
                 accent = Electric,
             )
             NeonMenuButton(
-                text = stringResource(R.string.theme_button, settings.themeMode.displayLabel()),
+                text = stringResource(R.string.theme_button, stringResource(settings.themeMode.labelRes())),
                 onClick = {
                     playMenu(audio, settings)
                     saveSettings(settings.copy(themeMode = settings.themeMode.next()), analytics, settingsRepository, scope)
@@ -1278,8 +1278,8 @@ private fun SettingsScreen(
 
     if (confirmResetCollection) {
         ConfirmDialog(
-            title = "Reset collection?",
-            body = "Discovered compounds will be cleared.",
+            title = stringResource(R.string.reset_collection_title),
+            body = stringResource(R.string.reset_collection_body),
             onDismiss = { confirmResetCollection = false },
             onConfirm = {
                 scope.launch { collectionRepository.clear() }
@@ -1300,8 +1300,8 @@ private fun SettingsScreen(
     }
     confirmResetDifficulty?.let { difficulty ->
         ConfirmDialog(
-            title = "Reset ${difficulty.name.lowercase()}?",
-            body = "The active save for this level will be deleted.",
+            title = stringResource(R.string.reset_difficulty_title, difficulty.localizedLabel()),
+            body = stringResource(R.string.reset_difficulty_body),
             onDismiss = { confirmResetDifficulty = null },
             onConfirm = {
                 vm.resetDifficulty(difficulty)
@@ -1498,9 +1498,9 @@ private fun AppLanguage.shortLabel(): String = when (this) {
     AppLanguage.PERSIAN -> "FA"
 }
 
-private fun AppLanguage.displayLabel(): String = when (this) {
-    AppLanguage.ENGLISH -> "English"
-    AppLanguage.PERSIAN -> "فارسی"
+private fun AppLanguage.labelRes(): Int = when (this) {
+    AppLanguage.ENGLISH -> R.string.language_english
+    AppLanguage.PERSIAN -> R.string.language_persian
 }
 
 private fun AppThemeMode.iconLabel(): String = when (this) {
@@ -1508,9 +1508,9 @@ private fun AppThemeMode.iconLabel(): String = when (this) {
     AppThemeMode.LIGHT -> "☀"
 }
 
-private fun AppThemeMode.displayLabel(): String = when (this) {
-    AppThemeMode.DARK -> "Dark"
-    AppThemeMode.LIGHT -> "Light"
+private fun AppThemeMode.labelRes(): Int = when (this) {
+    AppThemeMode.DARK -> R.string.theme_dark
+    AppThemeMode.LIGHT -> R.string.theme_light
 }
 
 @Composable

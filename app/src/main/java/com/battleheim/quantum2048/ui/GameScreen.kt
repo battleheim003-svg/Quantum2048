@@ -38,6 +38,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,9 +57,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.battleheim.quantum2048.audio.GameAudio
@@ -114,6 +117,7 @@ fun GameScreen(
 ) {
     val ui by vm.ui.collectAsState()
     val snackbar = remember { SnackbarHostState() }
+    val context = LocalContext.current
     LaunchedEffect(settings) {
         audio.applySettings(settings)
         audio.gameMusic()
@@ -122,7 +126,7 @@ fun GameScreen(
 
     LaunchedEffect(ui.message) {
         ui.message?.let {
-            snackbar.showSnackbar(it)
+            snackbar.showSnackbar(it.resolve(context))
             vm.consumeMessage()
         }
     }
@@ -246,14 +250,14 @@ private fun QuantumUnlockEffect(onDismiss: () -> Unit) {
             ),
     )
     QuantumDialog(
-        title = "Quantum Anomaly Detected!",
+        title = stringResource(R.string.quantum_unlock_title),
         onDismiss = onDismiss,
         accent = RadiantGold,
-        confirmText = "Unlocked",
+        confirmText = stringResource(R.string.quantum_unlock_confirm),
         onConfirm = onDismiss,
     ) {
-        Text("New Mode Unlocked.", color = Color.White, fontWeight = FontWeight.Black)
-        Text("Quantum modes are now available from New Game.", color = TextSecondary, fontSize = 13.sp)
+        Text(stringResource(R.string.quantum_unlock_headline), color = Color.White, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.quantum_unlock_body), color = TextSecondary, fontSize = 13.sp)
     }
 }
 
@@ -875,7 +879,9 @@ private fun TileCell(
         when {
             tile == null -> Unit
             mode == GameMode.QUANTUM -> QuantumTileLabel(tile, boardSize, observerValue)
-            else -> Text(formatNumber(tile.value), fontSize = if (tile.value < 1000) 26.sp else 20.sp, fontWeight = FontWeight.Black, color = classicTileTextColor(tile.value))
+            else -> CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Text(formatNumber(tile.value), fontSize = if (tile.value < 1000) 26.sp else 20.sp, fontWeight = FontWeight.Black, color = classicTileTextColor(tile.value))
+            }
         }
     }
 }
@@ -932,9 +938,11 @@ private fun QuantumTileLabel(tile: Tile, boardSize: Int, observerValue: Int?) {
     val rankSize = if (boardSize >= 8) 7.sp else 9.sp
     val familySize = if (boardSize >= 8) 0.sp else 7.sp
     Column(Modifier.fillMaxWidth().padding(if (boardSize >= 8) 2.dp else 5.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Text(formatNumber(FusionRules.rankOf(tile)), modifier = Modifier.align(Alignment.Start), color = TextSecondary, fontSize = rankSize, fontWeight = FontWeight.Bold)
         Text(observerValue?.let { formatNumber(it) } ?: FusionRules.displaySymbol(tile), fontSize = symbolSize, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center)
         Text(formatNumber(FusionRules.gameValueOf(tile)), color = Cyan, fontSize = valueSize, fontWeight = FontWeight.Black)
+        }
         if (boardSize < 8) tile.element?.let { Text(elementFamily(it), color = TextSecondary, fontSize = familySize, textAlign = TextAlign.Center) }
     }
 }

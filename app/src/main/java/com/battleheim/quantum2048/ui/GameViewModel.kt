@@ -2,6 +2,7 @@ package com.battleheim.quantum2048.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.battleheim.quantum2048.R
 import com.battleheim.quantum2048.analytics.AnalyticsGateway
 import com.battleheim.quantum2048.analytics.NoOpAnalyticsGateway
 import com.battleheim.quantum2048.audio.HapticEvent
@@ -63,7 +64,7 @@ data class GameUiState(
     val canUndo: Boolean = false,
     val loading: Boolean = true,
     val labTileIds: List<Long> = emptyList(),
-    val message: String? = null,
+    val message: GameMessage? = null,
     val feedback: GameFeedback? = null,
     val isBoardShaking: Boolean = false,
     val quantumUnlockEventVisible: Boolean = false,
@@ -147,11 +148,11 @@ class GameViewModel(
                 game = nextGame,
                 canUndo = undo.canUndo && FusionRules.isUndoEnabled(before.difficulty),
                 message = when {
-                    nextLevel?.status == LevelRunStatus.COMPLETE -> "Periodic Path cleared: ${nextLevel.stars} stars"
-                    nextLevel?.status == LevelRunStatus.FAILED -> "Attempt failed. Mercy assist may unlock after repeated tries."
-                    result.synthesizedCompound != null -> "Auto-synthesized ${result.synthesizedCompound.symbol}"
-                    result.energyOverflowBonus > 0 -> "Energy overflow +${result.energyOverflowBonus}"
-                    result.reactionCount > 0 -> "Particle reaction complete"
+                    nextLevel?.status == LevelRunStatus.COMPLETE -> message(R.string.msg_periodic_path_cleared, nextLevel.stars)
+                    nextLevel?.status == LevelRunStatus.FAILED -> message(R.string.msg_attempt_failed_mercy)
+                    result.synthesizedCompound != null -> message(R.string.msg_auto_synthesized, result.synthesizedCompound.symbol)
+                    result.energyOverflowBonus > 0 -> message(R.string.msg_energy_overflow, result.energyOverflowBonus)
+                    result.reactionCount > 0 -> message(R.string.msg_particle_reaction_complete)
                     else -> null
                 },
                 feedback = when {
@@ -201,7 +202,7 @@ class GameViewModel(
             duel = nextDuel,
             game = nextDuel.activeBoard,
             animations = result?.animations ?: emptyList(),
-            message = nextDuel.winner?.let { "${it.label()} wins" },
+            message = nextDuel.winner?.winMessage(),
             isBoardShaking = nextDuel.winner != null || (result?.gainedScore ?: 0) >= HIGH_VALUE_MERGE_SCORE,
             feedback = result?.let {
                 when {
@@ -218,18 +219,18 @@ class GameViewModel(
         val state = _ui.value.game
         val tile = state.cells.firstOrNull { it?.id == tileId } ?: return
         if (tile.kind != TileKind.ELEMENT || tile.element == null) {
-            _ui.value = _ui.value.copy(message = "Only elements can enter the lab")
+            _ui.value = _ui.value.copy(message = message(R.string.msg_only_elements_lab))
             return
         }
         if (state.mode != GameMode.QUANTUM) {
-            _ui.value = _ui.value.copy(message = "Compound Lab is locked on this level")
+            _ui.value = _ui.value.copy(message = message(R.string.msg_compound_lab_locked))
             return
         }
 
         val selected = (_ui.value.labTileIds + tileId).distinct()
         val maxInputs = FusionRules.compoundRecipes
             .maxOfOrNull { it.inputs.size } ?: 2
-        _ui.value = _ui.value.copy(labTileIds = selected.takeLast(maxInputs), message = "Lab sample ${selected.size}/$maxInputs")
+        _ui.value = _ui.value.copy(labTileIds = selected.takeLast(maxInputs), message = message(R.string.msg_lab_sample, selected.size, maxInputs))
         tryCompleteLab()
     }
 
@@ -243,7 +244,7 @@ class GameViewModel(
         _ui.value = _ui.value.copy(
             tunnelingTileId = if (selected == null) -1L else null,
             labTileIds = emptyList(),
-            message = if (selected == null) "Select a tile, then an empty cell" else "Tunneling cancelled",
+            message = if (selected == null) message(R.string.msg_tunnel_prompt) else message(R.string.msg_tunnel_cancelled),
         )
     }
 
@@ -260,14 +261,14 @@ class GameViewModel(
         }
         if (tunneling < 0L) {
             _ui.value = if (tile == null) {
-                _ui.value.copy(message = "Select a tile first")
+                _ui.value.copy(message = message(R.string.msg_select_tile_first))
             } else {
-                _ui.value.copy(tunnelingTileId = tile.id, message = "Select an empty destination")
+                _ui.value.copy(tunnelingTileId = tile.id, message = message(R.string.msg_select_empty_destination))
             }
             return
         }
         if (tile != null) {
-            _ui.value = _ui.value.copy(tunnelingTileId = tile.id, message = "Tunnel source changed")
+            _ui.value = _ui.value.copy(tunnelingTileId = tile.id, message = message(R.string.msg_tunnel_source_changed))
             return
         }
         val before = state
@@ -281,7 +282,7 @@ class GameViewModel(
                     duel = updateActiveDuelBoard(result.state),
                     canUndo = undo.canUndo,
                     tunnelingTileId = null,
-                    message = "Tile tunneled",
+                    message = message(R.string.msg_tile_tunneled),
                     feedback = GameFeedback.TUNNEL,
                     isBoardShaking = true,
                     animations = listOf(result.animation),
@@ -291,11 +292,11 @@ class GameViewModel(
             }
             is TunnelResult.Failure -> {
                 val message = when (result.reason) {
-                    TunnelFailure.INSUFFICIENT_SCORE -> "Not enough energy for tunneling"
-                    TunnelFailure.DESTINATION_OCCUPIED -> "Choose an empty destination"
-                    TunnelFailure.LAB_DISABLED -> "Tunneling is quantum-only"
-                    TunnelFailure.GAME_NOT_ACTIVE -> "The game is not active"
-                    TunnelFailure.TILE_NOT_FOUND -> "Tunnel source is gone"
+                    TunnelFailure.INSUFFICIENT_SCORE -> message(R.string.msg_not_enough_energy_tunnel)
+                    TunnelFailure.DESTINATION_OCCUPIED -> message(R.string.msg_choose_empty_destination)
+                    TunnelFailure.LAB_DISABLED -> message(R.string.msg_tunneling_quantum_only)
+                    TunnelFailure.GAME_NOT_ACTIVE -> message(R.string.msg_game_not_active)
+                    TunnelFailure.TILE_NOT_FOUND -> message(R.string.msg_tunnel_source_gone)
                 }
                 _ui.value = _ui.value.copy(message = message)
             }
@@ -316,7 +317,7 @@ class GameViewModel(
                     duel = updateActiveDuelBoard(result.state),
                     canUndo = undo.canUndo,
                     superpositionTileId = null,
-                    message = if (choiceIndex == 0) "Low collapse stabilized" else "High collapse stabilized",
+                    message = if (choiceIndex == 0) message(R.string.msg_low_collapse_stabilized) else message(R.string.msg_high_collapse_stabilized),
                     feedback = if (choiceIndex == 0) GameFeedback.COLLAPSE_LOW else GameFeedback.COLLAPSE_HIGH,
                     isBoardShaking = choiceIndex != 0,
                     animations = listOf(result.animation),
@@ -335,12 +336,12 @@ class GameViewModel(
             }
             is SuperpositionResult.Failure -> {
                 val message = when (result.reason) {
-                    SuperpositionFailure.INSUFFICIENT_SCORE -> "Not enough energy to collapse"
-                    SuperpositionFailure.INVALID_CHOICE -> "Collapse choice is invalid"
-                    SuperpositionFailure.NOT_SUPERPOSITION -> "Tile is already stable"
-                    SuperpositionFailure.LAB_DISABLED -> "Superposition is quantum-only"
-                    SuperpositionFailure.GAME_NOT_ACTIVE -> "The game is not active"
-                    SuperpositionFailure.TILE_NOT_FOUND -> "Superposition tile is gone"
+                    SuperpositionFailure.INSUFFICIENT_SCORE -> message(R.string.msg_not_enough_energy_collapse)
+                    SuperpositionFailure.INVALID_CHOICE -> message(R.string.msg_collapse_choice_invalid)
+                    SuperpositionFailure.NOT_SUPERPOSITION -> message(R.string.msg_tile_already_stable)
+                    SuperpositionFailure.LAB_DISABLED -> message(R.string.msg_superposition_quantum_only)
+                    SuperpositionFailure.GAME_NOT_ACTIVE -> message(R.string.msg_game_not_active)
+                    SuperpositionFailure.TILE_NOT_FOUND -> message(R.string.msg_superposition_tile_gone)
                 }
                 _ui.value = _ui.value.copy(message = message)
             }
@@ -360,7 +361,7 @@ class GameViewModel(
                     game = result.state,
                     duel = updateActiveDuelBoard(result.state),
                     observerPreview = ObserverPreview(tileId, result.previewValue),
-                    message = "Observer preview: ${result.previewValue}",
+                    message = message(R.string.msg_observer_preview, result.previewValue),
                 )
                 persist()
                 viewModelScope.launch {
@@ -372,11 +373,11 @@ class GameViewModel(
             }
             is ObserverResult.Failure -> {
                 val message = when (result.reason) {
-                    ObserverFailure.INSUFFICIENT_SCORE -> "Not enough energy to observe"
-                    ObserverFailure.NOT_SUPERPOSITION -> "Only superposition tiles can be observed"
-                    ObserverFailure.LAB_DISABLED -> "Observer effect is quantum-only"
-                    ObserverFailure.GAME_NOT_ACTIVE -> "The game is not active"
-                    ObserverFailure.TILE_NOT_FOUND -> "Observer target is gone"
+                    ObserverFailure.INSUFFICIENT_SCORE -> message(R.string.msg_not_enough_energy_observe)
+                    ObserverFailure.NOT_SUPERPOSITION -> message(R.string.msg_only_superposition_observed)
+                    ObserverFailure.LAB_DISABLED -> message(R.string.msg_observer_quantum_only)
+                    ObserverFailure.GAME_NOT_ACTIVE -> message(R.string.msg_game_not_active)
+                    ObserverFailure.TILE_NOT_FOUND -> message(R.string.msg_observer_target_gone)
                 }
                 _ui.value = _ui.value.copy(message = message)
             }
@@ -398,7 +399,7 @@ class GameViewModel(
                     duel = updateActiveDuelBoard(result.state),
                     canUndo = undo.canUndo,
                     labTileIds = emptyList(),
-                    message = "Discovered ${result.recipe.output.symbol}",
+                    message = message(R.string.msg_discovered_compound, result.recipe.output.symbol),
                     feedback = GameFeedback.COMPOUND,
                     isBoardShaking = result.recipe.output.scoreValue >= HIGH_VALUE_MERGE_SCORE,
                     level = nextLevel ?: _ui.value.level,
@@ -408,9 +409,9 @@ class GameViewModel(
             }
             is CompoundResult.Failure -> {
                 val reason = when (result.reason) {
-                    CompoundFailure.NO_RECIPE -> "No compound recipe matched"
-                    CompoundFailure.LAB_DISABLED -> "Compound Lab is disabled here"
-                    else -> "This lab sample is invalid"
+                    CompoundFailure.NO_RECIPE -> message(R.string.msg_no_compound_recipe)
+                    CompoundFailure.LAB_DISABLED -> message(R.string.msg_compound_lab_disabled)
+                    else -> message(R.string.msg_lab_sample_invalid)
                 }
                 _ui.value = _ui.value.copy(message = reason)
             }
@@ -439,7 +440,7 @@ class GameViewModel(
             viewModelScope.launch { collectionRepository.unrecord(compoundSymbol) }
         }
         val restored = prior.copy(usedUndo = true)
-        _ui.value = _ui.value.copy(game = restored, canUndo = false, labTileIds = emptyList(), tunnelingTileId = null, superpositionTileId = null, observerPreview = null, message = "Move undone", level = evaluateActiveLevel(restored))
+        _ui.value = _ui.value.copy(game = restored, canUndo = false, labTileIds = emptyList(), tunnelingTileId = null, superpositionTileId = null, observerPreview = null, message = message(R.string.msg_move_undone), level = evaluateActiveLevel(restored))
         persist()
     }
 
@@ -494,7 +495,7 @@ class GameViewModel(
             val catalog = catalogRepository.catalog()
             val level = catalog.findLevel(levelId)
             if (level == null) {
-                _ui.value = _ui.value.copy(loading = false, message = "Level not found")
+                _ui.value = _ui.value.copy(loading = false, message = message(R.string.msg_level_not_found))
                 inputLocked = false
                 return@launch
             }
@@ -545,7 +546,7 @@ class GameViewModel(
         _ui.value = _ui.value.copy(
             duel = next,
             game = next.activeBoard,
-            message = next.winner?.let { "${it.label()} wins" } ?: "Turn passed",
+            message = next.winner?.winMessage() ?: message(R.string.msg_turn_passed),
         )
         if (next.winner == null) runBotTurnIfNeeded()
     }
@@ -763,7 +764,7 @@ class GameViewModel(
 private fun stableSeed(value: String): Long =
     value.fold(1125899906842597L) { acc, char -> acc * 31 + char.code }
 
-private fun DuelPlayer.label(): String = when (this) {
-    DuelPlayer.PLAYER_ONE -> "Player 1"
-    DuelPlayer.PLAYER_TWO -> "Player 2"
+private fun DuelPlayer.winMessage(): GameMessage = when (this) {
+    DuelPlayer.PLAYER_ONE -> message(R.string.msg_player_one_wins)
+    DuelPlayer.PLAYER_TWO -> message(R.string.msg_player_two_wins)
 }
