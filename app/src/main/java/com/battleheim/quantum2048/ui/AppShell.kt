@@ -35,6 +35,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -102,6 +103,8 @@ import com.battleheim.quantum2048.designsystem.TextSecondary
 import com.battleheim.quantum2048.designsystem.Void
 import com.battleheim.quantum2048.designsystem.difficultyAccent
 import com.battleheim.quantum2048.domain.CollectionRepository
+import com.battleheim.quantum2048.domain.AchievementProgress
+import com.battleheim.quantum2048.domain.AchievementsRepository
 import com.battleheim.quantum2048.domain.BillingRepository
 import com.battleheim.quantum2048.domain.DailyChallengeRepository
 import com.battleheim.quantum2048.domain.DailyChallengeStatus
@@ -143,6 +146,7 @@ private object Routes {
     const val MainMenu = "menu"
     const val LevelSelect = "level_select"
     const val Collection = "collection"
+    const val Achievements = "achievements"
     const val Statistics = "stats"
     const val DailyChallenge = "daily_challenge"
     const val About = "about"
@@ -170,6 +174,7 @@ fun QuantumAppShell(
     socialRepository: SocialRepository,
     statisticsRepository: StatisticsRepository,
     dailyChallengeRepository: DailyChallengeRepository,
+    achievementsRepository: AchievementsRepository,
     billingRepository: BillingRepository,
     levelCatalogRepository: LevelCatalogRepository,
     levelProgressRepository: LevelProgressRepository,
@@ -199,6 +204,7 @@ fun QuantumAppShell(
             levelProgressRepository = levelProgressRepository,
             statisticsRepository = statisticsRepository,
             dailyChallengeRepository = dailyChallengeRepository,
+            achievementsRepository = achievementsRepository,
             engine = engine,
             analytics = analytics,
             soundEvents = gameSoundPlayer,
@@ -261,6 +267,7 @@ fun QuantumAppShell(
                 onNewQuantum = { playSelect(audio, settings); nav.navigate(Routes.game(MainGameModeRoute.QUANTUM)) },
                 onNewGame = { playSelect(audio, settings); nav.navigate(Routes.LevelSelect) },
                 onCollection = { playMenu(audio, settings); nav.navigate(Routes.Collection) },
+                onAchievements = { playMenu(audio, settings); nav.navigate(Routes.Achievements) },
                 onStatistics = { playMenu(audio, settings); nav.navigate(Routes.Statistics) },
                 onDailyChallenge = { playSelect(audio, settings); nav.navigate(Routes.DailyChallenge) },
                 onAbout = { playMenu(audio, settings); nav.navigate(Routes.About) },
@@ -351,6 +358,9 @@ fun QuantumAppShell(
         composable(Routes.Collection) {
             CollectionScreen(collectionRepository, profileRepository, onBack = { nav.popBackStack() })
         }
+        composable(Routes.Achievements) {
+            AchievementsScreen(achievementsRepository, onBack = { nav.popBackStack() })
+        }
         composable(Routes.DailyChallenge) {
             DailyChallengeScreen(
                 dailyChallengeRepository = dailyChallengeRepository,
@@ -397,6 +407,7 @@ fun QuantumAppShell(
                     statisticsRepository = statisticsRepository,
                     levelProgressRepository = levelProgressRepository,
                     dailyChallengeRepository = dailyChallengeRepository,
+                    achievementsRepository = achievementsRepository,
                 ),
                 settings = settings,
                 entitlements = billingRepository.observe().collectAsState(initial = EntitlementState()).value,
@@ -425,6 +436,7 @@ private fun MainMenuScreen(
     onNewQuantum: () -> Unit,
     onNewGame: () -> Unit,
     onCollection: () -> Unit,
+    onAchievements: () -> Unit,
     onStatistics: () -> Unit,
     onDailyChallenge: () -> Unit,
     onAbout: () -> Unit,
@@ -504,8 +516,9 @@ private fun MainMenuScreen(
         NeonMenuButton(text = stringResource(R.string.periodic_path), onClick = onPeriodicPath, modifier = Modifier.fillMaxWidth().testTag("periodic_path_button"), accent = Electric, filled = true)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             NeonMenuButton(text = stringResource(R.string.collection), onClick = onCollection, modifier = Modifier.weight(1f), accent = NeonPink, icon = "◇")
-            NeonMenuButton(text = stringResource(R.string.statistics), onClick = onStatistics, modifier = Modifier.weight(1f), accent = Electric, icon = "▦")
+            NeonMenuButton(text = stringResource(R.string.achievements), onClick = onAchievements, modifier = Modifier.weight(1f), accent = RadiantGold, icon = "*")
         }
+        NeonMenuButton(text = stringResource(R.string.statistics), onClick = onStatistics, modifier = Modifier.fillMaxWidth(), accent = Electric, icon = "▦")
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             NeonMenuButton(text = stringResource(R.string.tutorial), onClick = onTutorial, modifier = Modifier.weight(1f), accent = Cyan, icon = "?")
             NeonMenuButton(text = stringResource(R.string.settings), onClick = onSettings, modifier = Modifier.weight(1f), accent = RadiantGold, icon = "⚙")
@@ -854,6 +867,71 @@ private fun com.battleheim.quantum2048.engine.Tile.tutorialLabel(): String =
         com.battleheim.quantum2048.engine.TileKind.ELEMENT -> element?.symbol.orEmpty()
         com.battleheim.quantum2048.engine.TileKind.CLASSIC -> value.toString()
     }
+
+@Composable
+private fun AchievementsScreen(achievementsRepository: AchievementsRepository, onBack: () -> Unit) {
+    val achievements by achievementsRepository.observeAchievements().collectAsState(initial = emptyList())
+    MenuScaffold {
+        SectionTitle(stringResource(R.string.achievements), stringResource(R.string.achievements_progress_subtitle))
+        if (achievements.isEmpty()) {
+            NeonPanel(title = stringResource(R.string.achievements), accent = RadiantGold) {
+                Text(stringResource(R.string.loading), color = TextSecondary, fontSize = 13.sp)
+            }
+        } else {
+            achievements.forEach { progress ->
+                AchievementCard(progress)
+            }
+        }
+        NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+    }
+}
+
+@Composable
+private fun AchievementCard(progress: AchievementProgress) {
+    val done = progress.isCompleted
+    NeonPanel(
+        title = stringResource(progress.achievement.titleKey.stringRes()),
+        accent = if (done) RadiantGold else Electric,
+    ) {
+        Text(stringResource(progress.achievement.descriptionKey.stringRes()), color = TextSecondary, fontSize = 13.sp)
+        LinearProgressIndicator(
+            progress = { progress.ratio },
+            modifier = Modifier.fillMaxWidth().height(8.dp),
+            color = if (done) RadiantGold else Cyan,
+            trackColor = Color.White.copy(alpha = 0.10f),
+        )
+        StatRow(
+            stringResource(if (done) R.string.achievement_completed else R.string.achievement_progress),
+            stringResource(R.string.achievement_progress_value, formatNumber(progress.current), formatNumber(progress.achievement.target)),
+        )
+    }
+}
+
+private fun String.stringRes(): Int = when (this) {
+    "achievement_low_collapse_100_title" -> R.string.achievement_low_collapse_100_title
+    "achievement_low_collapse_100_desc" -> R.string.achievement_low_collapse_100_desc
+    "achievement_high_collapse_100_title" -> R.string.achievement_high_collapse_100_title
+    "achievement_high_collapse_100_desc" -> R.string.achievement_high_collapse_100_desc
+    "achievement_quantum_2048_title" -> R.string.achievement_quantum_2048_title
+    "achievement_quantum_2048_desc" -> R.string.achievement_quantum_2048_desc
+    "achievement_tile_4096_title" -> R.string.achievement_tile_4096_title
+    "achievement_tile_4096_desc" -> R.string.achievement_tile_4096_desc
+    "achievement_daily_streak_5_title" -> R.string.achievement_daily_streak_5_title
+    "achievement_daily_streak_5_desc" -> R.string.achievement_daily_streak_5_desc
+    "achievement_daily_streak_30_title" -> R.string.achievement_daily_streak_30_title
+    "achievement_daily_streak_30_desc" -> R.string.achievement_daily_streak_30_desc
+    "achievement_classic_first_game_title" -> R.string.achievement_classic_first_game_title
+    "achievement_classic_first_game_desc" -> R.string.achievement_classic_first_game_desc
+    "achievement_quantum_first_game_title" -> R.string.achievement_quantum_first_game_title
+    "achievement_quantum_first_game_desc" -> R.string.achievement_quantum_first_game_desc
+    "achievement_merges_1000_title" -> R.string.achievement_merges_1000_title
+    "achievement_merges_1000_desc" -> R.string.achievement_merges_1000_desc
+    "achievement_win_streak_5_title" -> R.string.achievement_win_streak_5_title
+    "achievement_win_streak_5_desc" -> R.string.achievement_win_streak_5_desc
+    "achievement_both_modes_title" -> R.string.achievement_both_modes_title
+    "achievement_both_modes_desc" -> R.string.achievement_both_modes_desc
+    else -> R.string.achievements
+}
 
 @Composable
 private fun DailyChallengeScreen(

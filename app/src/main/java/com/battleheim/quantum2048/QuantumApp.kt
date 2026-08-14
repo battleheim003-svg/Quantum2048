@@ -4,6 +4,7 @@ import com.battleheim.quantum2048.analytics.OfflineAnalyticsGateway
 import com.battleheim.quantum2048.ads.OfflineAdGateway
 import com.battleheim.quantum2048.config.OfflineRemoteConfigGateway
 import com.battleheim.quantum2048.data.AssetLevelCatalogRepository
+import com.battleheim.quantum2048.data.DataStoreAchievementsRepository
 import com.battleheim.quantum2048.data.DataStoreBillingRepository
 import com.battleheim.quantum2048.data.DataStoreCollectionRepository
 import com.battleheim.quantum2048.data.DataStoreDailyChallengeRepository
@@ -22,6 +23,9 @@ class QuantumApp : Application() {
     val socialRepository by lazy { DataStoreSocialRepository(this) }
     val statisticsRepository by lazy { DataStoreStatisticsRepository(this) }
     val dailyChallengeRepository by lazy { DataStoreDailyChallengeRepository(this) }
+    val achievementsRepository by lazy {
+        DataStoreAchievementsRepository(this, statisticsRepository, dailyChallengeRepository)
+    }
     val billingRepository by lazy { DataStoreBillingRepository(this) }
     val levelCatalogRepository by lazy { AssetLevelCatalogRepository(this) }
     val levelProgressRepository by lazy { DataStoreLevelProgressRepository(this) }

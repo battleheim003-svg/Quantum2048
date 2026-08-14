@@ -14,6 +14,7 @@ import com.battleheim.quantum2048.audio.SoundEventSink
 import com.battleheim.quantum2048.audio.hapticEventsForMove
 import com.battleheim.quantum2048.audio.soundEventsForMove
 import com.battleheim.quantum2048.domain.CollectionRepository
+import com.battleheim.quantum2048.domain.AchievementsRepository
 import com.battleheim.quantum2048.domain.DailyChallengeRepository
 import com.battleheim.quantum2048.domain.GameRepository
 import com.battleheim.quantum2048.domain.LevelCatalog
@@ -91,6 +92,7 @@ class GameViewModel(
     private val levelProgressRepository: LevelProgressRepository? = null,
     private val statisticsRepository: StatisticsRepository? = null,
     private val dailyChallengeRepository: DailyChallengeRepository? = null,
+    private val achievementsRepository: AchievementsRepository? = null,
     private val engine: GameEngine,
     private val analytics: AnalyticsGateway = NoOpAnalyticsGateway,
     private val soundEvents: SoundEventSink = NoOpSoundEventSink,
@@ -679,6 +681,7 @@ class GameViewModel(
         profileRepository.record(_ui.value.game)
         socialRepository?.recordGame(_ui.value.game)
         recordDailyResultIfTerminal(_ui.value.game)
+        notifyNewAchievements()
     }
 
     private fun evaluateActiveLevel(state: GameState): LevelRunUiState? {
@@ -766,6 +769,13 @@ class GameViewModel(
         val date = state.dailyChallengeDate ?: return
         if (!recordedDailyResults.add(date)) return
         dailyChallengeRepository?.recordResult(date, maxOf(state.score, state.bestScore, state.dailyBestScore))
+    }
+
+    private suspend fun notifyNewAchievements() {
+        val unlocked = achievementsRepository?.refresh().orEmpty()
+        if (unlocked.isNotEmpty()) {
+            _ui.value = _ui.value.copy(message = message(R.string.msg_achievement_unlocked))
+        }
     }
 
     private fun shouldTriggerQuantumUnlock(before: GameState, after: GameState): Boolean {

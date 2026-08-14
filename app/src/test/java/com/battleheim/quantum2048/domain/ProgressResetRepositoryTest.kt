@@ -21,9 +21,10 @@ class ProgressResetRepositoryTest {
         val statistics = FakeStatisticsRepository()
         val levels = FakeLevelProgressRepository()
         val daily = FakeDailyChallengeRepository()
+        val achievements = FakeAchievementsRepository()
         val settings = AppSettings(language = AppLanguage.PERSIAN, soundEnabled = false, hapticsEnabled = false)
 
-        LocalProgressResetRepository(game, collection, profile, social, statistics, levels, daily).resetAllProgress()
+        LocalProgressResetRepository(game, collection, profile, social, statistics, levels, daily, achievements).resetAllProgress()
 
         assertTrue(game.clearAllCalled)
         assertTrue(collection.clearCalled)
@@ -32,6 +33,7 @@ class ProgressResetRepositoryTest {
         assertTrue(statistics.clearCalled)
         assertTrue(levels.clearCalled)
         assertEquals(false, daily.clearHistoryCalled)
+        assertEquals(false, achievements.clearCalled)
         assertEquals(AppLanguage.PERSIAN, settings.language)
         assertEquals(false, settings.soundEnabled)
         assertEquals(false, settings.hapticsEnabled)
@@ -117,6 +119,15 @@ class ProgressResetRepositoryTest {
         override suspend fun clearActiveRun(date: String) = Unit
         override suspend fun clearHistory() {
             clearHistoryCalled = true
+        }
+    }
+
+    private class FakeAchievementsRepository : AchievementsRepository {
+        var clearCalled = false
+        override fun observeAchievements(): Flow<List<AchievementProgress>> = MutableStateFlow(emptyList())
+        override suspend fun refresh(nowMillis: Long): List<AchievementProgress> = emptyList()
+        override suspend fun clear() {
+            clearCalled = true
         }
     }
 }

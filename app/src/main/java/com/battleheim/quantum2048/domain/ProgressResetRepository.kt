@@ -12,6 +12,7 @@ class LocalProgressResetRepository(
     private val statisticsRepository: StatisticsRepository,
     private val levelProgressRepository: LevelProgressRepository,
     @Suppress("unused") private val dailyChallengeRepository: DailyChallengeRepository? = null,
+    @Suppress("unused") private val achievementsRepository: AchievementsRepository? = null,
 ) : ProgressResetRepository {
     override suspend fun resetAllProgress() {
         gameRepository.clearAll()
