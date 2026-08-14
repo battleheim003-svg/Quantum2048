@@ -50,7 +50,7 @@ class EntanglementEngineTest {
             difficulty = Difficulty.QUANTUM,
             nextTileId = 2,
         )
-        val engine = GameEngine(ScriptedRandom(ints = mutableListOf(0, 0), doubles = mutableListOf(0.0, 0.0)))
+        val engine = GameEngine(ScriptedRandom(ints = mutableListOf(0, 0), doubles = mutableListOf(0.0, 0.0)), entanglementEnabled = false)
 
         val spawned = engine.spawn(state)
 
@@ -74,7 +74,7 @@ class EntanglementEngineTest {
             entangledPairs = listOf(EntangledPair(42, 1, 3)),
         )
 
-        val result = GameEngine(ScriptedRandom()).move(state, Direction.LEFT)
+        val result = GameEngine(ScriptedRandom(), entanglementEnabled = false).move(state, Direction.LEFT)
 
         assertTrue(result.changed)
         assertEquals(0, result.entanglementCollapseCount)
