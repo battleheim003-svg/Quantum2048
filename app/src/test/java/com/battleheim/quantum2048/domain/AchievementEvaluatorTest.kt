@@ -22,6 +22,7 @@ class AchievementEvaluatorTest {
             totalMerges = 400,
             manualCollapseLow = 100,
             manualCollapseHigh = 100,
+            entangledCollapseChainCount = 50,
             longestWinStreak = 3,
         )
         val daily = DailyChallengeState(
@@ -35,6 +36,21 @@ class AchievementEvaluatorTest {
         assertEquals(AchievementCatalog.all.size, evaluation.newlyCompleted.size)
         assertTrue(evaluation.achievements.all { it.isCompleted })
         assertEquals(AchievementCatalog.all.map { it.id }.toSet(), evaluation.nextState.completedAtMillis.keys)
+    }
+
+    @Test
+    fun entangledCollapseAchievementCompletesAtTarget() {
+        val evaluation = AchievementEvaluator.evaluate(
+            classic = StatsSnapshot(GameMode.CLASSIC),
+            quantum = StatsSnapshot(GameMode.QUANTUM, entangledCollapseChainCount = 50),
+            daily = DailyChallengeState(),
+            stored = AchievementsState(),
+            nowMillis = 321L,
+        )
+
+        val achievement = evaluation.achievements.single { it.achievement.id == AchievementCatalog.ENTANGLED_COLLAPSE_50 }
+        assertEquals(50, achievement.current)
+        assertTrue(achievement.isCompleted)
     }
 
     @Test

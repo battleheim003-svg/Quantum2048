@@ -35,6 +35,10 @@ class DataStoreStatisticsRepository(private val context: Context) : StatisticsRe
         update(mode) { it.recordCollapse(lowValue = lowValue, manual = manual) }
     }
 
+    override suspend fun recordEntangledCollapse(mode: GameMode, count: Int) {
+        update(mode) { it.recordEntangledCollapse(count) }
+    }
+
     override suspend fun recordGameEnded(mode: GameMode, state: GameState) {
         update(mode) { it.recordGameEnded(state) }
     }

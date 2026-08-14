@@ -105,6 +105,7 @@ class ProgressResetRepositoryTest {
 
         override suspend fun recordMerge(mode: com.battleheim.quantum2048.engine.GameMode, count: Int, state: GameState) = Unit
         override suspend fun recordCollapse(mode: com.battleheim.quantum2048.engine.GameMode, lowValue: Boolean, manual: Boolean) = Unit
+        override suspend fun recordEntangledCollapse(mode: com.battleheim.quantum2048.engine.GameMode, count: Int) = Unit
         override suspend fun recordGameEnded(mode: com.battleheim.quantum2048.engine.GameMode, state: GameState) = Unit
         override suspend fun clear() {
             clearCalled = true

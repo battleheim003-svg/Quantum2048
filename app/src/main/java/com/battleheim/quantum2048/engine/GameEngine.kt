@@ -276,6 +276,7 @@ class GameEngine(
         return SuperpositionResult.Success(
             state = next,
             animation = MoveAnimation(tile.id, sourceIndex, sourceIndex, if (choiceIndex == 0) MoveAnimationKind.COLLAPSE_LOW else MoveAnimationKind.COLLAPSE_HIGH),
+            entanglementCollapseCount = collapse.extraCollapseCount,
         )
     }
 

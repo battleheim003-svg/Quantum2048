@@ -43,6 +43,17 @@ class StatisticsRepositoryTest {
     }
 
     @Test
+    fun recordEntangledCollapseTracksChainCounterSeparately() = runTest {
+        val repository = InMemoryStatisticsRepository()
+
+        repository.recordEntangledCollapse(GameMode.QUANTUM, count = 2)
+
+        val stats = repository.observeStatistics(GameMode.QUANTUM).first()
+        assertEquals(2L, stats.entangledCollapseChainCount)
+        assertEquals(0L, stats.autoCollapseCount)
+    }
+
+    @Test
     fun recordGameEndedIncrementsGamesAndLongestWinningStreak() = runTest {
         val repository = InMemoryStatisticsRepository()
         val win = boardWithTile(value = 2048, score = 2048, status = GameStatus.WON)
@@ -82,6 +93,10 @@ class StatisticsRepositoryTest {
 
         override suspend fun recordCollapse(mode: GameMode, lowValue: Boolean, manual: Boolean) {
             update(mode) { it.recordCollapse(lowValue, manual) }
+        }
+
+        override suspend fun recordEntangledCollapse(mode: GameMode, count: Int) {
+            update(mode) { it.recordEntangledCollapse(count) }
         }
 
         override suspend fun recordGameEnded(mode: GameMode, state: GameState) {

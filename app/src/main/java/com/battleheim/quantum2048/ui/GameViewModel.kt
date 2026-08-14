@@ -336,6 +336,7 @@ class GameViewModel(
                         lowValue = choiceIndex == 0,
                         manual = true,
                     )
+                    statisticsRepository?.recordEntangledCollapse(before.mode, result.entanglementCollapseCount)
                 }
                 persist()
             }

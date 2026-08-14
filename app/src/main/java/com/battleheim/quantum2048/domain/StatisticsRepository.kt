@@ -17,6 +17,7 @@ data class StatsSnapshot(
     val manualCollapseLow: Long = 0,
     val manualCollapseHigh: Long = 0,
     val autoCollapseCount: Long = 0,
+    val entangledCollapseChainCount: Long = 0,
     val currentWinStreak: Int = 0,
     val longestWinStreak: Int = 0,
 ) {
@@ -27,7 +28,8 @@ data class StatsSnapshot(
             gamesPlayed == 0 &&
             totalMerges == 0L &&
             manualCollapseTotal == 0L &&
-            autoCollapseCount == 0L
+            autoCollapseCount == 0L &&
+            entangledCollapseChainCount == 0L
 
     fun recordMerge(count: Int, state: GameState): StatsSnapshot {
         if (count <= 0) return recordBoard(state)
@@ -42,6 +44,9 @@ data class StatsSnapshot(
             copy(manualCollapseHigh = manualCollapseHigh + 1)
         }
     }
+
+    fun recordEntangledCollapse(count: Int): StatsSnapshot =
+        if (count <= 0) this else copy(entangledCollapseChainCount = entangledCollapseChainCount + count)
 
     fun recordGameEnded(state: GameState): StatsSnapshot {
         val withBoard = recordBoard(state)
@@ -75,6 +80,7 @@ interface StatisticsRepository {
     fun observeStatistics(mode: GameMode): Flow<StatsSnapshot>
     suspend fun recordMerge(mode: GameMode, count: Int, state: GameState)
     suspend fun recordCollapse(mode: GameMode, lowValue: Boolean, manual: Boolean)
+    suspend fun recordEntangledCollapse(mode: GameMode, count: Int)
     suspend fun recordGameEnded(mode: GameMode, state: GameState)
     suspend fun clear()
 }

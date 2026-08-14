@@ -54,6 +54,7 @@ object AchievementCatalog {
     const val MERGES_1000 = "merges_1000"
     const val WIN_STREAK_5 = "win_streak_5"
     const val BOTH_MODES = "both_modes"
+    const val ENTANGLED_COLLAPSE_50 = "entangled_collapse_50"
 
     val all: List<Achievement> = listOf(
         Achievement(LOW_COLLAPSE_100, "achievement_low_collapse_100_title", "achievement_low_collapse_100_desc", 100, AchievementProgressType.CUMULATIVE),
@@ -67,6 +68,7 @@ object AchievementCatalog {
         Achievement(MERGES_1000, "achievement_merges_1000_title", "achievement_merges_1000_desc", 1_000, AchievementProgressType.CUMULATIVE),
         Achievement(WIN_STREAK_5, "achievement_win_streak_5_title", "achievement_win_streak_5_desc", 5, AchievementProgressType.CUMULATIVE),
         Achievement(BOTH_MODES, "achievement_both_modes_title", "achievement_both_modes_desc", 2, AchievementProgressType.BOOLEAN),
+        Achievement(ENTANGLED_COLLAPSE_50, "achievement_entangled_collapse_50_title", "achievement_entangled_collapse_50_desc", 50, AchievementProgressType.CUMULATIVE),
     )
 }
 
@@ -90,6 +92,7 @@ object AchievementEvaluator {
             AchievementCatalog.MERGES_1000 to classic.totalMerges + quantum.totalMerges,
             AchievementCatalog.WIN_STREAK_5 to maxOf(classic.longestWinStreak, quantum.longestWinStreak).toLong(),
             AchievementCatalog.BOTH_MODES to listOf(classic.gamesPlayed, quantum.gamesPlayed).count { it > 0 }.toLong(),
+            AchievementCatalog.ENTANGLED_COLLAPSE_50 to quantum.entangledCollapseChainCount,
         )
         var completed = stored.completedAtMillis
         val evaluated = AchievementCatalog.all.map { achievement ->

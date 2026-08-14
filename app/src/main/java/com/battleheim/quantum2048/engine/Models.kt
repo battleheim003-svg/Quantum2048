@@ -152,7 +152,11 @@ sealed interface TunnelResult {
 
 enum class SuperpositionFailure { LAB_DISABLED, GAME_NOT_ACTIVE, TILE_NOT_FOUND, NOT_SUPERPOSITION, INVALID_CHOICE, INSUFFICIENT_SCORE }
 sealed interface SuperpositionResult {
-    data class Success(val state: GameState, val animation: MoveAnimation) : SuperpositionResult
+    data class Success(
+        val state: GameState,
+        val animation: MoveAnimation,
+        val entanglementCollapseCount: Int = 0,
+    ) : SuperpositionResult
     data class Failure(val state: GameState, val reason: SuperpositionFailure) : SuperpositionResult
 }
 
