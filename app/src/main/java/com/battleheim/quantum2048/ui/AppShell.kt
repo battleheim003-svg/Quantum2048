@@ -83,6 +83,11 @@ import com.battleheim.quantum2048.ads.NoOpAdGateway
 import com.battleheim.quantum2048.ads.RewardPlacement
 import com.battleheim.quantum2048.analytics.AnalyticsGateway
 import com.battleheim.quantum2048.analytics.NoOpAnalyticsGateway
+import com.battleheim.quantum2048.audio.AndroidHapticPerformer
+import com.battleheim.quantum2048.audio.AppSoundSettingsProvider
+import com.battleheim.quantum2048.audio.GameAudioSoundPlaybackEngine
+import com.battleheim.quantum2048.audio.GameSoundPlayer
+import com.battleheim.quantum2048.audio.HapticFeedbackController
 import com.battleheim.quantum2048.audio.ToneGameAudio
 import com.battleheim.quantum2048.designsystem.BoardGlass
 import com.battleheim.quantum2048.designsystem.Cyan
@@ -166,6 +171,17 @@ fun QuantumAppShell(
     engine: GameEngine,
 ) {
     val nav = rememberNavController()
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val audio = remember(context) { ToneGameAudio(context) }
+    val eventScope = rememberCoroutineScope()
+    val soundSettingsProvider = remember(settingsRepository) { AppSoundSettingsProvider(settingsRepository.observe()) }
+    val gameSoundPlayer = remember(audio, soundSettingsProvider, eventScope) {
+        GameSoundPlayer(soundSettingsProvider, GameAudioSoundPlaybackEngine(audio), eventScope)
+    }
+    val hapticFeedbackController = remember(context, soundSettingsProvider, eventScope) {
+        HapticFeedbackController(soundSettingsProvider, AndroidHapticPerformer(context), eventScope)
+    }
     val gameViewModel: GameViewModel = viewModel {
         GameViewModel(
             repository = gameRepository,
@@ -176,13 +192,12 @@ fun QuantumAppShell(
             levelProgressRepository = levelProgressRepository,
             engine = engine,
             analytics = analytics,
+            soundEvents = gameSoundPlayer,
+            hapticEvents = hapticFeedbackController,
         )
     }
     val ui by gameViewModel.ui.collectAsState()
     val settings by settingsRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.AppSettings())
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val audio = remember(context) { ToneGameAudio(context) }
     var tutorialPrompted by remember { mutableStateOf(false) }
     var showSplash by remember { mutableStateOf(true) }
     DisposableEffect(lifecycleOwner, audio) {

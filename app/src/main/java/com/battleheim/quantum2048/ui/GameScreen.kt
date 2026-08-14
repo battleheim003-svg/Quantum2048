@@ -56,7 +56,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -115,8 +114,6 @@ fun GameScreen(
 ) {
     val ui by vm.ui.collectAsState()
     val snackbar = remember { SnackbarHostState() }
-    val haptics = LocalHapticFeedback.current
-
     LaunchedEffect(settings) {
         audio.applySettings(settings)
         audio.gameMusic()
@@ -131,38 +128,6 @@ fun GameScreen(
     }
     LaunchedEffect(ui.feedback) {
         val feedback = ui.feedback
-        when (feedback) {
-            GameFeedback.MOVE -> {
-                if (settings.soundEnabled) audio.move()
-            }
-            GameFeedback.MERGE -> {
-                if (settings.soundEnabled) audio.merge()
-            }
-            GameFeedback.REACTION -> {
-                if (settings.soundEnabled) audio.reaction()
-            }
-            GameFeedback.COMPOUND -> {
-                if (settings.soundEnabled) audio.synthesis()
-            }
-            GameFeedback.TUNNEL -> {
-                if (settings.soundEnabled) audio.tunnel()
-            }
-            GameFeedback.COLLAPSE_LOW -> {
-                if (settings.soundEnabled) audio.collapseLow()
-            }
-            GameFeedback.COLLAPSE_HIGH -> {
-                if (settings.soundEnabled) audio.collapseHigh()
-            }
-            GameFeedback.GAME_OVER -> {
-                if (settings.soundEnabled) {
-                    if (ui.game.status == GameStatus.WON) audio.win() else audio.gameOver()
-                }
-            }
-            null -> Unit
-        }
-        if (feedback != null && settings.hapticsEnabled) {
-            HapticFeedbackManager.perform(haptics, feedback.hapticPattern())
-        }
         if (feedback != null) vm.consumeFeedback()
     }
     LaunchedEffect(ui.isBoardShaking) {

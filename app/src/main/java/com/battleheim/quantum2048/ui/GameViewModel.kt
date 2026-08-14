@@ -4,6 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.battleheim.quantum2048.analytics.AnalyticsGateway
 import com.battleheim.quantum2048.analytics.NoOpAnalyticsGateway
+import com.battleheim.quantum2048.audio.HapticEvent
+import com.battleheim.quantum2048.audio.HapticEventSink
+import com.battleheim.quantum2048.audio.NoOpHapticEventSink
+import com.battleheim.quantum2048.audio.NoOpSoundEventSink
+import com.battleheim.quantum2048.audio.SoundEvent
+import com.battleheim.quantum2048.audio.SoundEventSink
+import com.battleheim.quantum2048.audio.hapticEventsForMove
+import com.battleheim.quantum2048.audio.soundEventsForMove
 import com.battleheim.quantum2048.domain.CollectionRepository
 import com.battleheim.quantum2048.domain.GameRepository
 import com.battleheim.quantum2048.domain.LevelCatalog
@@ -80,6 +88,8 @@ class GameViewModel(
     private val levelProgressRepository: LevelProgressRepository? = null,
     private val engine: GameEngine,
     private val analytics: AnalyticsGateway = NoOpAnalyticsGateway,
+    private val soundEvents: SoundEventSink = NoOpSoundEventSink,
+    private val hapticEvents: HapticEventSink = NoOpHapticEventSink,
 ) : ViewModel() {
     private val _ui = MutableStateFlow(GameUiState())
     val ui: StateFlow<GameUiState> = _ui.asStateFlow()
@@ -124,6 +134,7 @@ class GameViewModel(
                 if (element.rank > beforeBestRank) analytics.logFusionPerformed(element)
             }
             val nextGame = _ui.value.duel?.activeBoard ?: result.state
+            emitMoveFeedback(before, result)
             val nextLevel = evaluateActiveLevel(nextGame)
             val shouldShake = result.state.status != GameStatus.PLAYING ||
                 result.entanglementCollapseCount > 0 ||
@@ -181,6 +192,7 @@ class GameViewModel(
             analytics.logDuelResult(nextDuel.config.difficulty, nextDuel.config.botDifficulty, nextDuel.winner)
             recordDuel(nextDuel)
         }
+        result?.let { emitMoveFeedback(duel.activeBoard, it) }
         _ui.value = _ui.value.copy(
             duel = nextDuel,
             game = nextDuel.activeBoard,
@@ -271,6 +283,8 @@ class GameViewModel(
                     animations = listOf(result.animation),
                     level = nextLevel ?: _ui.value.level,
                 )
+                soundEvents.onSoundEvent(SoundEvent.CollapseManual)
+                hapticEvents.onHapticEvent(HapticEvent.CollapseManual)
                 persist()
             }
             is TunnelResult.Failure -> {
@@ -688,6 +702,11 @@ class GameViewModel(
         } else {
             undo.clear()
         }
+    }
+
+    private fun emitMoveFeedback(before: GameState, result: com.battleheim.quantum2048.engine.MoveResult) {
+        soundEventsForMove(before, result).forEach(soundEvents::onSoundEvent)
+        hapticEventsForMove(before, result).forEach(hapticEvents::onHapticEvent)
     }
 
     private fun shouldTriggerQuantumUnlock(before: GameState, after: GameState): Boolean {
