@@ -241,7 +241,7 @@ fun GameScreen(
             }
         }
 
-        if (ui.game.status != GameStatus.PLAYING) {
+        if (ui.game.status != GameStatus.PLAYING && ui.game.difficulty != Difficulty.PUZZLE) {
             EndDialog(ui.game, vm::continueGame, vm::newGame, audio, settings)
         }
         ui.superpositionTileId?.let { tileId ->

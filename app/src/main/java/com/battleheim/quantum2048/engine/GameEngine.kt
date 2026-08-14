@@ -281,13 +281,13 @@ class GameEngine(
         val at = empty[random.nextInt(empty.size)]
         val cells = state.cells.toMutableList()
         cells[at] = if (state.mode == GameMode.QUANTUM) {
-            val kind = if (random.nextDouble() < FusionRules.protonInjectionSpawnChance) TileKind.PROTON else TileKind.ELECTRON
+            val baseTile = FusionRules.quantumSpawnTile(state, random.nextDouble())
             val values = if (FusionRules.canSpawnSuperposition(state) && random.nextDouble() < FusionRules.superpositionSpawnChance) {
                 FusionRules.superpositionValuesFor(1)
             } else {
                 emptyList()
             }
-            Tile(state.nextTileId, 1, kind, superpositionValues = values)
+            if (baseTile.kind == TileKind.ELEMENT) baseTile else baseTile.copy(superpositionValues = values)
         } else {
             Tile(state.nextTileId, if (random.nextDouble() < 0.9) 2 else 4)
         }

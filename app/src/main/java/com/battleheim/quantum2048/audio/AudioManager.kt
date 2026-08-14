@@ -74,6 +74,7 @@ class AndroidGameAudio(context: Context) : GameAudio {
     private var currentMusic: MediaPlayer? = null
     private var currentMusicRes: Int? = null
     private var musicRequested = false
+    private var released = false
 
     private val sounds = mapOf(
         Sound.MOVE to soundPool.load(appContext, R.raw.sfx_tile_move_01, 1),
@@ -160,6 +161,8 @@ class AndroidGameAudio(context: Context) : GameAudio {
     override fun select() = play(Sound.SELECT, volume = 0.72f)
 
     override fun release() {
+        if (released) return
+        released = true
         currentMusic?.release()
         currentMusic = null
         soundPool.release()
@@ -197,6 +200,7 @@ class AndroidGameAudio(context: Context) : GameAudio {
     }
 
     private fun play(sound: Sound, volume: Float, rate: Float = 1f) {
+        if (released) return
         if (!settings.soundEnabled) return
         val id = sounds[sound] ?: return
         val gain = settings.masterVolume * settings.sfxVolume * volume

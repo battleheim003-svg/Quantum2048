@@ -15,6 +15,7 @@ object FusionRules {
     // collapses into the primary fusion output and the bond is consumed.
     const val entanglementSpawnChance: Double = 0.12
     const val protonInjectionSpawnChance: Double = 0.18
+    const val elementSpawnScoreThreshold: Long = 650L
 
     const val tunnelingEnergyCost: Int = 42
 
@@ -222,6 +223,78 @@ object FusionRules {
         4 -> 2
         6 -> 3
         else -> 4
+    }
+
+    fun quantumSpawnTile(state: GameState, roll: Double): Tile {
+        val cells = state.cells.filterNotNull()
+        val particleValues = cells
+            .filter { it.kind == TileKind.ELECTRON || it.kind == TileKind.PROTON }
+            .groupBy { it.kind }
+            .mapValues { (_, tiles) -> tiles.sumOf { it.value } }
+        val electrons = particleValues[TileKind.ELECTRON] ?: 0
+        val protons = particleValues[TileKind.PROTON] ?: 0
+        val emptyRatio = state.cells.count { it == null }.toDouble() / state.cells.size.toDouble()
+        val elementSpawnChance = elementSpawnChanceFor(state, emptyRatio, cells)
+        val protonChance = protonSpawnChanceFor(state, electrons, protons, emptyRatio)
+        return when {
+            roll < elementSpawnChance -> {
+                val element = spawnElementFor(state, cells)
+                Tile(state.nextTileId, element.atomicNumber, TileKind.ELEMENT, element)
+            }
+            roll < elementSpawnChance + protonChance -> Tile(state.nextTileId, 1, TileKind.PROTON)
+            else -> Tile(state.nextTileId, 1, TileKind.ELECTRON)
+        }
+    }
+
+    private fun protonSpawnChanceFor(state: GameState, electrons: Int, protons: Int, emptyRatio: Double): Double {
+        val balanceBias = ((electrons - protons).coerceIn(-8, 8)) * 0.035
+        val pressureAssist = if (emptyRatio < 0.25) 0.06 else 0.0
+        val difficultyBias = when (state.difficulty) {
+            Difficulty.MEDIUM -> 0.06
+            Difficulty.HARD, Difficulty.QUANTUM, Difficulty.DAILY -> 0.10
+            Difficulty.ZEN -> 0.08
+            Difficulty.HARDCORE -> 0.12
+            Difficulty.PUZZLE, Difficulty.EASY -> 0.0
+        }
+        val boardBias = when {
+            state.size >= 8 -> -0.04
+            state.size >= 6 -> -0.02
+            else -> 0.0
+        }
+        return (0.34 + balanceBias + pressureAssist + difficultyBias + boardBias).coerceIn(0.24, 0.58)
+    }
+
+    private fun elementSpawnChanceFor(state: GameState, emptyRatio: Double, cells: List<Tile>): Double {
+        if (state.score < elementSpawnScoreThreshold) return 0.0
+        if (cells.none { it.kind == TileKind.ELEMENT }) return 0.0
+        val pressure = when {
+            emptyRatio < 0.16 -> 0.10
+            emptyRatio < 0.28 -> 0.07
+            else -> 0.035
+        }
+        val difficulty = when (state.difficulty) {
+            Difficulty.MEDIUM -> 0.015
+            Difficulty.HARD, Difficulty.QUANTUM, Difficulty.DAILY -> 0.03
+            Difficulty.ZEN -> 0.05
+            Difficulty.HARDCORE -> 0.025
+            Difficulty.PUZZLE, Difficulty.EASY -> 0.0
+        }
+        val board = if (state.size >= 6) 0.015 else 0.0
+        return (pressure + difficulty + board).coerceIn(0.0, 0.16)
+    }
+
+    private fun spawnElementFor(state: GameState, cells: List<Tile>): QuantumElement {
+        val bestRank = cells.mapNotNull { it.element?.rank }.maxOrNull() ?: 1
+        val rankLimit = when (state.difficulty) {
+            Difficulty.MEDIUM -> 2
+            Difficulty.HARD -> 3
+            Difficulty.QUANTUM, Difficulty.DAILY -> 4
+            Difficulty.ZEN -> 5
+            Difficulty.HARDCORE -> 4
+            Difficulty.PUZZLE, Difficulty.EASY -> 1
+        }
+        val maxRank = min(bestRank, rankLimit)
+        return elementChain.lastOrNull { it.rank <= maxRank } ?: QuantumElement.HYDROGEN
     }
 
     fun canEntangle(tile: Tile): Boolean =

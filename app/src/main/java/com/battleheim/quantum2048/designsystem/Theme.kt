@@ -90,20 +90,20 @@ val DarkQuantumPalette = QuantumPalette(
 )
 
 val LightQuantumPalette = QuantumPalette(
-    void = Color(0xFFEAF4FF),
-    panel = Color(0xFFDCEBFF),
-    panelRaised = Color(0xFFF8FCFF),
-    panelSoft = Color(0xFFC9DBF4),
-    glassPanel = Color(0xDDF8FCFF),
-    boardGlass = Color(0xE6D8E8FF),
+    void = Color(0xFFF6FAFF),
+    panel = Color(0xFFE9F2FF),
+    panelRaised = Color(0xFFFFFFFF),
+    panelSoft = Color(0xFFD5E4F7),
+    glassPanel = Color(0xF2FFFFFF),
+    boardGlass = Color(0xF0E6F0FF),
     textPrimary = Color(0xFF071A30),
-    textSecondary = Color(0xFF25425F),
-    textMuted = Color(0xFF627891),
-    cyan = Color(0xFF007C89),
-    violet = Color(0xFF6541D8),
-    electric = Color(0xFF005EB8),
-    neonPink = Color(0xFFB80083),
-    radiantGold = Color(0xFF8B5D00),
+    textSecondary = Color(0xFF183954),
+    textMuted = Color(0xFF53677C),
+    cyan = Color(0xFF006B74),
+    violet = Color(0xFF5330B9),
+    electric = Color(0xFF0054A8),
+    neonPink = Color(0xFFA00073),
+    radiantGold = Color(0xFF765000),
     danger = Color(0xFFC2293F),
 )
 

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -64,6 +65,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -88,7 +92,6 @@ import com.battleheim.quantum2048.designsystem.TextMuted
 import com.battleheim.quantum2048.designsystem.TextSecondary
 import com.battleheim.quantum2048.designsystem.Void
 import com.battleheim.quantum2048.designsystem.difficultyAccent
-import com.battleheim.quantum2048.designsystem.difficultySurface
 import com.battleheim.quantum2048.domain.CollectionRepository
 import com.battleheim.quantum2048.domain.BillingRepository
 import com.battleheim.quantum2048.domain.EntitlementState
@@ -163,10 +166,25 @@ fun QuantumAppShell(
     val ui by gameViewModel.ui.collectAsState()
     val settings by settingsRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.AppSettings())
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val audio = remember(context) { ToneGameAudio(context) }
     var tutorialPrompted by remember { mutableStateOf(false) }
     var showSplash by remember { mutableStateOf(true) }
-    DisposableEffect(Unit) { onDispose { audio.release() } }
+    DisposableEffect(lifecycleOwner, audio) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> audio.ambientStop()
+                Lifecycle.Event.ON_STOP -> audio.ambientStop()
+                Lifecycle.Event.ON_DESTROY -> audio.release()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            audio.release()
+        }
+    }
     LaunchedEffect(settings) {
         audio.applySettings(settings)
     }
@@ -762,12 +780,15 @@ private fun LevelSelectScreen(
         Difficulty.entries.chunked(2).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 row.forEach { difficulty ->
-                    val locked = !duel && difficulty.mode != com.battleheim.quantum2048.engine.GameMode.CLASSIC && !profile.isQuantumUnlocked
+                    val unlock = unlockRequirementFor(difficulty, profile)
+                    val locked = !duel && !unlock.unlocked
                     DifficultyCard(
                         difficulty = difficulty,
                         size = selectedSize,
                         hasSave = SavedGameKey(difficulty, selectedSize) in saves,
                         description = difficultyDescription(difficulty),
+                        mission = missionFor(difficulty),
+                        unlockText = unlock.text,
                         locked = locked,
                         onClick = { onSelect(difficulty, selectedSize, duel, opponent, botDifficulty) },
                         modifier = Modifier.weight(1f),
@@ -835,40 +856,100 @@ private fun DifficultyCard(
     size: Int,
     hasSave: Boolean,
     description: String,
+    mission: String,
+    unlockText: String,
     locked: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val accent = difficultyAccent(difficulty)
+    val titleColor = MaterialTheme.colorScheme.onSurface
+    val bodyColor = if (locked) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f) else MaterialTheme.colorScheme.onSurfaceVariant
+    val cardBrush = if (locked) {
+        Brush.linearGradient(
+            listOf(
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f),
+                MaterialTheme.colorScheme.surface.copy(alpha = 0.82f),
+            ),
+        )
+    } else {
+        Brush.linearGradient(
+            listOf(
+                accent.copy(alpha = 0.16f),
+                MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f),
+            ),
+        )
+    }
     Card(
         onClick = { if (!locked) onClick() },
-        colors = CardDefaults.cardColors(containerColor = difficultySurface(difficulty)),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         shape = RoundedCornerShape(8.dp),
         modifier = modifier
             .graphicsLayer { alpha = if (locked) 0.52f else 1f }
-            .border(1.dp, if (locked) TextMuted.copy(alpha = 0.55f) else difficultyAccent(difficulty), RoundedCornerShape(8.dp))
+            .background(cardBrush, RoundedCornerShape(8.dp))
+            .border(1.dp, if (locked) TextMuted.copy(alpha = 0.55f) else accent, RoundedCornerShape(8.dp))
+            .defaultMinSize(minHeight = 132.dp)
             .testTag("level_${difficulty.name.lowercase()}"),
     ) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Box(Modifier.size(14.dp).background(difficultyAccent(difficulty), RoundedCornerShape(3.dp)))
-                    Text(difficulty.localizedLabel(), fontWeight = FontWeight.Black)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(12.dp).background(accent, RoundedCornerShape(3.dp)))
+                    Text(difficulty.localizedLabel(), color = titleColor, fontWeight = FontWeight.Black, fontSize = 13.sp)
                 }
                 Text(
-                    if (locked) "LOCKED" else if (hasSave) stringResource(R.string.saved_size, size) else stringResource(R.string.board_size, size),
-                    color = if (locked) TextMuted else difficultyAccent(difficulty),
-                    fontSize = 12.sp,
+                    if (locked) stringResource(R.string.periodic_locked) else if (hasSave) stringResource(R.string.saved_size, size) else stringResource(R.string.board_size, size),
+                    color = if (locked) TextMuted else accent,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                 )
             }
             Text(
-                if (locked) "Reach tile 256 in Classic to unlock Quantum modes." else description,
-                color = if (locked) TextMuted else TextSecondary,
-                fontSize = 11.sp,
-                lineHeight = 14.sp,
+                if (locked) unlockText else description,
+                color = bodyColor,
+                fontSize = 10.sp,
+                lineHeight = 13.sp,
+            )
+            Text(
+                mission,
+                color = if (locked) TextMuted else accent,
+                fontSize = 10.sp,
+                lineHeight = 13.sp,
+                fontWeight = FontWeight.Bold,
             )
         }
     }
+}
+
+private data class DifficultyUnlock(val unlocked: Boolean, val text: String)
+
+@Composable
+private fun unlockRequirementFor(
+    difficulty: Difficulty,
+    profile: com.battleheim.quantum2048.domain.ProfileState,
+): DifficultyUnlock = when (difficulty) {
+    Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD -> DifficultyUnlock(true, stringResource(R.string.unlock_available))
+    Difficulty.QUANTUM, Difficulty.ZEN ->
+        DifficultyUnlock(profile.isQuantumUnlocked, stringResource(R.string.unlock_quantum_lab))
+    Difficulty.HARDCORE ->
+        DifficultyUnlock(FusionRules.achievementCollapseCentury in profile.unlockedAchievements, stringResource(R.string.unlock_hardcore))
+    Difficulty.PUZZLE ->
+        DifficultyUnlock(FusionRules.achievementNoUndoWin in profile.unlockedAchievements, stringResource(R.string.unlock_puzzle))
+    Difficulty.DAILY ->
+        DifficultyUnlock(FusionRules.achievementResolved2048 in profile.unlockedAchievements, stringResource(R.string.unlock_daily))
+}
+
+@Composable
+private fun missionFor(difficulty: Difficulty): String = when (difficulty) {
+    Difficulty.EASY -> stringResource(R.string.mission_easy)
+    Difficulty.MEDIUM -> stringResource(R.string.mission_medium)
+    Difficulty.HARD -> stringResource(R.string.mission_hard)
+    Difficulty.QUANTUM -> stringResource(R.string.mission_quantum)
+    Difficulty.ZEN -> stringResource(R.string.mission_zen)
+    Difficulty.HARDCORE -> stringResource(R.string.mission_hardcore)
+    Difficulty.PUZZLE -> stringResource(R.string.mission_puzzle)
+    Difficulty.DAILY -> stringResource(R.string.mission_daily)
 }
 
 @Composable
