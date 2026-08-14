@@ -4,6 +4,9 @@
     <string name="fusion_lab">آزمایشگاه فیوژن</string>
     <string name="continue_game">ادامه</string>
     <string name="new_game">بازی جدید</string>
+    <string name="start_classic">شروع کلاسیک</string>
+    <string name="start_quantum">شروع کوانتومی</string>
+    <string name="more_modes">حالت‌های بیشتر</string>
     <string name="periodic_path">مسیر تناوبی</string>
     <string name="periodic_path_subtitle">سفر مرحله‌ای در جدول تناوبی</string>
     <string name="periodic_path_progress">پیشرفت مسیر</string>
@@ -128,6 +131,12 @@
     <string name="achievement_no_undo_win">اجرای پاک: برد بدون استفاده از برگشت</string>
     <string name="achievements_local_note">پیشرفت فعلاً فقط محلی است.</string>
     <string name="statistics">آمار</string>
+    <string name="about_game">درباره بازی</string>
+    <string name="about_version">نسخه</string>
+    <string name="about_studio">استودیو</string>
+    <string name="studio_name">Battleheim Labs</string>
+    <string name="notice">NOTICE</string>
+    <string name="notice_body">برای جزئیات مجوزها و انتساب‌ها فایل NOTICE ریپازیتوری را ببینید.</string>
     <string name="profile">پروفایل</string>
     <string name="stat_collapse_ratio">نسبت فروپاشی کم</string>
     <string name="stat_average_win_energy">میانگین انرژی برد</string>

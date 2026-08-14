@@ -8,6 +8,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
@@ -75,6 +76,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.battleheim.quantum2048.R
+import com.battleheim.quantum2048.BuildConfig
 import com.battleheim.quantum2048.ads.AdGateway
 import com.battleheim.quantum2048.ads.NoOpAdGateway
 import com.battleheim.quantum2048.ads.RewardPlacement
@@ -104,6 +106,8 @@ import com.battleheim.quantum2048.domain.LevelCatalog
 import com.battleheim.quantum2048.domain.LevelCatalogRepository
 import com.battleheim.quantum2048.domain.LevelDefinition
 import com.battleheim.quantum2048.domain.LevelProgressRepository
+import com.battleheim.quantum2048.domain.MainGameModeRoute
+import com.battleheim.quantum2048.domain.MainMenuState
 import com.battleheim.quantum2048.domain.PlayerProgress
 import com.battleheim.quantum2048.domain.ProfileRepository
 import com.battleheim.quantum2048.domain.ProductIds
@@ -124,19 +128,22 @@ import kotlinx.coroutines.delay
 import java.time.LocalDate
 
 private object Routes {
-    const val MainMenu = "main_menu"
+    const val MainMenu = "menu"
     const val LevelSelect = "level_select"
     const val Collection = "collection"
-    const val Statistics = "statistics"
+    const val Statistics = "stats"
+    const val About = "about"
     const val PeriodicPath = "periodic_path"
     const val PeriodicGame = "periodic_level/{levelId}"
     const val Tutorial = "tutorial"
     const val Settings = "settings"
-    const val Game = "game/{difficulty}/{size}"
+    const val Game = "game/{mode}"
+    const val SavedGame = "game_saved/{difficulty}/{size}"
     const val DuelGame = "duel/{difficulty}"
     const val Pause = "pause"
 
-    fun game(difficulty: Difficulty, size: Int) = "game/${difficulty.name}/$size"
+    fun game(mode: MainGameModeRoute) = "game/${mode.routeValue}"
+    fun savedGame(difficulty: Difficulty, size: Int) = "game_saved/${difficulty.name}/$size"
     fun duel(difficulty: Difficulty) = "duel/${difficulty.name}"
     fun periodicGame(levelId: String) = "periodic_level/$levelId"
 }
@@ -202,13 +209,6 @@ fun QuantumAppShell(
         delay(SPLASH_MS)
         showSplash = false
     }
-    LaunchedEffect(showSplash, ui.loading, settings.tutorialCompleted) {
-        if (!showSplash && !ui.loading && !settings.tutorialCompleted && !tutorialPrompted) {
-            tutorialPrompted = true
-            nav.navigate(Routes.Tutorial)
-        }
-    }
-
     if (showSplash) {
         SplashScreen()
         return
@@ -229,10 +229,13 @@ fun QuantumAppShell(
                 settingsRepository = settingsRepository,
                 analytics = analytics,
                 audio = audio,
-                onContinue = { saved -> playSelect(audio, settings); nav.navigate(Routes.game(saved.difficulty, saved.size)) },
+                onContinue = { saved -> playSelect(audio, settings); nav.navigate(Routes.savedGame(saved.difficulty, saved.size)) },
+                onNewClassic = { playSelect(audio, settings); nav.navigate(Routes.game(MainGameModeRoute.CLASSIC)) },
+                onNewQuantum = { playSelect(audio, settings); nav.navigate(Routes.game(MainGameModeRoute.QUANTUM)) },
                 onNewGame = { playSelect(audio, settings); nav.navigate(Routes.LevelSelect) },
                 onCollection = { playMenu(audio, settings); nav.navigate(Routes.Collection) },
                 onStatistics = { playMenu(audio, settings); nav.navigate(Routes.Statistics) },
+                onAbout = { playMenu(audio, settings); nav.navigate(Routes.About) },
                 onPeriodicPath = { playSelect(audio, settings); nav.navigate(Routes.PeriodicPath) },
                 onTutorial = { playMenu(audio, settings); nav.navigate(Routes.Tutorial) },
                 onSettings = { playMenu(audio, settings); nav.navigate(Routes.Settings) },
@@ -267,7 +270,7 @@ fun QuantumAppShell(
                         nav.navigate(Routes.duel(difficulty))
                     } else {
                         gameViewModel.newGame(difficulty, size)
-                        nav.navigate(Routes.game(difficulty, size))
+                        nav.navigate(Routes.savedGame(difficulty, size))
                     }
                 },
             )
@@ -281,6 +284,23 @@ fun QuantumAppShell(
         composable(
             route = Routes.Game,
             arguments = listOf(
+                navArgument("mode") { type = NavType.StringType },
+            ),
+        ) { backStack ->
+            val mode = MainGameModeRoute.fromRoute(backStack.arguments?.getString("mode"))
+            LaunchedEffect(mode) {
+                gameViewModel.newGame(mode.difficulty, 4)
+                if (mode == MainGameModeRoute.QUANTUM && !settings.tutorialCompleted && !tutorialPrompted) {
+                    tutorialPrompted = true
+                    nav.navigate(Routes.Tutorial)
+                }
+            }
+            BackHandler { nav.popBackStack(Routes.MainMenu, inclusive = false) }
+            GameScreen(vm = gameViewModel, settings = settings, audio = audio, onPause = { nav.navigate(Routes.Pause) })
+        }
+        composable(
+            route = Routes.SavedGame,
+            arguments = listOf(
                 navArgument("difficulty") { type = NavType.StringType },
                 navArgument("size") { type = NavType.IntType },
             ),
@@ -288,6 +308,7 @@ fun QuantumAppShell(
             val difficulty = Difficulty.valueOf(backStack.arguments?.getString("difficulty") ?: Difficulty.QUANTUM.name)
             val size = backStack.arguments?.getInt("size") ?: 4
             LaunchedEffect(difficulty, size) { gameViewModel.loadDifficulty(difficulty, size) }
+            BackHandler { nav.popBackStack(Routes.MainMenu, inclusive = false) }
             GameScreen(vm = gameViewModel, settings = settings, audio = audio, onPause = { nav.navigate(Routes.Pause) })
         }
         composable(Routes.Pause) {
@@ -304,6 +325,9 @@ fun QuantumAppShell(
         }
         composable(Routes.Statistics) {
             StatisticsScreen(profileRepository, socialRepository, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.About) {
+            AboutScreen(onBack = { nav.popBackStack() })
         }
         composable(Routes.Tutorial) {
             val scope = rememberCoroutineScope()
@@ -327,6 +351,9 @@ fun QuantumAppShell(
                 audio = audio,
                 vm = gameViewModel,
                 analytics = analytics,
+                onTutorial = {
+                    nav.navigate(Routes.Tutorial)
+                },
                 onBack = { nav.popBackStack() },
             )
         }
@@ -341,9 +368,12 @@ private fun MainMenuScreen(
     analytics: AnalyticsGateway,
     audio: ToneGameAudio,
     onContinue: (SavedGameKey) -> Unit,
+    onNewClassic: () -> Unit,
+    onNewQuantum: () -> Unit,
     onNewGame: () -> Unit,
     onCollection: () -> Unit,
     onStatistics: () -> Unit,
+    onAbout: () -> Unit,
     onPeriodicPath: () -> Unit,
     onTutorial: () -> Unit,
     onSettings: () -> Unit,
@@ -354,7 +384,8 @@ private fun MainMenuScreen(
     LaunchedEffect(settings.musicEnabled) {
         if (settings.musicEnabled) audio.menuMusic()
     }
-    val continueSave = saves.lastOrNull() ?: SavedGameKey(Difficulty.QUANTUM, 4)
+    val menuState = MainMenuState(saves.map { com.battleheim.quantum2048.domain.SavedGameRef(it.difficulty, it.size) }.toSet())
+    val continueSave = menuState.preferredContinue?.let { SavedGameKey(it.difficulty, it.size) } ?: SavedGameKey(Difficulty.QUANTUM, 4)
 
     MenuScaffold {
         QuickSettingsRow(
@@ -381,17 +412,32 @@ private fun MainMenuScreen(
         NeonMenuButton(
             text = stringResource(R.string.continue_game),
             onClick = { onContinue(continueSave) },
-            enabled = saves.isNotEmpty(),
+            enabled = menuState.canContinue,
             modifier = Modifier.fillMaxWidth().testTag("continue_button"),
             accent = Cyan,
             filled = true,
         )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            NeonMenuButton(
+                text = stringResource(R.string.start_classic),
+                onClick = onNewClassic,
+                modifier = Modifier.weight(1f).testTag("start_classic_button"),
+                accent = Cyan,
+                filled = true,
+            )
+            NeonMenuButton(
+                text = stringResource(R.string.start_quantum),
+                onClick = onNewQuantum,
+                modifier = Modifier.weight(1f).testTag("start_quantum_button"),
+                accent = RadiantGold,
+                filled = true,
+            )
+        }
         NeonMenuButton(
-            text = stringResource(R.string.new_game),
+            text = stringResource(R.string.more_modes),
             onClick = onNewGame,
             modifier = Modifier.fillMaxWidth().testTag("new_game_button"),
-            accent = RadiantGold,
-            filled = true,
+            accent = Electric,
         )
         NeonMenuButton(text = stringResource(R.string.periodic_path), onClick = onPeriodicPath, modifier = Modifier.fillMaxWidth().testTag("periodic_path_button"), accent = Electric, filled = true)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -402,6 +448,7 @@ private fun MainMenuScreen(
             NeonMenuButton(text = stringResource(R.string.tutorial), onClick = onTutorial, modifier = Modifier.weight(1f), accent = Cyan, icon = "?")
             NeonMenuButton(text = stringResource(R.string.settings), onClick = onSettings, modifier = Modifier.weight(1f), accent = RadiantGold, icon = "⚙")
         }
+        NeonMenuButton(text = stringResource(R.string.about_game), onClick = onAbout, modifier = Modifier.fillMaxWidth().testTag("about_button"), accent = TextSecondary)
     }
 }
 
@@ -773,6 +820,22 @@ private fun StatisticsScreen(profileRepository: ProfileRepository, socialReposit
 }
 
 @Composable
+private fun AboutScreen(onBack: () -> Unit) {
+    MenuScaffold(modifier = Modifier.testTag("about_screen")) {
+        SectionTitle(stringResource(R.string.about_game), stringResource(R.string.app_title))
+        NeonPanel(title = stringResource(R.string.about_version), accent = Cyan) {
+            StatRow(stringResource(R.string.app_name), BuildConfig.VERSION_NAME)
+            StatRow(stringResource(R.string.about_studio), stringResource(R.string.studio_name))
+        }
+        NeonPanel(title = stringResource(R.string.notice), accent = RadiantGold) {
+            Text(stringResource(R.string.notice_body), color = TextSecondary, fontSize = 13.sp)
+            Text(stringResource(R.string.notice), color = Cyan, fontSize = 16.sp, fontWeight = FontWeight.Black, modifier = Modifier.testTag("notice_link"))
+        }
+        NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+    }
+}
+
+@Composable
 private fun StatRow(label: String, value: String) {
     Row(
         Modifier
@@ -1068,6 +1131,7 @@ private fun SettingsScreen(
     audio: ToneGameAudio,
     vm: GameViewModel,
     analytics: AnalyticsGateway,
+    onTutorial: () -> Unit,
     onBack: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -1113,6 +1177,7 @@ private fun SettingsScreen(
                 onClick = {
                     playMenu(audio, settings)
                     saveSettings(settings.copy(tutorialCompleted = false), analytics, settingsRepository, scope)
+                    onTutorial()
                 },
                 modifier = Modifier.fillMaxWidth().testTag("reset_tutorial"),
                 accent = Cyan,
