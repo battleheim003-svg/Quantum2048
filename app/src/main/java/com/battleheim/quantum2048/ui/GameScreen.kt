@@ -117,7 +117,9 @@ fun GameScreen(
     val snackbar = remember { SnackbarHostState() }
     val haptics = LocalHapticFeedback.current
 
-    LaunchedEffect(settings.musicEnabled) {
+    LaunchedEffect(settings) {
+        audio.applySettings(settings)
+        audio.gameMusic()
         if (settings.musicEnabled) audio.ambientStart() else audio.ambientStop()
     }
 
@@ -140,7 +142,7 @@ fun GameScreen(
                 if (settings.soundEnabled) audio.reaction()
             }
             GameFeedback.COMPOUND -> {
-                if (settings.soundEnabled) audio.merge()
+                if (settings.soundEnabled) audio.synthesis()
             }
             GameFeedback.TUNNEL -> {
                 if (settings.soundEnabled) audio.tunnel()
@@ -240,7 +242,7 @@ fun GameScreen(
         }
 
         if (ui.game.status != GameStatus.PLAYING) {
-            EndDialog(ui.game, vm::continueGame, vm::newGame)
+            EndDialog(ui.game, vm::continueGame, vm::newGame, audio, settings)
         }
         ui.superpositionTileId?.let { tileId ->
             val tile = ui.game.cells.firstOrNull { it?.id == tileId }
@@ -249,6 +251,9 @@ fun GameScreen(
             }
         }
         if (ui.quantumUnlockEventVisible) {
+            LaunchedEffect(Unit) {
+                if (settings.soundEnabled) audio.unlock()
+            }
             QuantumUnlockEffect(onDismiss = vm::dismissQuantumUnlockEvent)
         }
     }
@@ -1001,7 +1006,7 @@ private fun DuelPlayer.opponent(): DuelPlayer = when (this) {
 }
 
 @Composable
-private fun EndDialog(game: GameState, continueGame: () -> Unit, newGame: () -> Unit) {
+private fun EndDialog(game: GameState, continueGame: () -> Unit, newGame: () -> Unit, audio: GameAudio, settings: AppSettings) {
     val status = game.status
     val context = LocalContext.current
     val bestElement = game.cells.mapNotNull { it?.element }.maxByOrNull { it.rank }
@@ -1020,7 +1025,10 @@ private fun EndDialog(game: GameState, continueGame: () -> Unit, newGame: () -> 
         Text(stringResource(R.string.best_element_line, bestElement?.symbol ?: stringResource(R.string.none)), color = TextSecondary)
         QuantumActionButton(
             text = stringResource(R.string.share_result),
-            onClick = { shareGameResult(context, game) },
+            onClick = {
+                if (settings.soundEnabled) audio.share()
+                shareGameResult(context, game)
+            },
             modifier = Modifier.fillMaxWidth(),
             accent = Electric,
         )

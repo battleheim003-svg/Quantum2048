@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.floatOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -55,6 +56,9 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
             AppSettings(
                 soundEnabled = element?.get("soundEnabled")?.jsonPrimitive?.booleanOrNull ?: true,
                 musicEnabled = element?.get("musicEnabled")?.jsonPrimitive?.booleanOrNull ?: true,
+                masterVolume = element?.get("masterVolume")?.jsonPrimitive?.floatOrNull ?: 0.86f,
+                musicVolume = element?.get("musicVolume")?.jsonPrimitive?.floatOrNull ?: 0.56f,
+                sfxVolume = element?.get("sfxVolume")?.jsonPrimitive?.floatOrNull ?: 0.92f,
                 hapticsEnabled = element?.get("hapticsEnabled")?.jsonPrimitive?.booleanOrNull ?: true,
                 reducedMotion = element?.get("reducedMotion")?.jsonPrimitive?.booleanOrNull ?: false,
                 language = language ?: context.defaultResolvedSettings().language,

@@ -7,6 +7,9 @@ import kotlinx.serialization.Serializable
 data class AppSettings(
     val soundEnabled: Boolean = true,
     val musicEnabled: Boolean = true,
+    val masterVolume: Float = 0.86f,
+    val musicVolume: Float = 0.56f,
+    val sfxVolume: Float = 0.92f,
     val hapticsEnabled: Boolean = true,
     val reducedMotion: Boolean = false,
     val language: AppLanguage = AppLanguage.ENGLISH,

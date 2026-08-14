@@ -32,6 +32,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -54,6 +55,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -160,10 +162,19 @@ fun QuantumAppShell(
     }
     val ui by gameViewModel.ui.collectAsState()
     val settings by settingsRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.AppSettings())
-    val audio = remember { ToneGameAudio() }
+    val context = LocalContext.current
+    val audio = remember(context) { ToneGameAudio(context) }
     var tutorialPrompted by remember { mutableStateOf(false) }
     var showSplash by remember { mutableStateOf(true) }
     DisposableEffect(Unit) { onDispose { audio.release() } }
+    LaunchedEffect(settings) {
+        audio.applySettings(settings)
+    }
+    LaunchedEffect(ui.game.mode, ui.duel != null) {
+        if (settings.musicEnabled) {
+            if (ui.duel == null && ui.game.moveCount == 0) audio.menuMusic() else audio.gameMusic()
+        }
+    }
     LaunchedEffect(Unit) {
         delay(SPLASH_MS)
         showSplash = false
@@ -317,6 +328,9 @@ private fun MainMenuScreen(
     var saves by remember { mutableStateOf(emptySet<SavedGameKey>()) }
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) { saves = vm.savedGames() }
+    LaunchedEffect(settings.musicEnabled) {
+        if (settings.musicEnabled) audio.menuMusic()
+    }
     val continueSave = saves.lastOrNull() ?: SavedGameKey(Difficulty.QUANTUM, 4)
 
     MenuScaffold {
@@ -928,6 +942,9 @@ private fun SettingsScreen(
         NeonPanel(title = stringResource(R.string.settings), accent = Cyan) {
             SettingsToggle(stringResource(R.string.sound), settings.soundEnabled) { playMenu(audio, settings); saveSettings(settings.copy(soundEnabled = it), analytics, settingsRepository, scope) }
             SettingsToggle(stringResource(R.string.music), settings.musicEnabled) { playMenu(audio, settings); saveSettings(settings.copy(musicEnabled = it), analytics, settingsRepository, scope) }
+            SettingsSlider("Master", settings.masterVolume) { saveSettings(settings.copy(masterVolume = it), analytics, settingsRepository, scope) }
+            SettingsSlider("Music", settings.musicVolume) { saveSettings(settings.copy(musicVolume = it), analytics, settingsRepository, scope) }
+            SettingsSlider("SFX", settings.sfxVolume) { saveSettings(settings.copy(sfxVolume = it), analytics, settingsRepository, scope) }
             SettingsToggle(stringResource(R.string.haptics), settings.hapticsEnabled) { playMenu(audio, settings); saveSettings(settings.copy(hapticsEnabled = it), analytics, settingsRepository, scope) }
             SettingsToggle(stringResource(R.string.reduced_motion), settings.reducedMotion) { playMenu(audio, settings); saveSettings(settings.copy(reducedMotion = it), analytics, settingsRepository, scope) }
         }
@@ -1114,6 +1131,28 @@ private fun quantumPopExitTransition(): ExitTransition =
 
 private fun playSelect(audio: ToneGameAudio, settings: AppSettings) {
     if (settings.soundEnabled) audio.select()
+}
+
+@Composable
+private fun SettingsSlider(label: String, value: Float, onValueChange: (Float) -> Unit) {
+    val shape = RoundedCornerShape(12.dp)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.72f), shape)
+            .border(1.dp, Cyan.copy(alpha = 0.34f), shape)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(label, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Black, fontSize = 14.sp)
+            Text("${(value * 100).toInt()}%", color = Cyan, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        }
+        Slider(
+            value = value.coerceIn(0f, 1f),
+            onValueChange = { onValueChange(it.coerceIn(0f, 1f)) },
+        )
+    }
 }
 
 private fun saveSettings(
