@@ -330,6 +330,10 @@ class GameViewModel(
                 )
                 soundEvents.onSoundEvent(SoundEvent.CollapseManual)
                 hapticEvents.onHapticEvent(HapticEvent.CollapseManual)
+                if (result.entanglementCollapseCount > 0) {
+                    soundEvents.onSoundEvent(SoundEvent.EntangledCollapse)
+                    hapticEvents.onHapticEvent(HapticEvent.EntangledCollapse)
+                }
                 viewModelScope.launch {
                     statisticsRepository?.recordCollapse(
                         mode = before.mode,
@@ -626,6 +630,10 @@ class GameViewModel(
 
     fun consumeMessage() {
         _ui.value = _ui.value.copy(message = null)
+    }
+
+    fun showEntanglementIntro() {
+        _ui.value = _ui.value.copy(message = message(R.string.msg_entanglement_intro))
     }
 
     fun consumeFeedback() {

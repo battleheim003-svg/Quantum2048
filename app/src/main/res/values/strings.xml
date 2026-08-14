@@ -194,6 +194,8 @@
     <string name="achievement_win_streak_5_desc">Build a 5-game win streak in Classic or Quantum.</string>
     <string name="achievement_both_modes_title">Two-lab traveler</string>
     <string name="achievement_both_modes_desc">Finish at least one Classic game and one Quantum game.</string>
+    <string name="achievement_entangled_collapse_50_title">Entangled signal</string>
+    <string name="achievement_entangled_collapse_50_desc">Trigger 50 successful entangled collapse chains.</string>
     <string name="achievement_collapse_century">Collapse Century: 100 successful collapses without losing</string>
     <string name="achievement_resolved_2048">Resolved 2048: reach 2048 with no unresolved tiles</string>
     <string name="achievement_no_undo_win">Clean Run: win without using undo</string>
@@ -210,6 +212,7 @@
     <string name="stat_manual_collapse_low">Manual low collapses</string>
     <string name="stat_manual_collapse_high">Manual high collapses</string>
     <string name="stat_auto_collapse">Auto collapses</string>
+    <string name="stat_entangled_collapse_chain">Entangled collapse chains</string>
     <string name="stat_longest_win_streak">Longest win streak</string>
     <string name="stat_daily_best_today">Daily best today</string>
     <string name="stat_today_date">Today</string>
@@ -287,6 +290,7 @@
     <string name="msg_auto_synthesized">Auto-synthesized %1$s</string>
     <string name="msg_energy_overflow">Energy overflow +%1$s</string>
     <string name="msg_particle_reaction_complete">Particle reaction complete</string>
+    <string name="msg_entanglement_intro">Entanglement: paired quantum tiles collapse together when one is stabilized.</string>
     <string name="msg_achievement_unlocked">Achievement unlocked</string>
     <string name="msg_only_elements_lab">Only elements can enter the lab</string>
     <string name="msg_compound_lab_locked">Compound Lab is locked on this level</string>

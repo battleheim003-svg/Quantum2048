@@ -177,6 +177,8 @@
     <string name="achievement_win_streak_5_desc">در حالت کلاسیک یا کوانتومی به ۵ برد متوالی برس.</string>
     <string name="achievement_both_modes_title">مسافر دو آزمایشگاه</string>
     <string name="achievement_both_modes_desc">حداقل یک بازی کلاسیک و یک بازی کوانتومی را تمام کن.</string>
+    <string name="achievement_entangled_collapse_50_title">سیگنال درهم‌تنیدگی</string>
+    <string name="achievement_entangled_collapse_50_desc">۵۰ زنجیره فروپاشی موفق با کاشی‌های درهم‌تنیده فعال کن.</string>
     <string name="achievement_collapse_century">قرن فروپاشی: ۱۰۰ فروپاشی موفق بدون باخت</string>
     <string name="achievement_resolved_2048">۲۰۴۸ پایدار: رسیدن به ۲۰۴۸ بدون کاشی حل‌نشده</string>
     <string name="achievement_no_undo_win">اجرای پاک: برد بدون استفاده از برگشت</string>
@@ -209,6 +211,7 @@
     <string name="stat_manual_collapse_low">فروپاشی دستی کم‌ارزش</string>
     <string name="stat_manual_collapse_high">فروپاشی دستی پرارزش</string>
     <string name="stat_auto_collapse">فروپاشی خودکار</string>
+    <string name="stat_entangled_collapse_chain">زنجیره‌های فروپاشی درهم‌تنیده</string>
     <string name="stat_longest_win_streak">طولانی‌ترین برد متوالی</string>
     <string name="stat_daily_best_today">بهترین روزانه امروز</string>
     <string name="stat_today_date">امروز</string>
@@ -287,6 +290,7 @@
     <string name="msg_auto_synthesized">%1$s به‌صورت خودکار سنتز شد</string>
     <string name="msg_energy_overflow">سرریز انرژی +%1$s</string>
     <string name="msg_particle_reaction_complete">واکنش ذرات کامل شد</string>
+    <string name="msg_entanglement_intro">درهم‌تنیدگی: کاشی‌های کوانتومی جفت‌شده با پایدار شدن یکی، با هم فرو می‌پاشند.</string>
     <string name="msg_achievement_unlocked">اچیومنت باز شد</string>
     <string name="msg_only_elements_lab">فقط عنصرها می‌توانند وارد آزمایشگاه شوند</string>
     <string name="msg_compound_lab_locked">آزمایشگاه ترکیب در این سطح قفل است</string>

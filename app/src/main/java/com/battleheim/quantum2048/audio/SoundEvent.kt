@@ -13,6 +13,7 @@ enum class SoundEvent {
     ChainMerge,
     CollapseManual,
     CollapseAuto,
+    EntangledCollapse,
     EnergyFull,
     GameOver,
 }
@@ -22,6 +23,7 @@ enum class HapticEvent {
     ChainMerge,
     CollapseManual,
     CollapseAuto,
+    EntangledCollapse,
     EnergyFull,
     GameOver,
 }
@@ -55,6 +57,7 @@ class GameAudioSoundPlaybackEngine(
             SoundEvent.ChainMerge -> audio.reaction()
             SoundEvent.CollapseManual -> audio.collapseHigh()
             SoundEvent.CollapseAuto -> audio.collapseLow()
+            SoundEvent.EntangledCollapse -> audio.tunnel()
             SoundEvent.EnergyFull -> audio.unlock()
             SoundEvent.GameOver -> audio.gameOver()
         }
@@ -85,7 +88,7 @@ fun soundEventsForMove(before: GameState, result: MoveResult): List<SoundEvent> 
     } else if (result.mergeCount == 1) {
         add(SoundEvent.Merge)
     }
-    if (result.entanglementCollapseCount > 0) add(SoundEvent.CollapseAuto)
+    if (result.entanglementCollapseCount > 0) add(SoundEvent.EntangledCollapse)
     val maxEnergy = FusionRules.maxEnergyFor(result.state.difficulty)
     if (before.energy < maxEnergy && result.state.energy >= maxEnergy) add(SoundEvent.EnergyFull)
     if (before.status != GameStatus.LOST && result.state.status == GameStatus.LOST) add(SoundEvent.GameOver)
@@ -98,6 +101,7 @@ fun hapticEventsForMove(before: GameState, result: MoveResult): List<HapticEvent
             SoundEvent.ChainMerge -> HapticEvent.ChainMerge
             SoundEvent.CollapseManual -> HapticEvent.CollapseManual
             SoundEvent.CollapseAuto -> HapticEvent.CollapseAuto
+            SoundEvent.EntangledCollapse -> HapticEvent.EntangledCollapse
             SoundEvent.EnergyFull -> HapticEvent.EnergyFull
             SoundEvent.GameOver -> HapticEvent.GameOver
         }

@@ -876,6 +876,19 @@ private fun TileCell(
                 }
             }
         }
+        if (tile?.entanglementGroupId != null) {
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(5.dp)
+                    .size(18.dp)
+                    .background(NeonPink.copy(alpha = 0.92f), RoundedCornerShape(18.dp))
+                    .border(1.dp, Color.White.copy(alpha = 0.55f), RoundedCornerShape(18.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("∞", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Black, lineHeight = 12.sp)
+            }
+        }
         when {
             tile == null -> Unit
             mode == GameMode.QUANTUM -> QuantumTileLabel(tile, boardSize, observerValue)

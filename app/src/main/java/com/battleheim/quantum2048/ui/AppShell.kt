@@ -234,6 +234,12 @@ fun QuantumAppShell(
             if (ui.duel == null && ui.game.moveCount == 0) audio.menuMusic() else audio.gameMusic()
         }
     }
+    LaunchedEffect(ui.game.entangledPairs.size, settings.entanglementIntroSeen) {
+        if (ui.game.entangledPairs.isNotEmpty() && !settings.entanglementIntroSeen) {
+            gameViewModel.showEntanglementIntro()
+            settingsRepository.save(settings.copy(entanglementIntroSeen = true))
+        }
+    }
     NavHost(
         navController = nav,
         startDestination = Routes.MainMenu,
@@ -911,6 +917,8 @@ private fun String.stringRes(): Int = when (this) {
     "achievement_win_streak_5_desc" -> R.string.achievement_win_streak_5_desc
     "achievement_both_modes_title" -> R.string.achievement_both_modes_title
     "achievement_both_modes_desc" -> R.string.achievement_both_modes_desc
+    "achievement_entangled_collapse_50_title" -> R.string.achievement_entangled_collapse_50_title
+    "achievement_entangled_collapse_50_desc" -> R.string.achievement_entangled_collapse_50_desc
     else -> R.string.achievements
 }
 
@@ -1026,6 +1034,7 @@ private fun StatisticsScreen(
                     StatRow(stringResource(R.string.stat_manual_collapse_low), formatNumber(stats.manualCollapseLow))
                     StatRow(stringResource(R.string.stat_manual_collapse_high), formatNumber(stats.manualCollapseHigh))
                     StatRow(stringResource(R.string.stat_auto_collapse), formatNumber(stats.autoCollapseCount))
+                    StatRow(stringResource(R.string.stat_entangled_collapse_chain), formatNumber(stats.entangledCollapseChainCount))
                 }
             }
         }

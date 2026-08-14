@@ -27,6 +27,7 @@ class AndroidHapticPerformer(context: Context) : HapticPerformer {
             HapticEvent.ChainMerge -> 28L
             HapticEvent.CollapseManual -> 22L
             HapticEvent.CollapseAuto -> 12L
+            HapticEvent.EntangledCollapse -> 30L
             HapticEvent.EnergyFull -> 34L
             HapticEvent.GameOver -> 48L
         }
@@ -35,6 +36,7 @@ class AndroidHapticPerformer(context: Context) : HapticPerformer {
             HapticEvent.ChainMerge -> 130
             HapticEvent.CollapseManual -> 110
             HapticEvent.CollapseAuto -> 60
+            HapticEvent.EntangledCollapse -> 145
             HapticEvent.EnergyFull -> 160
             HapticEvent.GameOver -> 190
         }
