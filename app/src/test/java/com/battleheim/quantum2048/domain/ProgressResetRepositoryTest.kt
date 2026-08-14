@@ -18,15 +18,17 @@ class ProgressResetRepositoryTest {
         val collection = FakeCollectionRepository()
         val profile = FakeProfileRepository()
         val social = FakeSocialRepository()
+        val statistics = FakeStatisticsRepository()
         val levels = FakeLevelProgressRepository()
         val settings = AppSettings(language = AppLanguage.PERSIAN, soundEnabled = false, hapticsEnabled = false)
 
-        LocalProgressResetRepository(game, collection, profile, social, levels).resetAllProgress()
+        LocalProgressResetRepository(game, collection, profile, social, statistics, levels).resetAllProgress()
 
         assertTrue(game.clearAllCalled)
         assertTrue(collection.clearCalled)
         assertTrue(profile.clearCalled)
         assertTrue(social.clearCalled)
+        assertTrue(statistics.clearCalled)
         assertTrue(levels.clearCalled)
         assertEquals(AppLanguage.PERSIAN, settings.language)
         assertEquals(false, settings.soundEnabled)
@@ -87,6 +89,19 @@ class ProgressResetRepositoryTest {
         var clearCalled = false
         override fun observe(): Flow<PlayerProgress> = MutableStateFlow(PlayerProgress())
         override suspend fun save(progress: PlayerProgress) = Unit
+        override suspend fun clear() {
+            clearCalled = true
+        }
+    }
+
+    private class FakeStatisticsRepository : StatisticsRepository {
+        var clearCalled = false
+        override fun observeStatistics(mode: com.battleheim.quantum2048.engine.GameMode): Flow<StatsSnapshot> =
+            MutableStateFlow(StatsSnapshot(mode))
+
+        override suspend fun recordMerge(mode: com.battleheim.quantum2048.engine.GameMode, count: Int, state: GameState) = Unit
+        override suspend fun recordCollapse(mode: com.battleheim.quantum2048.engine.GameMode, lowValue: Boolean, manual: Boolean) = Unit
+        override suspend fun recordGameEnded(mode: com.battleheim.quantum2048.engine.GameMode, state: GameState) = Unit
         override suspend fun clear() {
             clearCalled = true
         }

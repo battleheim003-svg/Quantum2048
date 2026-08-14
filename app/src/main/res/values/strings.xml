@@ -47,6 +47,7 @@
     <string name="medium">Medium</string>
     <string name="hard">Hard</string>
     <string name="normal">Normal</string>
+    <string name="classic">Classic</string>
     <string name="quantum">Quantum</string>
     <string name="zen">Zen</string>
     <string name="hardcore">Hardcore</string>
@@ -149,6 +150,16 @@
     <string name="stat_collapse_ratio">Low collapse ratio</string>
     <string name="stat_average_win_energy">Average win energy</string>
     <string name="stat_chain_merges">Chain merges</string>
+    <string name="stats_by_mode">Classic and Quantum</string>
+    <string name="stats_empty">No completed activity yet. Play a round to start filling this panel.</string>
+    <string name="stat_highest_tile">Highest tile</string>
+    <string name="stat_high_score">High score</string>
+    <string name="stat_games_played">Games played</string>
+    <string name="stat_total_merges">Total merges</string>
+    <string name="stat_manual_collapse_low">Manual low collapses</string>
+    <string name="stat_manual_collapse_high">Manual high collapses</string>
+    <string name="stat_auto_collapse">Auto collapses</string>
+    <string name="stat_longest_win_streak">Longest win streak</string>
     <string name="stat_daily_best_today">Daily best today</string>
     <string name="stat_today_date">Today</string>
     <string name="stat_best_daily_score">Best daily score</string>

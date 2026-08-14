@@ -24,6 +24,7 @@ import com.battleheim.quantum2048.domain.LevelRunUiState
 import com.battleheim.quantum2048.domain.PeriodicPathProgression
 import com.battleheim.quantum2048.domain.ProfileRepository
 import com.battleheim.quantum2048.domain.SocialRepository
+import com.battleheim.quantum2048.domain.StatisticsRepository
 import com.battleheim.quantum2048.domain.UndoBuffer
 import com.battleheim.quantum2048.engine.CompoundFailure
 import com.battleheim.quantum2048.engine.CompoundResult
@@ -86,6 +87,7 @@ class GameViewModel(
     private val socialRepository: SocialRepository? = null,
     private val levelCatalogRepository: LevelCatalogRepository? = null,
     private val levelProgressRepository: LevelProgressRepository? = null,
+    private val statisticsRepository: StatisticsRepository? = null,
     private val engine: GameEngine,
     private val analytics: AnalyticsGateway = NoOpAnalyticsGateway,
     private val soundEvents: SoundEventSink = NoOpSoundEventSink,
@@ -135,6 +137,7 @@ class GameViewModel(
             }
             val nextGame = _ui.value.duel?.activeBoard ?: result.state
             emitMoveFeedback(before, result)
+            recordMoveStatistics(before, result)
             val nextLevel = evaluateActiveLevel(nextGame)
             val shouldShake = result.state.status != GameStatus.PLAYING ||
                 result.entanglementCollapseCount > 0 ||
@@ -193,6 +196,7 @@ class GameViewModel(
             recordDuel(nextDuel)
         }
         result?.let { emitMoveFeedback(duel.activeBoard, it) }
+        result?.let { recordMoveStatistics(duel.activeBoard, it) }
         _ui.value = _ui.value.copy(
             duel = nextDuel,
             game = nextDuel.activeBoard,
@@ -283,8 +287,6 @@ class GameViewModel(
                     animations = listOf(result.animation),
                     level = nextLevel ?: _ui.value.level,
                 )
-                soundEvents.onSoundEvent(SoundEvent.CollapseManual)
-                hapticEvents.onHapticEvent(HapticEvent.CollapseManual)
                 persist()
             }
             is TunnelResult.Failure -> {
@@ -320,6 +322,15 @@ class GameViewModel(
                     animations = listOf(result.animation),
                     level = nextLevel ?: _ui.value.level,
                 )
+                soundEvents.onSoundEvent(SoundEvent.CollapseManual)
+                hapticEvents.onHapticEvent(HapticEvent.CollapseManual)
+                viewModelScope.launch {
+                    statisticsRepository?.recordCollapse(
+                        mode = before.mode,
+                        lowValue = choiceIndex == 0,
+                        manual = true,
+                    )
+                }
                 persist()
             }
             is SuperpositionResult.Failure -> {
@@ -707,6 +718,21 @@ class GameViewModel(
     private fun emitMoveFeedback(before: GameState, result: com.battleheim.quantum2048.engine.MoveResult) {
         soundEventsForMove(before, result).forEach(soundEvents::onSoundEvent)
         hapticEventsForMove(before, result).forEach(hapticEvents::onHapticEvent)
+    }
+
+    private fun recordMoveStatistics(before: GameState, result: com.battleheim.quantum2048.engine.MoveResult) {
+        viewModelScope.launch {
+            val repository = statisticsRepository ?: return@launch
+            if (result.mergeCount > 0) {
+                repository.recordMerge(before.mode, result.mergeCount, result.state)
+            }
+            repeat(result.entanglementCollapseCount) {
+                repository.recordCollapse(before.mode, lowValue = false, manual = false)
+            }
+            if (before.status == GameStatus.PLAYING && result.state.status != GameStatus.PLAYING) {
+                repository.recordGameEnded(before.mode, result.state)
+            }
+        }
     }
 
     private fun shouldTriggerQuantumUnlock(before: GameState, after: GameState): Boolean {

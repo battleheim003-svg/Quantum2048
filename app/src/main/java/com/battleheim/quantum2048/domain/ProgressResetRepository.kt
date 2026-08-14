@@ -9,6 +9,7 @@ class LocalProgressResetRepository(
     private val collectionRepository: CollectionRepository,
     private val profileRepository: ProfileRepository,
     private val socialRepository: SocialRepository,
+    private val statisticsRepository: StatisticsRepository,
     private val levelProgressRepository: LevelProgressRepository,
 ) : ProgressResetRepository {
     override suspend fun resetAllProgress() {
@@ -16,6 +17,7 @@ class LocalProgressResetRepository(
         collectionRepository.clear()
         profileRepository.clear()
         socialRepository.clear()
+        statisticsRepository.clear()
         levelProgressRepository.clear()
     }
 }

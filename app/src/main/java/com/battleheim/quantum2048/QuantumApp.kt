@@ -11,6 +11,7 @@ import com.battleheim.quantum2048.data.DataStoreLevelProgressRepository
 import com.battleheim.quantum2048.data.DataStoreProfileRepository
 import com.battleheim.quantum2048.data.DataStoreSettingsRepository
 import com.battleheim.quantum2048.data.DataStoreSocialRepository
+import com.battleheim.quantum2048.data.DataStoreStatisticsRepository
 import com.battleheim.quantum2048.social.OfflinePlayGamesGateway
 class QuantumApp : Application() {
     val repository by lazy { DataStoreGameRepository(this) }
@@ -18,6 +19,7 @@ class QuantumApp : Application() {
     val profileRepository by lazy { DataStoreProfileRepository(this) }
     val settingsRepository by lazy { DataStoreSettingsRepository(this) }
     val socialRepository by lazy { DataStoreSocialRepository(this) }
+    val statisticsRepository by lazy { DataStoreStatisticsRepository(this) }
     val billingRepository by lazy { DataStoreBillingRepository(this) }
     val levelCatalogRepository by lazy { AssetLevelCatalogRepository(this) }
     val levelProgressRepository by lazy { DataStoreLevelProgressRepository(this) }

@@ -38,6 +38,7 @@
     <string name="medium">متوسط</string>
     <string name="hard">سخت</string>
     <string name="normal">معمولی</string>
+    <string name="classic">کلاسیک</string>
     <string name="quantum">کوانتومی</string>
     <string name="zen">ذن</string>
     <string name="hardcore">هاردکور</string>
@@ -148,6 +149,16 @@
     <string name="stat_collapse_ratio">نسبت فروپاشی کم</string>
     <string name="stat_average_win_energy">میانگین انرژی برد</string>
     <string name="stat_chain_merges">ادغام‌های زنجیره‌ای</string>
+    <string name="stats_by_mode">کلاسیک و کوانتومی</string>
+    <string name="stats_empty">هنوز فعالیتی ثبت نشده است. یک دور بازی کن تا این بخش پر شود.</string>
+    <string name="stat_highest_tile">بالاترین کاشی</string>
+    <string name="stat_high_score">بالاترین امتیاز</string>
+    <string name="stat_games_played">بازی‌های انجام‌شده</string>
+    <string name="stat_total_merges">کل ادغام‌ها</string>
+    <string name="stat_manual_collapse_low">فروپاشی دستی کم‌ارزش</string>
+    <string name="stat_manual_collapse_high">فروپاشی دستی پرارزش</string>
+    <string name="stat_auto_collapse">فروپاشی خودکار</string>
+    <string name="stat_longest_win_streak">طولانی‌ترین برد متوالی</string>
     <string name="stat_daily_best_today">بهترین روزانه امروز</string>
     <string name="stat_today_date">امروز</string>
     <string name="stat_best_daily_score">بهترین امتیاز روزانه</string>

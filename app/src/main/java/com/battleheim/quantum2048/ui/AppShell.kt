@@ -122,10 +122,12 @@ import com.battleheim.quantum2048.domain.ProductIds
 import com.battleheim.quantum2048.domain.RewardEntitlement
 import com.battleheim.quantum2048.domain.SettingsRepository
 import com.battleheim.quantum2048.domain.SocialRepository
+import com.battleheim.quantum2048.domain.StatisticsRepository
 import com.battleheim.quantum2048.engine.Difficulty
 import com.battleheim.quantum2048.engine.Direction
 import com.battleheim.quantum2048.engine.FusionRules
 import com.battleheim.quantum2048.engine.GameEngine
+import com.battleheim.quantum2048.engine.GameMode
 import com.battleheim.quantum2048.engine.BotDifficulty
 import com.battleheim.quantum2048.engine.DuelOpponent
 import com.battleheim.quantum2048.engine.TutorialEngine
@@ -133,7 +135,6 @@ import com.battleheim.quantum2048.engine.TutorialLessonState
 import com.battleheim.quantum2048.engine.TutorialStep
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
-import java.time.LocalDate
 
 private object Routes {
     const val MainMenu = "menu"
@@ -163,6 +164,7 @@ fun QuantumAppShell(
     profileRepository: ProfileRepository,
     settingsRepository: SettingsRepository,
     socialRepository: SocialRepository,
+    statisticsRepository: StatisticsRepository,
     billingRepository: BillingRepository,
     levelCatalogRepository: LevelCatalogRepository,
     levelProgressRepository: LevelProgressRepository,
@@ -190,6 +192,7 @@ fun QuantumAppShell(
             socialRepository = socialRepository,
             levelCatalogRepository = levelCatalogRepository,
             levelProgressRepository = levelProgressRepository,
+            statisticsRepository = statisticsRepository,
             engine = engine,
             analytics = analytics,
             soundEvents = gameSoundPlayer,
@@ -342,7 +345,7 @@ fun QuantumAppShell(
             CollectionScreen(collectionRepository, profileRepository, onBack = { nav.popBackStack() })
         }
         composable(Routes.Statistics) {
-            StatisticsScreen(profileRepository, socialRepository, onBack = { nav.popBackStack() })
+            StatisticsScreen(statisticsRepository, onBack = { nav.popBackStack() })
         }
         composable(Routes.About) {
             AboutScreen(onBack = { nav.popBackStack() })
@@ -368,6 +371,7 @@ fun QuantumAppShell(
                     collectionRepository = collectionRepository,
                     profileRepository = profileRepository,
                     socialRepository = socialRepository,
+                    statisticsRepository = statisticsRepository,
                     levelProgressRepository = levelProgressRepository,
                 ),
                 settings = settings,
@@ -819,26 +823,46 @@ private fun com.battleheim.quantum2048.engine.Tile.tutorialLabel(): String =
     }
 
 @Composable
-private fun StatisticsScreen(profileRepository: ProfileRepository, socialRepository: SocialRepository, onBack: () -> Unit) {
-    val profile by profileRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.ProfileState())
-    val social by socialRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.SocialState())
-    val today = LocalDate.now()
+private fun StatisticsScreen(statisticsRepository: StatisticsRepository, onBack: () -> Unit) {
+    var selectedMode by remember { mutableStateOf(GameMode.CLASSIC) }
+    val stats by statisticsRepository.observeStatistics(selectedMode).collectAsState(
+        initial = com.battleheim.quantum2048.domain.StatsSnapshot(selectedMode),
+    )
     MenuScaffold {
-        SectionTitle(stringResource(R.string.statistics), stringResource(R.string.profile))
-        ProfileDataHeader(
-            date = formatDate(today),
-            dailyBest = formatNumber(profile.dailyBestScore(today.toString())),
-            bestDaily = formatNumber(profile.bestDailyScore),
-        )
-        NeonPanel(title = stringResource(R.string.statistics), accent = Electric) {
-            StatRow(stringResource(R.string.stat_daily_challenge_count), formatNumber(profile.dailyChallengeCount))
-            StatRow(stringResource(R.string.stat_daily_current_streak), formatNumber(social.dailyStreak.currentStreak))
-            StatRow(stringResource(R.string.stat_daily_best_streak), formatNumber(social.dailyStreak.bestStreak))
-            StatRow(stringResource(R.string.stat_best_duel_streak), formatNumber(social.duelRecord.bestWinStreak))
-            StatRow(stringResource(R.string.stat_leaderboard_entries), formatNumber(social.leaderboards.size))
-            StatRow(stringResource(R.string.stat_collapse_ratio), formatPercent(profile.collapseLowRatio))
-            StatRow(stringResource(R.string.stat_average_win_energy), formatDecimal(profile.averageWinEnergy))
-            StatRow(stringResource(R.string.stat_chain_merges), formatNumber(profile.totalChainMergeCount))
+        SectionTitle(stringResource(R.string.statistics), stringResource(R.string.stats_by_mode))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            NeonMenuButton(
+                text = stringResource(R.string.classic),
+                onClick = { selectedMode = GameMode.CLASSIC },
+                modifier = Modifier.weight(1f).testTag("stats_classic"),
+                accent = Cyan,
+                filled = selectedMode == GameMode.CLASSIC,
+            )
+            NeonMenuButton(
+                text = stringResource(R.string.quantum),
+                onClick = { selectedMode = GameMode.QUANTUM },
+                modifier = Modifier.weight(1f).testTag("stats_quantum"),
+                accent = RadiantGold,
+                filled = selectedMode == GameMode.QUANTUM,
+            )
+        }
+        if (stats.isEmpty) {
+            NeonPanel(title = stringResource(R.string.statistics), accent = Electric) {
+                Text(stringResource(R.string.stats_empty), color = TextSecondary, fontSize = 13.sp)
+            }
+        } else {
+            NeonPanel(title = stringResource(if (selectedMode == GameMode.CLASSIC) R.string.classic else R.string.quantum), accent = Electric) {
+                StatRow(stringResource(R.string.stat_highest_tile), formatNumber(stats.highestTile))
+                StatRow(stringResource(R.string.stat_high_score), formatNumber(stats.highScore))
+                StatRow(stringResource(R.string.stat_games_played), formatNumber(stats.gamesPlayed))
+                StatRow(stringResource(R.string.stat_total_merges), formatNumber(stats.totalMerges))
+                StatRow(stringResource(R.string.stat_longest_win_streak), formatNumber(stats.longestWinStreak))
+                if (selectedMode == GameMode.QUANTUM) {
+                    StatRow(stringResource(R.string.stat_manual_collapse_low), formatNumber(stats.manualCollapseLow))
+                    StatRow(stringResource(R.string.stat_manual_collapse_high), formatNumber(stats.manualCollapseHigh))
+                    StatRow(stringResource(R.string.stat_auto_collapse), formatNumber(stats.autoCollapseCount))
+                }
+            }
         }
         NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
     }

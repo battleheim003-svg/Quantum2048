@@ -35,6 +35,7 @@ class MainActivity : ComponentActivity() {
                     profileRepository = app.profileRepository,
                     settingsRepository = app.settingsRepository,
                     socialRepository = app.socialRepository,
+                    statisticsRepository = app.statisticsRepository,
                     billingRepository = app.billingRepository,
                     levelCatalogRepository = app.levelCatalogRepository,
                     levelProgressRepository = app.levelProgressRepository,
