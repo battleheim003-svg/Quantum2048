@@ -63,13 +63,14 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
                 reducedMotion = element?.get("reducedMotion")?.jsonPrimitive?.booleanOrNull ?: false,
                 language = language ?: context.defaultResolvedSettings().language,
                 themeMode = theme ?: context.defaultResolvedSettings().themeMode,
+                tutorialCompleted = element?.get("tutorialCompleted")?.jsonPrimitive?.booleanOrNull ?: false,
             )
         }.getOrNull()
 }
 
 @Serializable
 private data class SettingsSnapshot(
-    val schemaVersion: Int = 1,
+    val schemaVersion: Int = 2,
     val settings: AppSettings = AppSettings(),
 )
 

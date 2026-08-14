@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -110,10 +111,14 @@ import com.battleheim.quantum2048.domain.RewardEntitlement
 import com.battleheim.quantum2048.domain.SettingsRepository
 import com.battleheim.quantum2048.domain.SocialRepository
 import com.battleheim.quantum2048.engine.Difficulty
+import com.battleheim.quantum2048.engine.Direction
 import com.battleheim.quantum2048.engine.FusionRules
 import com.battleheim.quantum2048.engine.GameEngine
 import com.battleheim.quantum2048.engine.BotDifficulty
 import com.battleheim.quantum2048.engine.DuelOpponent
+import com.battleheim.quantum2048.engine.TutorialEngine
+import com.battleheim.quantum2048.engine.TutorialLessonState
+import com.battleheim.quantum2048.engine.TutorialStep
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import java.time.LocalDate
@@ -197,8 +202,8 @@ fun QuantumAppShell(
         delay(SPLASH_MS)
         showSplash = false
     }
-    LaunchedEffect(ui.loading, ui.game.tutorialCompleted) {
-        if (!showSplash && !ui.loading && !ui.game.tutorialCompleted && !tutorialPrompted) {
+    LaunchedEffect(showSplash, ui.loading, settings.tutorialCompleted) {
+        if (!showSplash && !ui.loading && !settings.tutorialCompleted && !tutorialPrompted) {
             tutorialPrompted = true
             nav.navigate(Routes.Tutorial)
         }
@@ -301,10 +306,10 @@ fun QuantumAppShell(
             StatisticsScreen(profileRepository, socialRepository, onBack = { nav.popBackStack() })
         }
         composable(Routes.Tutorial) {
+            val scope = rememberCoroutineScope()
             TutorialScreen(
-                vm = gameViewModel,
                 onDone = {
-                    gameViewModel.completeTutorial()
+                    scope.launch { settingsRepository.save(settings.copy(tutorialCompleted = true)) }
                     nav.popBackStack()
                 },
             )
@@ -627,67 +632,119 @@ private fun QuickSettingsRow(settings: AppSettings, onLanguage: () -> Unit, onTh
 }
 
 @Composable
-private fun TutorialScreen(vm: GameViewModel, onDone: () -> Unit) {
-    var step by remember { mutableStateOf(0) }
-    var completedAction by remember(step) { mutableStateOf(false) }
-    val titles = listOf(
-        R.string.tutorial_step_move,
-        R.string.tutorial_step_quantum,
-        R.string.tutorial_step_collapse,
-        R.string.tutorial_step_energy,
-        R.string.tutorial_step_auto,
-        R.string.tutorial_step_undo,
-        R.string.tutorial_step_new_features,
-    )
-    val boards = listOf(
-        listOf("2", "2", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
-        listOf("e-", "p+", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
-        listOf("1 | 2 | 4", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
-        listOf("2e-", "2e-", "p+", "p+", "", "", "", "", "", "", "", "", "", "", "", ""),
-        listOf("?", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
-        listOf("4", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
-        listOf("E", "T", "D", "", "", "", "", "", "", "", "", "", "", "", "", ""),
-    )
+private fun TutorialScreen(onDone: () -> Unit) {
+    var lesson by remember { mutableStateOf(TutorialEngine.start()) }
+    val title = when (lesson.step) {
+        TutorialStep.SUPERPOSITION -> R.string.tutorial_step_superposition
+        TutorialStep.MANUAL_COLLAPSE -> R.string.tutorial_step_manual_collapse
+        TutorialStep.ENERGY_COST -> R.string.tutorial_step_energy_cost
+        TutorialStep.MERGE_ENERGY -> R.string.tutorial_step_merge_energy
+    }
+    val body = when (lesson.step) {
+        TutorialStep.SUPERPOSITION -> R.string.tutorial_body_superposition
+        TutorialStep.MANUAL_COLLAPSE -> R.string.tutorial_body_manual_collapse
+        TutorialStep.ENERGY_COST -> R.string.tutorial_body_energy_cost
+        TutorialStep.MERGE_ENERGY -> R.string.tutorial_body_merge_energy
+    }
     MenuScaffold {
-        SectionTitle(stringResource(R.string.tutorial), stringResource(titles[step]))
-        TutorialBoard(boards[step])
-        Text(stringResource(R.string.tutorial_body), color = TextSecondary, fontSize = 13.sp)
-        Button(onClick = { completedAction = true }, modifier = Modifier.fillMaxWidth().testTag("tutorial_action")) {
-            Text(stringResource(R.string.tutorial_action))
-        }
+        SectionTitle(stringResource(R.string.tutorial), stringResource(title))
+        TutorialBoard(
+            lesson = lesson,
+            onTile = { lesson = TutorialEngine.selectTile(lesson, it) },
+        )
+        TutorialEnergyPanel(lesson)
+        Text(stringResource(body), color = TextSecondary, fontSize = 13.sp)
+        TutorialInteractionControls(
+            lesson = lesson,
+            onCollapse = { lesson = TutorialEngine.collapseSelected(lesson, it) },
+            onMerge = { lesson = TutorialEngine.merge(lesson, it) },
+        )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = onDone, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.skip)) }
             Button(
                 onClick = {
-                    if (step == titles.lastIndex) onDone() else {
-                        step++
-                        completedAction = false
-                    }
+                    if (lesson.step == TutorialStep.entries.last()) onDone() else lesson = TutorialEngine.next(lesson)
                 },
-                enabled = completedAction,
+                enabled = lesson.isCurrentStepComplete,
                 modifier = Modifier.weight(1f).testTag("tutorial_next"),
-            ) { Text(stringResource(if (step == titles.lastIndex) R.string.finish else R.string.next)) }
+            ) { Text(stringResource(if (lesson.step == TutorialStep.entries.last()) R.string.finish else R.string.next)) }
         }
     }
 }
 
 @Composable
-private fun TutorialBoard(cells: List<String>) {
+private fun TutorialBoard(lesson: TutorialLessonState, onTile: (Long) -> Unit) {
     Column(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(8.dp)).padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         repeat(4) { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 repeat(4) { column ->
-                    val label = cells[row * 4 + column]
+                    val tile = lesson.board.cells[row * 4 + column]
+                    val selected = tile?.id == lesson.selectedTileId
+                    val label = tile?.tutorialLabel().orEmpty()
                     Box(
-                        Modifier.weight(1f).size(56.dp).background(if (label.isEmpty()) Color(0xFF171D38) else PanelRaised, RoundedCornerShape(8.dp)).border(1.dp, Cyan.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
+                        Modifier
+                            .weight(1f)
+                            .size(56.dp)
+                            .background(if (tile == null) Color(0xFF171D38) else PanelRaised, RoundedCornerShape(8.dp))
+                            .border(1.dp, if (selected) RadiantGold else Cyan.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                            .clickable(enabled = tile?.superpositionValues?.isNotEmpty() == true) { onTile(tile!!.id) }
+                            .testTag("tutorial_cell_${row}_${column}"),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        if (label.isNotEmpty()) Text(label, modifier = Modifier.padding(8.dp), color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp)
+                        if (label.isNotEmpty()) Text(label, color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp, textAlign = TextAlign.Center)
                     }
                 }
             }
         }
     }
 }
+
+@Composable
+private fun TutorialEnergyPanel(lesson: TutorialLessonState) {
+    NeonPanel(title = stringResource(R.string.tutorial_energy_panel), accent = Electric) {
+        StatRow(stringResource(R.string.hud_energy, ""), formatNumber(lesson.board.energy))
+        if (lesson.step == TutorialStep.ENERGY_COST || lesson.step == TutorialStep.MANUAL_COLLAPSE) {
+            FusionRules.superpositionCollapseEnergyCosts.forEachIndexed { index, cost ->
+                StatRow(stringResource(R.string.tutorial_collapse_choice_label, index + 1), formatNumber(cost))
+            }
+        }
+    }
+}
+
+@Composable
+private fun TutorialInteractionControls(
+    lesson: TutorialLessonState,
+    onCollapse: (Int) -> Unit,
+    onMerge: (Direction) -> Unit,
+) {
+    when (lesson.step) {
+        TutorialStep.SUPERPOSITION -> Text(stringResource(R.string.tutorial_tap_tile), color = Cyan, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        TutorialStep.MANUAL_COLLAPSE,
+        TutorialStep.ENERGY_COST -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FusionRules.superpositionCollapseEnergyCosts.forEachIndexed { index, _ ->
+                NeonMenuButton(
+                    text = lesson.board.cells.firstNotNullOfOrNull { it?.superpositionValues?.getOrNull(index) }?.toString() ?: "?",
+                    onClick = { onCollapse(index) },
+                    enabled = lesson.selectedTileId != null && !lesson.isCurrentStepComplete,
+                    modifier = Modifier.weight(1f).testTag("tutorial_collapse_$index"),
+                    accent = if (index == 0) Cyan else RadiantGold,
+                )
+            }
+        }
+        TutorialStep.MERGE_ENERGY -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            NeonMenuButton(stringResource(R.string.tutorial_swipe_left), onClick = { onMerge(Direction.LEFT) }, enabled = !lesson.isCurrentStepComplete, modifier = Modifier.weight(1f).testTag("tutorial_merge_left"), accent = Cyan, filled = true)
+            NeonMenuButton(stringResource(R.string.tutorial_swipe_right), onClick = { onMerge(Direction.RIGHT) }, enabled = !lesson.isCurrentStepComplete, modifier = Modifier.weight(1f), accent = RadiantGold)
+        }
+    }
+}
+
+private fun com.battleheim.quantum2048.engine.Tile.tutorialLabel(): String =
+    if (superpositionValues.isNotEmpty()) superpositionValues.joinToString(" | ") else when (kind) {
+        com.battleheim.quantum2048.engine.TileKind.ELECTRON -> "${value}e-"
+        com.battleheim.quantum2048.engine.TileKind.PROTON -> "${value}p+"
+        com.battleheim.quantum2048.engine.TileKind.ELEMENT -> element?.symbol.orEmpty()
+        com.battleheim.quantum2048.engine.TileKind.CLASSIC -> value.toString()
+    }
 
 @Composable
 private fun StatisticsScreen(profileRepository: ProfileRepository, socialRepository: SocialRepository, onBack: () -> Unit) {
@@ -1049,6 +1106,17 @@ private fun SettingsScreen(
                 accent = RadiantGold,
             )
             Text(stringResource(R.string.language_note), color = TextSecondary, fontSize = 12.sp)
+        }
+        NeonPanel(title = stringResource(R.string.tutorial), accent = Cyan) {
+            NeonMenuButton(
+                text = stringResource(R.string.show_tutorial_again),
+                onClick = {
+                    playMenu(audio, settings)
+                    saveSettings(settings.copy(tutorialCompleted = false), analytics, settingsRepository, scope)
+                },
+                modifier = Modifier.fillMaxWidth().testTag("reset_tutorial"),
+                accent = Cyan,
+            )
         }
         MonetizationSection(
             entitlements = entitlements,

@@ -14,6 +14,7 @@ data class AppSettings(
     val reducedMotion: Boolean = false,
     val language: AppLanguage = AppLanguage.ENGLISH,
     val themeMode: AppThemeMode = AppThemeMode.DARK,
+    val tutorialCompleted: Boolean = false,
 )
 
 @Serializable enum class AppLanguage { ENGLISH, PERSIAN }
