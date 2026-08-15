@@ -29,6 +29,7 @@
     <string name="about_version">Version</string>
     <string name="about_studio">Studio</string>
     <string name="studio_name">Battleheim Labs</string>
+    <string name="studio_splash_content_description">Battleheim studio logo</string>
     <string name="notice">NOTICE</string>
     <string name="notice_body">Open the repository NOTICE file for license and attribution details.</string>
     <string name="privacy_policy">Privacy Policy</string>

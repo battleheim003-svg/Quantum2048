@@ -24,6 +24,7 @@
     <string name="loading">در حال بارگذاری...</string>
     <string name="collection">کلکسیون</string>
     <string name="settings">تنظیمات</string>
+    <string name="studio_splash_content_description">لوگوی استودیو Battleheim</string>
     <string name="refresh_saves">بازخوانی ذخیره‌ها</string>
     <string name="choose_rules_size">قانون‌ها و اندازه صفحه را انتخاب کن</string>
     <string name="solo">تکی</string>
