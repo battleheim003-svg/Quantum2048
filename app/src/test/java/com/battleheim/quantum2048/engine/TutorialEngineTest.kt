@@ -6,19 +6,18 @@ import org.junit.Test
 
 class TutorialEngineTest {
     @Test
-    fun tappingSuperpositionTileCompletesFirstStep() {
+    fun swipeStepUsesRealMoveAndCompletesFirstStep() {
         val start = TutorialEngine.start()
-        val tileId = start.board.cells.filterNotNull().single().id
 
-        val selected = TutorialEngine.selectTile(start, tileId)
+        val moved = TutorialEngine.merge(start, Direction.LEFT)
 
-        assertEquals(tileId, selected.selectedTileId)
-        assertTrue(selected.isCurrentStepComplete)
+        assertEquals(2, moved.board[0, 0]?.value)
+        assertTrue(moved.isCurrentStepComplete)
     }
 
     @Test
     fun manualCollapseUsesRealCollapseCostAndResolvesTile() {
-        val start = TutorialEngine.next(TutorialEngine.start())
+        val start = TutorialEngine.next(TutorialEngine.next(TutorialEngine.start()))
         val tileId = start.board.cells.filterNotNull().single().id
         val selected = TutorialEngine.selectTile(start, tileId)
         val beforeEnergy = selected.board.energy
@@ -32,7 +31,7 @@ class TutorialEngineTest {
 
     @Test
     fun mergeStepUsesRealMoveAndAwardsEnergy() {
-        val mergeStep = TutorialLessonState(step = TutorialStep.MERGE_ENERGY, board = TutorialEngine.sampleBoard(TutorialStep.MERGE_ENERGY))
+        val mergeStep = TutorialLessonState(step = TutorialStep.FUSION_MERGE, board = TutorialEngine.sampleBoard(TutorialStep.FUSION_MERGE))
 
         val merged = TutorialEngine.merge(mergeStep, Direction.LEFT)
 

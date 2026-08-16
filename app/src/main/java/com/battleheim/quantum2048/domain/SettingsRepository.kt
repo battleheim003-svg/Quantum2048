@@ -19,7 +19,7 @@ data class AppSettings(
 )
 
 @Serializable enum class AppLanguage { ENGLISH, PERSIAN }
-@Serializable enum class AppThemeMode { DARK, LIGHT }
+@Serializable enum class AppThemeMode { LIGHT, DARK }
 
 interface SettingsRepository {
     fun observe(): Flow<AppSettings>

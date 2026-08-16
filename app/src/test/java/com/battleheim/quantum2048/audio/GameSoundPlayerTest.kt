@@ -50,7 +50,7 @@ class GameSoundPlayerTest {
             mergeCount = 2,
         )
 
-        assertEquals(listOf(SoundEvent.ChainMerge), soundEventsForMove(before, result))
+        assertEquals(listOf(SoundEvent.Move, SoundEvent.ChainMerge), soundEventsForMove(before, result))
         assertEquals(listOf(HapticEvent.ChainMerge), hapticEventsForMove(before, result))
     }
 

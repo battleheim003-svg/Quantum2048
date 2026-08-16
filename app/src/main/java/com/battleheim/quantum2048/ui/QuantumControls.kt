@@ -31,6 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -80,7 +82,7 @@ fun QuantumActionButton(
         shape = shape,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (filled) accent else MaterialTheme.colorScheme.surface.copy(alpha = 0.76f),
-            contentColor = if (filled) Color(0xFF061016) else accent,
+            contentColor = if (filled) MaterialTheme.colorScheme.onPrimary else accent,
             disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.46f),
             disabledContentColor = TextMuted,
         ),
@@ -94,7 +96,7 @@ fun QuantumActionButton(
                 Brush.horizontalGradient(
                     listOf(
                         accent.copy(alpha = if (enabled) 0.20f else 0.06f),
-                        Color.Transparent,
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0f),
                         NeonPink.copy(alpha = if (enabled && !filled) 0.12f else 0.02f),
                     ),
                 ),
@@ -142,6 +144,8 @@ fun QuantumDialog(
     dismissText: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val measurementSink = LocalLayoutMeasurementSink.current
+    val density = LocalDensity.current
     Dialog(onDismissRequest = onDismiss) {
         var visible by remember { mutableStateOf(false) }
         LaunchedEffect(Unit) { visible = true }
@@ -167,10 +171,13 @@ fun QuantumDialog(
                     this.alpha = alpha
                     translationY = (1f - scale) * 42f
                 }
+                .onGloballyPositioned { coordinates ->
+                    measurementSink?.invoke("dialog_content", with(density) { coordinates.size.height.toDp().value })
+                }
                 .background(
                     Brush.linearGradient(
                         listOf(
-                            Color.White.copy(alpha = 0.10f),
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
                             MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
                             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f),
                         ),
@@ -186,7 +193,7 @@ fun QuantumDialog(
                 Modifier
                     .fillMaxWidth(0.56f)
                     .height(2.dp)
-                    .background(Brush.horizontalGradient(listOf(accent, Color.Transparent)), RoundedCornerShape(2.dp)),
+                    .background(Brush.horizontalGradient(listOf(accent, MaterialTheme.colorScheme.surface.copy(alpha = 0f))), RoundedCornerShape(2.dp)),
             )
             content()
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {

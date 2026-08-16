@@ -182,6 +182,9 @@ class GameViewModel(
             result.synthesizedCompound?.let { compound ->
                 viewModelScope.launch { collectionRepository.record(compound, nextGame.difficulty) }
             }
+            result.state.cells.mapNotNull { it?.element }.forEach { element ->
+                viewModelScope.launch { collectionRepository.recordElement(element) }
+            }
             persist()
             viewModelScope.launch {
                 delay(MOVE_LOCK_MS)
@@ -189,6 +192,7 @@ class GameViewModel(
                 if (!_ui.value.quantumUnlockEventVisible) inputLocked = false
             }
         } else {
+            soundEvents.onSoundEvent(SoundEvent.InvalidMove)
             _ui.value = _ui.value.copy(game = result.state)
             inputLocked = false
         }
@@ -392,6 +396,20 @@ class GameViewModel(
                 _ui.value = _ui.value.copy(message = message)
             }
         }
+    }
+
+    fun grantRewardedEnergy(amount: Int = REWARDED_ENERGY_TOP_UP) {
+        val state = _ui.value.game
+        if (state.mode != GameMode.QUANTUM || state.status != GameStatus.PLAYING) return
+        val maxEnergy = FusionRules.maxEnergyFor(state.difficulty)
+        val nextEnergy = minOf(maxEnergy, state.energy + amount)
+        if (nextEnergy == state.energy) return
+        _ui.value = _ui.value.copy(
+            game = state.copy(energy = nextEnergy),
+            duel = updateActiveDuelBoard(state.copy(energy = nextEnergy)),
+            message = message(R.string.msg_reward_energy_top_up, amount),
+        )
+        persist()
     }
 
     private fun tryCompleteLab() {
@@ -805,10 +823,11 @@ class GameViewModel(
     }
 
     private companion object {
-        const val MOVE_LOCK_MS = 390L
+        const val MOVE_LOCK_MS = 180L
         const val OBSERVER_PREVIEW_MS = 2400L
         const val HIGH_VALUE_MERGE_SCORE = 512
         const val QUANTUM_UNLOCK_TILE = 256
+        const val REWARDED_ENERGY_TOP_UP = 30
     }
 }
 

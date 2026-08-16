@@ -14,6 +14,7 @@ data class StatsSnapshot(
     val highScore: Long = 0,
     val gamesPlayed: Int = 0,
     val totalMerges: Long = 0,
+    val longestMergeChain: Int = 0,
     val manualCollapseLow: Long = 0,
     val manualCollapseHigh: Long = 0,
     val autoCollapseCount: Long = 0,
@@ -27,6 +28,7 @@ data class StatsSnapshot(
             highScore == 0L &&
             gamesPlayed == 0 &&
             totalMerges == 0L &&
+            longestMergeChain == 0 &&
             manualCollapseTotal == 0L &&
             autoCollapseCount == 0L &&
             entangledCollapseChainCount == 0L
@@ -65,6 +67,7 @@ data class StatsSnapshot(
         return copy(
             highestTile = maxOf(highestTile, bestTile),
             highScore = maxOf(highScore, state.bestScore, state.score, state.dailyBestScore),
+            longestMergeChain = maxOf(longestMergeChain, state.totalChainMergeCount),
         )
     }
 

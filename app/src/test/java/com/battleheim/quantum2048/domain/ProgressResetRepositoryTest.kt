@@ -57,6 +57,7 @@ class ProgressResetRepositoryTest {
         var clearCalled = false
         override fun observe(): Flow<CollectionState> = MutableStateFlow(CollectionState())
         override suspend fun record(compound: Compound, difficulty: Difficulty, discoveredAtMillis: Long) = Unit
+        override suspend fun recordElement(element: com.battleheim.quantum2048.engine.QuantumElement) = Unit
         override suspend fun unrecord(compoundSymbol: String) = Unit
         override suspend fun clear() {
             clearCalled = true

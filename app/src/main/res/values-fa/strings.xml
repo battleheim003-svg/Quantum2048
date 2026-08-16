@@ -23,9 +23,11 @@
     <string name="mercy_active">کمک رحمی فعال: +%1$d حرکت</string>
     <string name="loading">در حال بارگذاری...</string>
     <string name="collection">کلکسیون</string>
+    <string name="element_codex">زنجیره عنصرها</string>
+    <string name="compound_codex">دستورهای ترکیب</string>
+    <string name="codex_locked">قفل</string>
     <string name="settings">تنظیمات</string>
     <string name="studio_splash_content_description">لوگوی استودیو Battleheim</string>
-    <string name="refresh_saves">بازخوانی ذخیره‌ها</string>
     <string name="choose_rules_size">قانون‌ها و اندازه صفحه را انتخاب کن</string>
     <string name="solo">تکی</string>
     <string name="solo_selected">تکی انتخاب شد</string>
@@ -103,6 +105,7 @@
     <string name="theme_button">تم: %1$s</string>
     <string name="language_english">انگلیسی</string>
     <string name="language_persian">فارسی</string>
+    <string name="theme_system">سیستم</string>
     <string name="theme_dark">تاریک</string>
     <string name="theme_light">روشن</string>
     <string name="master_volume">صدای اصلی</string>
@@ -132,6 +135,9 @@
     <string name="superposition_title">فروپاشی سوپرپوزیشن</string>
     <string name="superposition_body">یک مقدار پایدار برای این کاشی انتخاب کن.</string>
     <string name="superposition_choice">%1$s با %2$s انرژی</string>
+    <string name="tile_classic_description">کاشی %1$s</string>
+    <string name="tile_quantum_description">کاشی کوانتومی %1$s، رتبه %2$s، ارزش %3$s</string>
+    <string name="tile_superposition_description">کاشی سوپرپوزیشن با گزینه‌های %1$s</string>
     <string name="energy_line">انرژی %1$s</string>
     <string name="zen_description">یک آزمایشگاه آرام‌تر برای ران‌های طولانی و فیوژن بی‌وقفه.</string>
     <string name="hardcore_description">بدون حاشیه امن: انرژی محدود، بدون برگشت، هر حرکت حیاتی است.</string>
@@ -209,6 +215,7 @@
     <string name="stat_high_score">بالاترین امتیاز</string>
     <string name="stat_games_played">بازی‌های انجام‌شده</string>
     <string name="stat_total_merges">کل ادغام‌ها</string>
+    <string name="stat_longest_merge_chain">بلندترین زنجیره ادغام</string>
     <string name="stat_manual_collapse_low">فروپاشی دستی کم‌ارزش</string>
     <string name="stat_manual_collapse_high">فروپاشی دستی پرارزش</string>
     <string name="stat_auto_collapse">فروپاشی خودکار</string>
@@ -249,10 +256,14 @@
     <string name="tutorial_body">از صفحه برجسته‌شده استفاده کن، بعد تعامل را تأیید کن تا ادامه بدهی.</string>
     <string name="tutorial_action">انجام مرحله</string>
     <string name="tutorial_step_superposition">کاشی دو‌مقداری</string>
+    <string name="tutorial_step_swipe">سوایپ</string>
+    <string name="tutorial_step_fusion_merge">ادغام فیوژن</string>
     <string name="tutorial_step_manual_collapse">فروپاشی دستی</string>
     <string name="tutorial_step_energy_cost">هزینه انرژی</string>
     <string name="tutorial_step_merge_energy">ادغام انرژی می‌دهد</string>
     <string name="tutorial_body_superposition">روی کاشی کوانتومی درخشان بزن تا مقدارهای ممکنش را ببینی.</string>
+    <string name="tutorial_body_swipe">صفحه را سوایپ کن تا کاشی حرکت کند.</string>
+    <string name="tutorial_body_fusion_merge">ذرات کوانتومی همسان را ادغام کن تا کاشی قوی‌تر بسازی و انرژی برگردد.</string>
     <string name="tutorial_body_manual_collapse">یک مقدار را انتخاب کن تا کاشی نمونه پایدار شود.</string>
     <string name="tutorial_body_energy_cost">فروپاشی کم‌ارزش ارزان‌تر است. فروپاشی پرارزش انرژی بیشتری می‌گیرد و نتیجه قوی‌تری می‌دهد.</string>
     <string name="tutorial_body_merge_energy">ذرات همسان را ادغام کن تا انرژی برگردد.</string>
@@ -275,6 +286,7 @@
     <string name="watch_for_extra_undo">پاداش: برگشت اضافه</string>
     <string name="watch_for_revive">پاداش: ادامه بازی</string>
     <string name="watch_for_daily_attempt">پاداش: تلاش روزانه</string>
+    <string name="watch_for_energy_top_up">پاداش: +۳۰ انرژی</string>
     <string name="monetization_offline_note">نسخه تحریم‌پسند: آداپتر واقعی AdMob و Google Play Billing بعداً به همین قرارداد وصل می‌شود.</string>
     <string name="reset_entitlements">ریست دسترسی‌های خرید</string>
     <string name="social_retention">اجتماعی و بازگشت کاربر</string>
@@ -290,6 +302,7 @@
     <string name="msg_attempt_failed_mercy">تلاش ناموفق بود. کمک جبرانی ممکن است بعد از چند تلاش باز شود.</string>
     <string name="msg_auto_synthesized">%1$s به‌صورت خودکار سنتز شد</string>
     <string name="msg_energy_overflow">سرریز انرژی +%1$s</string>
+    <string name="msg_reward_energy_top_up">انرژی بازیابی شد +%1$d</string>
     <string name="msg_particle_reaction_complete">واکنش ذرات کامل شد</string>
     <string name="msg_entanglement_intro">درهم‌تنیدگی: کاشی‌های کوانتومی جفت‌شده با پایدار شدن یکی، با هم فرو می‌پاشند.</string>
     <string name="msg_achievement_unlocked">اچیومنت باز شد</string>

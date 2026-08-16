@@ -53,21 +53,23 @@ enum class QuantumElement(
 ) {
     HYDROGEN("H", "Hydrogen", 1, 1),
     HELIUM("He", "Helium", 2, 2),
-    BERYLLIUM("Be", "Beryllium", 4, 3),
-    CARBON("C", "Carbon", 6, 4),
-    NITROGEN("N", "Nitrogen", 7, 5),
-    OXYGEN("O", "Oxygen", 8, 6),
-    FLUORINE("F", "Fluorine", 9, 7),
-    NEON("Ne", "Neon", 10, 8),
-    SODIUM("Na", "Sodium", 11, 9),
-    SILICON("Si", "Silicon", 14, 10),
-    PHOSPHORUS("P", "Phosphorus", 15, 11),
-    SULFUR("S", "Sulfur", 16, 12),
-    CHLORINE("Cl", "Chlorine", 17, 13),
-    CALCIUM("Ca", "Calcium", 20, 14),
-    IRON("Fe", "Iron", 26, 15),
-    COPPER("Cu", "Copper", 29, 16),
-    GOLD("Au", "Gold", 79, 17);
+    LITHIUM("Li", "Lithium", 3, 3),
+    BERYLLIUM("Be", "Beryllium", 4, 4),
+    BORON("B", "Boron", 5, 5),
+    CARBON("C", "Carbon", 6, 6),
+    NITROGEN("N", "Nitrogen", 7, 7),
+    OXYGEN("O", "Oxygen", 8, 8),
+    FLUORINE("F", "Fluorine", 9, 9),
+    NEON("Ne", "Neon", 10, 10),
+    SODIUM("Na", "Sodium", 11, 11),
+    SILICON("Si", "Silicon", 14, 12),
+    PHOSPHORUS("P", "Phosphorus", 15, 13),
+    SULFUR("S", "Sulfur", 16, 14),
+    CHLORINE("Cl", "Chlorine", 17, 15),
+    CALCIUM("Ca", "Calcium", 20, 16),
+    IRON("Fe", "Iron", 26, 17),
+    COPPER("Cu", "Copper", 29, 18),
+    GOLD("Au", "Gold", 79, 19);
 }
 
 @Serializable

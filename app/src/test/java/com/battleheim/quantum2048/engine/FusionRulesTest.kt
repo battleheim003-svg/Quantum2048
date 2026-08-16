@@ -28,7 +28,7 @@ class FusionRulesTest {
             Tile(1, QuantumElement.HELIUM.atomicNumber, TileKind.ELEMENT, QuantumElement.HELIUM),
             Tile(2, QuantumElement.HELIUM.atomicNumber, TileKind.ELEMENT, QuantumElement.HELIUM),
         )!!
-        assertEquals(QuantumElement.BERYLLIUM, product.tiles.single().element)
+        assertEquals(QuantumElement.LITHIUM, product.tiles.single().element)
     }
 
     @Test fun ten_electrons_and_eleven_protons_make_neon_plus_one_proton() {

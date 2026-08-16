@@ -1,8 +1,10 @@
 package com.battleheim.quantum2048.domain
 
-import com.battleheim.quantum2048.engine.Compound
 import com.battleheim.quantum2048.engine.CompoundRecipe
+import com.battleheim.quantum2048.engine.Compound
 import com.battleheim.quantum2048.engine.Difficulty
+import com.battleheim.quantum2048.engine.FusionRules
+import com.battleheim.quantum2048.engine.QuantumElement
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 
@@ -30,6 +32,8 @@ data class CollectionEntry(
 @Serializable
 data class CollectionState(
     val entries: List<CollectionEntry> = emptyList(),
+    val unlockedElements: Set<QuantumElement> = emptySet(),
+    val elementEntries: List<ElementDiscoveryEntry> = emptyList(),
 ) {
     fun record(compound: Compound, difficulty: Difficulty, discoveredAtMillis: Long): CollectionState {
         require(discoveredAtMillis > 0)
@@ -69,6 +73,21 @@ data class CollectionState(
         }
     }
 
+    fun recordElement(element: QuantumElement, discoveredAtMillis: Long = System.currentTimeMillis()): CollectionState {
+        val normalizedEntries = normalizedElementEntries()
+        if (normalizedEntries.any { it.element == element }) {
+            return copy(unlockedElements = unlockedElements + element, elementEntries = normalizedEntries)
+        }
+        return copy(
+            unlockedElements = unlockedElements + element,
+            elementEntries = normalizedEntries + ElementDiscoveryEntry(
+                element = element,
+                firstDiscoveredAtMillis = discoveredAtMillis,
+                discoveryOrder = normalizedEntries.size + 1,
+            ),
+        )
+    }
+
     fun codex(recipes: List<CompoundRecipe>): List<CodexEntry> {
         val discovered = entries.associateBy { it.compoundSymbol }
         return recipes
@@ -88,6 +107,42 @@ data class CollectionState(
     }
 }
 
+@Serializable
+data class ElementDiscoveryEntry(
+    val element: QuantumElement,
+    val firstDiscoveredAtMillis: Long,
+    val discoveryOrder: Int,
+)
+
+data class ElementCodexEntry(
+    val element: QuantumElement,
+    val discovered: Boolean,
+    val discoveryOrder: Int? = null,
+    val firstDiscoveredAtMillis: Long? = null,
+)
+
+val LabCodexElementChain: List<QuantumElement> = FusionRules.elementChain
+
+fun CollectionState.elementCodex(): List<ElementCodexEntry> {
+    val discoveries = normalizedElementEntries().associateBy { it.element }
+    return LabCodexElementChain.map { element ->
+        val discovery = discoveries[element]
+        ElementCodexEntry(
+            element = element,
+            discovered = discovery != null || element in unlockedElements,
+            discoveryOrder = discovery?.discoveryOrder,
+            firstDiscoveredAtMillis = discovery?.firstDiscoveredAtMillis,
+        )
+    }
+}
+
+private fun CollectionState.normalizedElementEntries(): List<ElementDiscoveryEntry> {
+    if (elementEntries.isNotEmpty()) return elementEntries.sortedBy { it.discoveryOrder }
+    return unlockedElements
+        .sortedBy { LabCodexElementChain.indexOf(it).let { index -> if (index < 0) Int.MAX_VALUE else index } }
+        .mapIndexed { index, element -> ElementDiscoveryEntry(element, 1L, index + 1) }
+}
+
 data class CodexEntry(
     val symbol: String,
     val englishName: String?,
@@ -100,6 +155,7 @@ data class CodexEntry(
 interface CollectionRepository {
     fun observe(): Flow<CollectionState>
     suspend fun record(compound: Compound, difficulty: Difficulty, discoveredAtMillis: Long = System.currentTimeMillis())
+    suspend fun recordElement(element: QuantumElement)
     suspend fun unrecord(compoundSymbol: String)
     suspend fun clear()
 }

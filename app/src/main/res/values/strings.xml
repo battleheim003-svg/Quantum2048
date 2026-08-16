@@ -23,6 +23,9 @@
     <string name="mercy_active">Mercy assist active: +%1$d moves</string>
     <string name="loading">Loading...</string>
     <string name="collection">Collection</string>
+    <string name="element_codex">Element chain</string>
+    <string name="compound_codex">Compound recipes</string>
+    <string name="codex_locked">Locked</string>
     <string name="settings">Settings</string>
     <string name="statistics">Statistics</string>
     <string name="about_game">About</string>
@@ -42,7 +45,6 @@
     <string name="privacy_policy_ads_body">The current build uses offline no-op ad and service adapters. If real ads, billing, analytics, or cloud sync are enabled in a future release, this policy must be updated before publication.</string>
     <string name="profile">Profile</string>
     <string name="tutorial">Tutorial</string>
-    <string name="refresh_saves">Refresh saves</string>
     <string name="choose_rules_size">Choose rules and board size</string>
     <string name="solo">Solo</string>
     <string name="solo_selected">Solo selected</string>
@@ -137,6 +139,7 @@
     <string name="theme_button">Theme: %1$s</string>
     <string name="language_english">English</string>
     <string name="language_persian">Persian</string>
+    <string name="theme_system">System</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_light">Light</string>
     <string name="master_volume">Master</string>
@@ -166,6 +169,9 @@
     <string name="superposition_title">Collapse superposition</string>
     <string name="superposition_body">Choose one stable value for this tile.</string>
     <string name="superposition_choice">%1$s for %2$s energy</string>
+    <string name="tile_classic_description">Tile %1$s</string>
+    <string name="tile_quantum_description">Quantum tile %1$s, rank %2$s, value %3$s</string>
+    <string name="tile_superposition_description">Superposition tile choices %1$s</string>
     <string name="energy_line">Energy %1$s</string>
     <string name="daily_best_line">Daily best %1$s</string>
     <string name="achievements">Achievements</string>
@@ -210,6 +216,7 @@
     <string name="stat_high_score">High score</string>
     <string name="stat_games_played">Games played</string>
     <string name="stat_total_merges">Total merges</string>
+    <string name="stat_longest_merge_chain">Longest merge chain</string>
     <string name="stat_manual_collapse_low">Manual low collapses</string>
     <string name="stat_manual_collapse_high">Manual high collapses</string>
     <string name="stat_auto_collapse">Auto collapses</string>
@@ -249,10 +256,14 @@
     <string name="tutorial_body">Use the highlighted board, then confirm the interaction to continue.</string>
     <string name="tutorial_action">Perform step</string>
     <string name="tutorial_step_superposition">Two-value tile</string>
+    <string name="tutorial_step_swipe">Swipe</string>
+    <string name="tutorial_step_fusion_merge">Fusion merge</string>
     <string name="tutorial_step_manual_collapse">Manual collapse</string>
     <string name="tutorial_step_energy_cost">Energy cost</string>
     <string name="tutorial_step_merge_energy">Merge earns energy</string>
     <string name="tutorial_body_superposition">Tap the glowing quantum tile to inspect its possible values.</string>
+    <string name="tutorial_body_swipe">Swipe the board to move the tile.</string>
+    <string name="tutorial_body_fusion_merge">Merge matching quantum particles to produce a stronger tile and regain energy.</string>
     <string name="tutorial_body_manual_collapse">Choose one value to stabilize the sample tile.</string>
     <string name="tutorial_body_energy_cost">Low collapse is cheaper. High collapse spends more energy for a stronger result.</string>
     <string name="tutorial_body_merge_energy">Merge the matching particles to gain energy back.</string>
@@ -275,6 +286,7 @@
     <string name="watch_for_extra_undo">Reward: extra undo</string>
     <string name="watch_for_revive">Reward: revive</string>
     <string name="watch_for_daily_attempt">Reward: daily attempt</string>
+    <string name="watch_for_energy_top_up">Reward: +30 energy</string>
     <string name="monetization_offline_note">Offline-safe build: real AdMob and Play Billing adapters can plug into this contract later.</string>
     <string name="reset_entitlements">Reset entitlements</string>
     <string name="social_retention">Social &amp; retention</string>
@@ -290,6 +302,7 @@
     <string name="msg_attempt_failed_mercy">Attempt failed. Mercy assist may unlock after repeated tries.</string>
     <string name="msg_auto_synthesized">Auto-synthesized %1$s</string>
     <string name="msg_energy_overflow">Energy overflow +%1$s</string>
+    <string name="msg_reward_energy_top_up">Energy restored +%1$d</string>
     <string name="msg_particle_reaction_complete">Particle reaction complete</string>
     <string name="msg_entanglement_intro">Entanglement: paired quantum tiles collapse together when one is stabilized.</string>
     <string name="msg_achievement_unlocked">Achievement unlocked</string>

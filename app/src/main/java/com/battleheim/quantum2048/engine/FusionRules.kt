@@ -126,7 +126,9 @@ object FusionRules {
     val elementChain: List<QuantumElement> = listOf(
         QuantumElement.HYDROGEN,
         QuantumElement.HELIUM,
+        QuantumElement.LITHIUM,
         QuantumElement.BERYLLIUM,
+        QuantumElement.BORON,
         QuantumElement.CARBON,
         QuantumElement.NITROGEN,
         QuantumElement.OXYGEN,
@@ -248,19 +250,7 @@ object FusionRules {
     private fun protonSpawnChanceFor(state: GameState, electrons: Int, protons: Int, emptyRatio: Double): Double {
         val balanceBias = ((electrons - protons).coerceIn(-8, 8)) * 0.035
         val pressureAssist = if (emptyRatio < 0.25) 0.06 else 0.0
-        val difficultyBias = when (state.difficulty) {
-            Difficulty.MEDIUM -> 0.06
-            Difficulty.HARD, Difficulty.QUANTUM, Difficulty.DAILY -> 0.10
-            Difficulty.ZEN -> 0.08
-            Difficulty.HARDCORE -> 0.12
-            Difficulty.PUZZLE, Difficulty.EASY -> 0.0
-        }
-        val boardBias = when {
-            state.size >= 8 -> -0.04
-            state.size >= 6 -> -0.02
-            else -> 0.0
-        }
-        return (0.34 + balanceBias + pressureAssist + difficultyBias + boardBias).coerceIn(0.24, 0.58)
+        return (0.50 + balanceBias + pressureAssist).coerceIn(0.35, 0.65)
     }
 
     private fun elementSpawnChanceFor(state: GameState, emptyRatio: Double, cells: List<Tile>): Double {

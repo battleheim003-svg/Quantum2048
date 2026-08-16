@@ -1,0 +1,838 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:FusionRules.kt$FusionRules$(a.kind == TileKind.ELECTRON &amp;&amp; b.kind == TileKind.PROTON) || (a.kind == TileKind.PROTON &amp;&amp; b.kind == TileKind.ELECTRON)</ID>
+    <ID>ComplexCondition:FusionRules.kt$FusionRules$a.kind == b.kind &amp;&amp; (a.kind == TileKind.ELECTRON || a.kind == TileKind.PROTON) &amp;&amp; a.value == b.value</ID>
+    <ID>CyclomaticComplexMethod:AppShell.kt$@Composable fun QuantumAppShell( gameRepository: GameRepository, collectionRepository: CollectionRepository, profileRepository: ProfileRepository, settingsRepository: SettingsRepository, socialRepository: SocialRepository, statisticsRepository: StatisticsRepository, dailyChallengeRepository: DailyChallengeRepository, achievementsRepository: AchievementsRepository, billingRepository: BillingRepository, levelCatalogRepository: LevelCatalogRepository, levelProgressRepository: LevelProgressRepository, adGateway: AdGateway = NoOpAdGateway, analytics: AnalyticsGateway = NoOpAnalyticsGateway, engine: GameEngine, )</ID>
+    <ID>CyclomaticComplexMethod:AppShell.kt$private fun String.stringRes(): Int</ID>
+    <ID>CyclomaticComplexMethod:DataStoreSettingsRepository.kt$DataStoreSettingsRepository$private fun decodeLegacySettings(encoded: String): AppSettings?</ID>
+    <ID>CyclomaticComplexMethod:FusionRules.kt$FusionRules$fun mergeProduct(a: Tile, b: Tile): FusionProduct?</ID>
+    <ID>CyclomaticComplexMethod:GameEngine.kt$GameEngine$fun move(state: GameState, direction: Direction): MoveResult</ID>
+    <ID>CyclomaticComplexMethod:GameEngine.kt$GameEngine$private fun evaluate(state: GameState): GameStatus</ID>
+    <ID>CyclomaticComplexMethod:GameScreen.kt$@Composable fun GameScreen( vm: GameViewModel, settings: AppSettings = AppSettings(), audio: GameAudio = SilentGameAudio, onPause: () -&gt; Unit = {}, )</ID>
+    <ID>CyclomaticComplexMethod:GameScreen.kt$@Composable private fun QuantumTileLabel(tile: Tile, boardSize: Int, observerValue: Int?)</ID>
+    <ID>CyclomaticComplexMethod:GameScreen.kt$@Composable private fun TileCell( tile: Tile?, animation: MoveAnimation?, selectedForLab: Boolean, selectedForTunnel: Boolean, tunnelingActive: Boolean, observerValue: Int?, reducedMotion: Boolean, mode: GameMode, boardSize: Int, cellSize: androidx.compose.ui.unit.Dp, stepPx: Float, modifier: Modifier, onDragToLab: (Long) -&gt; Unit, onTap: () -&gt; Unit, onLongPress: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:GameViewModel.kt$GameViewModel$fun collapseSuperposition(choiceIndex: Int)</ID>
+    <ID>CyclomaticComplexMethod:GameViewModel.kt$GameViewModel$fun swipe(direction: Direction)</ID>
+    <ID>CyclomaticComplexMethod:GameViewModel.kt$GameViewModel$fun tapBoardCell(index: Int)</ID>
+    <ID>CyclomaticComplexMethod:HapticFeedbackController.kt$AndroidHapticPerformer$override fun perform(event: HapticEvent)</ID>
+    <ID>CyclomaticComplexMethod:Theme.kt$fun elementColor(element: QuantumElement?): Color</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable fun QuantumAppShell( gameRepository: GameRepository, collectionRepository: CollectionRepository, profileRepository: ProfileRepository, settingsRepository: SettingsRepository, socialRepository: SocialRepository, statisticsRepository: StatisticsRepository, dailyChallengeRepository: DailyChallengeRepository, achievementsRepository: AchievementsRepository, billingRepository: BillingRepository, levelCatalogRepository: LevelCatalogRepository, levelProgressRepository: LevelProgressRepository, adGateway: AdGateway = NoOpAdGateway, analytics: AnalyticsGateway = NoOpAnalyticsGateway, engine: GameEngine, )</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun AboutScreen(onPrivacy: () -&gt; Unit, onBack: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun AchievementCard(progress: AchievementProgress)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun AchievementList(unlocked: Set&lt;String&gt;)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun AchievementRow(label: String, unlocked: Boolean)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun AchievementsScreen(achievementsRepository: AchievementsRepository, onBack: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun BoardSizeSelector(selected: Int, enabled: Boolean, onSelect: (Int) -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun CollectionScreen(repository: CollectionRepository, profileRepository: ProfileRepository, onBack: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun ConfirmDialog(title: String, body: String, onDismiss: () -&gt; Unit, onConfirm: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun DailyChallengeScreen( dailyChallengeRepository: DailyChallengeRepository, onBack: () -&gt; Unit, onStart: (String) -&gt; Unit, onContinue: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun DailyHistoryPanel(state: com.battleheim.quantum2048.domain.DailyChallengeState)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun DataReadout(label: String, value: String, accent: Color, modifier: Modifier = Modifier)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun DifficultyCard( difficulty: Difficulty, size: Int, hasSave: Boolean, description: String, mission: String, unlockText: String, locked: Boolean, onClick: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun DuelSelector(opponent: DuelOpponent, botDifficulty: BotDifficulty, onOpponent: (DuelOpponent) -&gt; Unit, onBot: (BotDifficulty) -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun LevelSelectScreen( vm: GameViewModel, profileRepository: ProfileRepository, onBack: () -&gt; Unit, onSelect: (Difficulty, Int, Boolean, DuelOpponent, BotDifficulty) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun MainMenuHero()</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun MainMenuScreen( vm: GameViewModel, settings: AppSettings, settingsRepository: SettingsRepository, analytics: AnalyticsGateway, audio: ToneGameAudio, onContinue: (SavedGameKey) -&gt; Unit, onNewClassic: () -&gt; Unit, onNewQuantum: () -&gt; Unit, onNewGame: () -&gt; Unit, onCollection: () -&gt; Unit, onAchievements: () -&gt; Unit, onStatistics: () -&gt; Unit, onDailyChallenge: () -&gt; Unit, onAbout: () -&gt; Unit, onPeriodicPath: () -&gt; Unit, onTutorial: () -&gt; Unit, onSettings: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun MenuScaffold(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun ModeSelector(duel: Boolean, onSelect: (Boolean) -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun MonetizationSection( entitlements: EntitlementState, adGateway: AdGateway, onRemoveAds: () -&gt; Unit, onRewardUndo: () -&gt; Unit, onRewardRevive: () -&gt; Unit, onRewardDaily: () -&gt; Unit, onReset: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun NeonMenuButton( text: String, onClick: () -&gt; Unit, modifier: Modifier = Modifier, enabled: Boolean = true, accent: Color = Cyan, filled: Boolean = false, icon: String? = null, )</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun NeonPanel(title: String, accent: Color = Cyan, content: @Composable ColumnScope.() -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun NeonPillButton( text: String, onClick: () -&gt; Unit, modifier: Modifier = Modifier, accent: Color = Cyan, )</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun PauseScreen(vm: GameViewModel, onResume: () -&gt; Unit, onMainMenu: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun PeriodicLevelChip(level: LevelDefinition, progress: PlayerProgress, onPlay: (LevelDefinition) -&gt; Unit, modifier: Modifier = Modifier)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun PeriodicPathScreen( catalogRepository: LevelCatalogRepository, progressRepository: LevelProgressRepository, onBack: () -&gt; Unit, onPlay: (LevelDefinition) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun PeriodicZoneCard(zone: com.battleheim.quantum2048.domain.ZoneDefinition, progress: PlayerProgress, onPlay: (LevelDefinition) -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun PrivacyPolicyScreen(onBack: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun ProfileDataHeader(date: String, dailyBest: String, bestDaily: String)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun QuickSettingsRow(settings: AppSettings, onLanguage: () -&gt; Unit, onTheme: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun RefreshSavesButton(onClick: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun SectionTitle(title: String, subtitle: String)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun SettingsScreen( settingsRepository: SettingsRepository, collectionRepository: CollectionRepository, profileRepository: ProfileRepository, socialRepository: SocialRepository, billingRepository: BillingRepository, progressResetRepository: ProgressResetRepository, settings: AppSettings, entitlements: EntitlementState, adGateway: AdGateway, audio: ToneGameAudio, vm: GameViewModel, analytics: AnalyticsGateway, onTutorial: () -&gt; Unit, onBack: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun SettingsSlider(label: String, value: Float, onValueChange: (Float) -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun SettingsToggle(label: String, checked: Boolean, onCheckedChange: (Boolean) -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun SocialRetentionSection(socialRepository: SocialRepository)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun SpaceLabBackdrop()</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun StatRow(label: String, value: String)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun StatisticsScreen( statisticsRepository: StatisticsRepository, dailyChallengeRepository: DailyChallengeRepository, onBack: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun TutorialBoard(lesson: TutorialLessonState, onTile: (Long) -&gt; Unit)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun TutorialEnergyPanel(lesson: TutorialLessonState)</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun TutorialInteractionControls( lesson: TutorialLessonState, onCollapse: (Int) -&gt; Unit, onMerge: (Direction) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AppShell.kt$@Composable private fun TutorialScreen(onDone: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable fun GameScreen( vm: GameViewModel, settings: AppSettings = AppSettings(), audio: GameAudio = SilentGameAudio, onPause: () -&gt; Unit = {}, )</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun Board( game: GameState, labTileIds: List&lt;Long&gt;, tunnelingTileId: Long?, observerPreview: ObserverPreview?, animations: List&lt;MoveAnimation&gt;, reducedMotion: Boolean, isBoardShaking: Boolean, onSwipe: (Direction) -&gt; Unit, onTileDragToLab: (Long) -&gt; Unit, onCellTap: (Int) -&gt; Unit, onObserveTile: (Long) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun CompoundLab(game: GameState, labTileIds: List&lt;Long&gt;, clear: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun DuelHeader(current: DuelPlayer, opponent: DuelOpponent, secondsLeft: Int, winner: DuelPlayer?, pass: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun EndDialog(game: GameState, continueGame: () -&gt; Unit, newGame: () -&gt; Unit, audio: GameAudio, settings: AppSettings)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun EnergyMeter(energy: Int)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun FusionGuide(difficulty: Difficulty)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun Header(game: GameState, onPause: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun HudReadout(label: String, value: String, accent: Color)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun LevelGoalHud(level: LevelRunUiState)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun OpponentBoardSummary(board: GameState, current: DuelPlayer)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun ParticleBurst(progress: Float, color: Color, intense: Boolean)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun QuantumBackdrop(reducedMotion: Boolean)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun QuantumTileLabel(tile: Tile, boardSize: Int, observerValue: Int?)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun QuantumUnlockEffect(onDismiss: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun SuperpositionDialog(tile: Tile, onDismiss: () -&gt; Unit, onCollapse: (Int) -&gt; Unit)</ID>
+    <ID>FunctionNaming:GameScreen.kt$@Composable private fun TileCell( tile: Tile?, animation: MoveAnimation?, selectedForLab: Boolean, selectedForTunnel: Boolean, tunnelingActive: Boolean, observerValue: Int?, reducedMotion: Boolean, mode: GameMode, boardSize: Int, cellSize: androidx.compose.ui.unit.Dp, stepPx: Float, modifier: Modifier, onDragToLab: (Long) -&gt; Unit, onTap: () -&gt; Unit, onLongPress: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:GameShareImage.kt$@Composable private fun BannerHeader(game: GameState)</ID>
+    <ID>FunctionNaming:GameShareImage.kt$@Composable private fun BoardPreview(game: GameState)</ID>
+    <ID>FunctionNaming:GameShareImage.kt$@Composable private fun PremiumWatermark(studio: String, tagline: String)</ID>
+    <ID>FunctionNaming:GameShareImage.kt$@Composable private fun ScoreHero(score: Long, highestLabel: String, stars: Int)</ID>
+    <ID>FunctionNaming:GameShareImage.kt$@Composable private fun ShareBanner(game: GameState)</ID>
+    <ID>FunctionNaming:GameShareImage.kt$@Composable private fun ShareBannerBackdrop()</ID>
+    <ID>FunctionNaming:GameShareImage.kt$@Composable private fun StarIcon(filled: Boolean)</ID>
+    <ID>FunctionNaming:GameShareImage.kt$@Composable private fun StarRatingRow(stars: Int)</ID>
+    <ID>FunctionNaming:MainActivity.kt$@Composable private fun StudioSplashOverlay()</ID>
+    <ID>FunctionNaming:QuantumControls.kt$@Composable fun QuantumActionButton( text: String, onClick: () -&gt; Unit, modifier: Modifier = Modifier, enabled: Boolean = true, accent: Color = Cyan, filled: Boolean = false, icon: String? = null, )</ID>
+    <ID>FunctionNaming:QuantumControls.kt$@Composable fun QuantumChipButton( text: String, selected: Boolean, onClick: () -&gt; Unit, modifier: Modifier = Modifier, enabled: Boolean = true, accent: Color = Electric, )</ID>
+    <ID>FunctionNaming:QuantumControls.kt$@Composable fun QuantumDialog( title: String, onDismiss: () -&gt; Unit, modifier: Modifier = Modifier, accent: Color = Cyan, confirmText: String? = null, onConfirm: (() -&gt; Unit)? = null, dismissText: String? = null, content: @Composable ColumnScope.() -&gt; Unit, )</ID>
+    <ID>FunctionNaming:Theme.kt$@Composable fun QuantumTheme(themeMode: AppThemeMode = AppThemeMode.DARK, content: @Composable () -&gt; Unit)</ID>
+    <ID>LargeClass:GameViewModel.kt$GameViewModel : ViewModel</ID>
+    <ID>LongMethod:AppShell.kt$@Composable fun QuantumAppShell( gameRepository: GameRepository, collectionRepository: CollectionRepository, profileRepository: ProfileRepository, settingsRepository: SettingsRepository, socialRepository: SocialRepository, statisticsRepository: StatisticsRepository, dailyChallengeRepository: DailyChallengeRepository, achievementsRepository: AchievementsRepository, billingRepository: BillingRepository, levelCatalogRepository: LevelCatalogRepository, levelProgressRepository: LevelProgressRepository, adGateway: AdGateway = NoOpAdGateway, analytics: AnalyticsGateway = NoOpAnalyticsGateway, engine: GameEngine, )</ID>
+    <ID>LongMethod:AppShell.kt$@Composable private fun DifficultyCard( difficulty: Difficulty, size: Int, hasSave: Boolean, description: String, mission: String, unlockText: String, locked: Boolean, onClick: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:AppShell.kt$@Composable private fun MainMenuHero()</ID>
+    <ID>LongMethod:AppShell.kt$@Composable private fun MainMenuScreen( vm: GameViewModel, settings: AppSettings, settingsRepository: SettingsRepository, analytics: AnalyticsGateway, audio: ToneGameAudio, onContinue: (SavedGameKey) -&gt; Unit, onNewClassic: () -&gt; Unit, onNewQuantum: () -&gt; Unit, onNewGame: () -&gt; Unit, onCollection: () -&gt; Unit, onAchievements: () -&gt; Unit, onStatistics: () -&gt; Unit, onDailyChallenge: () -&gt; Unit, onAbout: () -&gt; Unit, onPeriodicPath: () -&gt; Unit, onTutorial: () -&gt; Unit, onSettings: () -&gt; Unit, )</ID>
+    <ID>LongMethod:AppShell.kt$@Composable private fun SettingsScreen( settingsRepository: SettingsRepository, collectionRepository: CollectionRepository, profileRepository: ProfileRepository, socialRepository: SocialRepository, billingRepository: BillingRepository, progressResetRepository: ProgressResetRepository, settings: AppSettings, entitlements: EntitlementState, adGateway: AdGateway, audio: ToneGameAudio, vm: GameViewModel, analytics: AnalyticsGateway, onTutorial: () -&gt; Unit, onBack: () -&gt; Unit, )</ID>
+    <ID>LongMethod:GameEngine.kt$GameEngine$fun move(state: GameState, direction: Direction): MoveResult</ID>
+    <ID>LongMethod:GameScreen.kt$@Composable fun GameScreen( vm: GameViewModel, settings: AppSettings = AppSettings(), audio: GameAudio = SilentGameAudio, onPause: () -&gt; Unit = {}, )</ID>
+    <ID>LongMethod:GameScreen.kt$@Composable private fun Board( game: GameState, labTileIds: List&lt;Long&gt;, tunnelingTileId: Long?, observerPreview: ObserverPreview?, animations: List&lt;MoveAnimation&gt;, reducedMotion: Boolean, isBoardShaking: Boolean, onSwipe: (Direction) -&gt; Unit, onTileDragToLab: (Long) -&gt; Unit, onCellTap: (Int) -&gt; Unit, onObserveTile: (Long) -&gt; Unit, )</ID>
+    <ID>LongMethod:GameScreen.kt$@Composable private fun LevelGoalHud(level: LevelRunUiState)</ID>
+    <ID>LongMethod:GameScreen.kt$@Composable private fun TileCell( tile: Tile?, animation: MoveAnimation?, selectedForLab: Boolean, selectedForTunnel: Boolean, tunnelingActive: Boolean, observerValue: Int?, reducedMotion: Boolean, mode: GameMode, boardSize: Int, cellSize: androidx.compose.ui.unit.Dp, stepPx: Float, modifier: Modifier, onDragToLab: (Long) -&gt; Unit, onTap: () -&gt; Unit, onLongPress: () -&gt; Unit, )</ID>
+    <ID>LongMethod:GameViewModel.kt$GameViewModel$fun swipe(direction: Direction)</ID>
+    <ID>LongParameterList:AppShell.kt$( difficulty: Difficulty, size: Int, hasSave: Boolean, description: String, mission: String, unlockText: String, locked: Boolean, onClick: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>LongParameterList:AppShell.kt$( entitlements: EntitlementState, adGateway: AdGateway, onRemoveAds: () -&gt; Unit, onRewardUndo: () -&gt; Unit, onRewardRevive: () -&gt; Unit, onRewardDaily: () -&gt; Unit, onReset: () -&gt; Unit, )</ID>
+    <ID>LongParameterList:AppShell.kt$( gameRepository: GameRepository, collectionRepository: CollectionRepository, profileRepository: ProfileRepository, settingsRepository: SettingsRepository, socialRepository: SocialRepository, statisticsRepository: StatisticsRepository, dailyChallengeRepository: DailyChallengeRepository, achievementsRepository: AchievementsRepository, billingRepository: BillingRepository, levelCatalogRepository: LevelCatalogRepository, levelProgressRepository: LevelProgressRepository, adGateway: AdGateway = NoOpAdGateway, analytics: AnalyticsGateway = NoOpAnalyticsGateway, engine: GameEngine, )</ID>
+    <ID>LongParameterList:AppShell.kt$( settingsRepository: SettingsRepository, collectionRepository: CollectionRepository, profileRepository: ProfileRepository, socialRepository: SocialRepository, billingRepository: BillingRepository, progressResetRepository: ProgressResetRepository, settings: AppSettings, entitlements: EntitlementState, adGateway: AdGateway, audio: ToneGameAudio, vm: GameViewModel, analytics: AnalyticsGateway, onTutorial: () -&gt; Unit, onBack: () -&gt; Unit, )</ID>
+    <ID>LongParameterList:AppShell.kt$( text: String, onClick: () -&gt; Unit, modifier: Modifier = Modifier, enabled: Boolean = true, accent: Color = Cyan, filled: Boolean = false, icon: String? = null, )</ID>
+    <ID>LongParameterList:AppShell.kt$( vm: GameViewModel, settings: AppSettings, settingsRepository: SettingsRepository, analytics: AnalyticsGateway, audio: ToneGameAudio, onContinue: (SavedGameKey) -&gt; Unit, onNewClassic: () -&gt; Unit, onNewQuantum: () -&gt; Unit, onNewGame: () -&gt; Unit, onCollection: () -&gt; Unit, onAchievements: () -&gt; Unit, onStatistics: () -&gt; Unit, onDailyChallenge: () -&gt; Unit, onAbout: () -&gt; Unit, onPeriodicPath: () -&gt; Unit, onTutorial: () -&gt; Unit, onSettings: () -&gt; Unit, )</ID>
+    <ID>LongParameterList:GameScreen.kt$( game: GameState, labTileIds: List&lt;Long&gt;, tunnelingTileId: Long?, observerPreview: ObserverPreview?, animations: List&lt;MoveAnimation&gt;, reducedMotion: Boolean, isBoardShaking: Boolean, onSwipe: (Direction) -&gt; Unit, onTileDragToLab: (Long) -&gt; Unit, onCellTap: (Int) -&gt; Unit, onObserveTile: (Long) -&gt; Unit, )</ID>
+    <ID>LongParameterList:GameScreen.kt$( tile: Tile?, animation: MoveAnimation?, selectedForLab: Boolean, selectedForTunnel: Boolean, tunnelingActive: Boolean, observerValue: Int?, reducedMotion: Boolean, mode: GameMode, boardSize: Int, cellSize: androidx.compose.ui.unit.Dp, stepPx: Float, modifier: Modifier, onDragToLab: (Long) -&gt; Unit, onTap: () -&gt; Unit, onLongPress: () -&gt; Unit, )</ID>
+    <ID>LongParameterList:GameViewModel.kt$GameViewModel$( private val repository: GameRepository, private val collectionRepository: CollectionRepository, private val profileRepository: ProfileRepository, private val socialRepository: SocialRepository? = null, private val levelCatalogRepository: LevelCatalogRepository? = null, private val levelProgressRepository: LevelProgressRepository? = null, private val statisticsRepository: StatisticsRepository? = null, private val dailyChallengeRepository: DailyChallengeRepository? = null, private val achievementsRepository: AchievementsRepository? = null, private val engine: GameEngine, private val analytics: AnalyticsGateway = NoOpAnalyticsGateway, private val soundEvents: SoundEventSink = NoOpSoundEventSink, private val hapticEvents: HapticEventSink = NoOpHapticEventSink, )</ID>
+    <ID>LongParameterList:ProgressResetRepository.kt$LocalProgressResetRepository$( private val gameRepository: GameRepository, private val collectionRepository: CollectionRepository, private val profileRepository: ProfileRepository, private val socialRepository: SocialRepository, private val statisticsRepository: StatisticsRepository, private val levelProgressRepository: LevelProgressRepository, @Suppress("unused") private val dailyChallengeRepository: DailyChallengeRepository? = null, @Suppress("unused") private val achievementsRepository: AchievementsRepository? = null, )</ID>
+    <ID>LongParameterList:QuantumControls.kt$( text: String, onClick: () -&gt; Unit, modifier: Modifier = Modifier, enabled: Boolean = true, accent: Color = Cyan, filled: Boolean = false, icon: String? = null, )</ID>
+    <ID>LongParameterList:QuantumControls.kt$( text: String, selected: Boolean, onClick: () -&gt; Unit, modifier: Modifier = Modifier, enabled: Boolean = true, accent: Color = Electric, )</ID>
+    <ID>LongParameterList:QuantumControls.kt$( title: String, onDismiss: () -&gt; Unit, modifier: Modifier = Modifier, accent: Color = Cyan, confirmText: String? = null, onConfirm: (() -&gt; Unit)? = null, dismissText: String? = null, content: @Composable ColumnScope.() -&gt; Unit, )</ID>
+    <ID>MagicNumber:AchievementsRepository.kt$AchievementCatalog$100</ID>
+    <ID>MagicNumber:AchievementsRepository.kt$AchievementCatalog$1_000</ID>
+    <ID>MagicNumber:AchievementsRepository.kt$AchievementCatalog$2048</ID>
+    <ID>MagicNumber:AchievementsRepository.kt$AchievementCatalog$30</ID>
+    <ID>MagicNumber:AchievementsRepository.kt$AchievementCatalog$4096</ID>
+    <ID>MagicNumber:AchievementsRepository.kt$AchievementCatalog$5</ID>
+    <ID>MagicNumber:AchievementsRepository.kt$AchievementCatalog$50</ID>
+    <ID>MagicNumber:AppShell.kt$0.014f</ID>
+    <ID>MagicNumber:AppShell.kt$0.028f</ID>
+    <ID>MagicNumber:AppShell.kt$0.02f</ID>
+    <ID>MagicNumber:AppShell.kt$0.035f</ID>
+    <ID>MagicNumber:AppShell.kt$0.04f</ID>
+    <ID>MagicNumber:AppShell.kt$0.07f</ID>
+    <ID>MagicNumber:AppShell.kt$0.08f</ID>
+    <ID>MagicNumber:AppShell.kt$0.09f</ID>
+    <ID>MagicNumber:AppShell.kt$0.16f</ID>
+    <ID>MagicNumber:AppShell.kt$0.18f</ID>
+    <ID>MagicNumber:AppShell.kt$0.22f</ID>
+    <ID>MagicNumber:AppShell.kt$0.24f</ID>
+    <ID>MagicNumber:AppShell.kt$0.26f</ID>
+    <ID>MagicNumber:AppShell.kt$0.2f</ID>
+    <ID>MagicNumber:AppShell.kt$0.34f</ID>
+    <ID>MagicNumber:AppShell.kt$0.36f</ID>
+    <ID>MagicNumber:AppShell.kt$0.42f</ID>
+    <ID>MagicNumber:AppShell.kt$0.48f</ID>
+    <ID>MagicNumber:AppShell.kt$0.52f</ID>
+    <ID>MagicNumber:AppShell.kt$0.56f</ID>
+    <ID>MagicNumber:AppShell.kt$0.58f</ID>
+    <ID>MagicNumber:AppShell.kt$0.62f</ID>
+    <ID>MagicNumber:AppShell.kt$0.63f</ID>
+    <ID>MagicNumber:AppShell.kt$0.68f</ID>
+    <ID>MagicNumber:AppShell.kt$0.70f</ID>
+    <ID>MagicNumber:AppShell.kt$0.72f</ID>
+    <ID>MagicNumber:AppShell.kt$0.78f</ID>
+    <ID>MagicNumber:AppShell.kt$0.87f</ID>
+    <ID>MagicNumber:AppShell.kt$0.92f</ID>
+    <ID>MagicNumber:AppShell.kt$0xFF061016</ID>
+    <ID>MagicNumber:AppShell.kt$0xFF171D38</ID>
+    <ID>MagicNumber:AppShell.kt$100</ID>
+    <ID>MagicNumber:AppShell.kt$28f</ID>
+    <ID>MagicNumber:AppShell.kt$3</ID>
+    <ID>MagicNumber:AppShell.kt$34f</ID>
+    <ID>MagicNumber:AppShell.kt$4</ID>
+    <ID>MagicNumber:AudioManager.kt$AndroidGameAudio$0.022f</ID>
+    <ID>MagicNumber:AudioManager.kt$AndroidGameAudio$0.5f</ID>
+    <ID>MagicNumber:AudioManager.kt$AndroidGameAudio$0.88f</ID>
+    <ID>MagicNumber:AudioManager.kt$AndroidGameAudio$1.22f</ID>
+    <ID>MagicNumber:AudioManager.kt$AndroidGameAudio$10</ID>
+    <ID>MagicNumber:AudioManager.kt$AndroidGameAudio$2048</ID>
+    <ID>MagicNumber:AudioManager.kt$AndroidGameAudio$512</ID>
+    <ID>MagicNumber:AudioManager.kt$AndroidGameAudio$64</ID>
+    <ID>MagicNumber:BotEngine.kt$BotScoring$100_000</ID>
+    <ID>MagicNumber:BotEngine.kt$BotScoring$120</ID>
+    <ID>MagicNumber:BotEngine.kt$BotScoring$17</ID>
+    <ID>MagicNumber:BotEngine.kt$BotScoring$30</ID>
+    <ID>MagicNumber:BotEngine.kt$BotScoring$31L</ID>
+    <ID>MagicNumber:BotEngine.kt$BotScoring$60</ID>
+    <ID>MagicNumber:BotEngine.kt$DuelEngine$4</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$11</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$14</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$15</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$16</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$17</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$20</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$240</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$26</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$29</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$300</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$320</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$330</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$360</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$420</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$500</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$520</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$540</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$580</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$6</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$620</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$680</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$7</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$700</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$720</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$740</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$760</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$780</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$8</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$820</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$840</ID>
+    <ID>MagicNumber:Chemistry.kt$ChemistryDictionary$940</ID>
+    <ID>MagicNumber:DailyChallengeRepository.kt$DailyChallengeState$7</ID>
+    <ID>MagicNumber:DailyChallengeSeedProvider.kt$DailyChallengeSeedProvider$1125899906842597L</ID>
+    <ID>MagicNumber:DailyChallengeSeedProvider.kt$DailyChallengeSeedProvider$31L</ID>
+    <ID>MagicNumber:DataStoreBillingRepository.kt$DataStoreBillingRepository$3</ID>
+    <ID>MagicNumber:DataStoreBillingRepository.kt$DataStoreBillingRepository$4</ID>
+    <ID>MagicNumber:DataStoreBillingRepository.kt$DataStoreBillingRepository$5</ID>
+    <ID>MagicNumber:DataStoreBillingRepository.kt$DataStoreBillingRepository$6</ID>
+    <ID>MagicNumber:FirebaseRemoteConfigGateway.kt$OfflineRemoteConfigGateway$0.10</ID>
+    <ID>MagicNumber:FirebaseRemoteConfigGateway.kt$OfflineRemoteConfigGateway$0.12</ID>
+    <ID>MagicNumber:FirebaseRemoteConfigGateway.kt$OfflineRemoteConfigGateway$30L</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.015</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.02</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.025</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.03</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.035</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.04</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.05</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.06</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.07</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.08</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.10</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.12</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.16</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.24</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.25</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.28</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.34</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$0.58</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$100</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$12</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$13</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$16</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$18</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$2048</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$28</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$3</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$32</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$4</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$40</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$5</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$6</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$64</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$7</ID>
+    <ID>MagicNumber:FusionRules.kt$FusionRules$8</ID>
+    <ID>MagicNumber:GameEngine.kt$GameEngine$0.9</ID>
+    <ID>MagicNumber:GameEngine.kt$GameEngine$2048</ID>
+    <ID>MagicNumber:GameEngine.kt$GameEngine$4</ID>
+    <ID>MagicNumber:GameFeel.kt$0.35f</ID>
+    <ID>MagicNumber:GameFeel.kt$0.45f</ID>
+    <ID>MagicNumber:GameFeel.kt$1.7f</ID>
+    <ID>MagicNumber:GameFeel.kt$100f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.01f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.03f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.12f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.16f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.18f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.22f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.24f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.28f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.42f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.54f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.55f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.5f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.66f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.72f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.76f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.7f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.82f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.84f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.86f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.88f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.92f</ID>
+    <ID>MagicNumber:GameScreen.kt$0.985f</ID>
+    <ID>MagicNumber:GameScreen.kt$0x6617203D</ID>
+    <ID>MagicNumber:GameScreen.kt$0xFF171D38</ID>
+    <ID>MagicNumber:GameScreen.kt$0xFF56E0B5</ID>
+    <ID>MagicNumber:GameScreen.kt$0xFFD8FBFF</ID>
+    <ID>MagicNumber:GameScreen.kt$1.025f</ID>
+    <ID>MagicNumber:GameScreen.kt$1.04f</ID>
+    <ID>MagicNumber:GameScreen.kt$1.06f</ID>
+    <ID>MagicNumber:GameScreen.kt$1.08f</ID>
+    <ID>MagicNumber:GameScreen.kt$1.16f</ID>
+    <ID>MagicNumber:GameScreen.kt$1.18f</ID>
+    <ID>MagicNumber:GameScreen.kt$1.1f</ID>
+    <ID>MagicNumber:GameScreen.kt$1.2f</ID>
+    <ID>MagicNumber:GameScreen.kt$1.35f</ID>
+    <ID>MagicNumber:GameScreen.kt$100</ID>
+    <ID>MagicNumber:GameScreen.kt$1000</ID>
+    <ID>MagicNumber:GameScreen.kt$100f</ID>
+    <ID>MagicNumber:GameScreen.kt$10f</ID>
+    <ID>MagicNumber:GameScreen.kt$110</ID>
+    <ID>MagicNumber:GameScreen.kt$12</ID>
+    <ID>MagicNumber:GameScreen.kt$120</ID>
+    <ID>MagicNumber:GameScreen.kt$12f</ID>
+    <ID>MagicNumber:GameScreen.kt$130</ID>
+    <ID>MagicNumber:GameScreen.kt$140</ID>
+    <ID>MagicNumber:GameScreen.kt$150</ID>
+    <ID>MagicNumber:GameScreen.kt$160</ID>
+    <ID>MagicNumber:GameScreen.kt$18</ID>
+    <ID>MagicNumber:GameScreen.kt$22f</ID>
+    <ID>MagicNumber:GameScreen.kt$24f</ID>
+    <ID>MagicNumber:GameScreen.kt$260</ID>
+    <ID>MagicNumber:GameScreen.kt$280</ID>
+    <ID>MagicNumber:GameScreen.kt$3</ID>
+    <ID>MagicNumber:GameScreen.kt$300</ID>
+    <ID>MagicNumber:GameScreen.kt$3200</ID>
+    <ID>MagicNumber:GameScreen.kt$34f</ID>
+    <ID>MagicNumber:GameScreen.kt$360</ID>
+    <ID>MagicNumber:GameScreen.kt$36f</ID>
+    <ID>MagicNumber:GameScreen.kt$380</ID>
+    <ID>MagicNumber:GameScreen.kt$40</ID>
+    <ID>MagicNumber:GameScreen.kt$40f</ID>
+    <ID>MagicNumber:GameScreen.kt$46f</ID>
+    <ID>MagicNumber:GameScreen.kt$6</ID>
+    <ID>MagicNumber:GameScreen.kt$6.28318f</ID>
+    <ID>MagicNumber:GameScreen.kt$700</ID>
+    <ID>MagicNumber:GameScreen.kt$8</ID>
+    <ID>MagicNumber:GameScreen.kt$8f</ID>
+    <ID>MagicNumber:GameScreen.kt$9</ID>
+    <ID>MagicNumber:GameScreen.kt$90</ID>
+    <ID>MagicNumber:GameScreen.kt$92f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0.015f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0.12f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0.22f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0.26f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0.28f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0.46f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0.48f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0.56f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0.68f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0.72f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0.74f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0.88f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0.90f</ID>
+    <ID>MagicNumber:GameShareImage.kt$0x6633415D</ID>
+    <ID>MagicNumber:GameShareImage.kt$0xAA101B36</ID>
+    <ID>MagicNumber:GameShareImage.kt$0xAA17203D</ID>
+    <ID>MagicNumber:GameShareImage.kt$0xAA261746</ID>
+    <ID>MagicNumber:GameShareImage.kt$0xCC0B1228</ID>
+    <ID>MagicNumber:GameShareImage.kt$0xFF070B18</ID>
+    <ID>MagicNumber:GameShareImage.kt$0xFFB984FF</ID>
+    <ID>MagicNumber:GameShareImage.kt$100</ID>
+    <ID>MagicNumber:GameShareImage.kt$10_000</ID>
+    <ID>MagicNumber:GameShareImage.kt$10f</ID>
+    <ID>MagicNumber:GameShareImage.kt$16f</ID>
+    <ID>MagicNumber:GameShareImage.kt$183</ID>
+    <ID>MagicNumber:GameShareImage.kt$18f</ID>
+    <ID>MagicNumber:GameShareImage.kt$195</ID>
+    <ID>MagicNumber:GameShareImage.kt$220</ID>
+    <ID>MagicNumber:GameShareImage.kt$228</ID>
+    <ID>MagicNumber:GameShareImage.kt$22f</ID>
+    <ID>MagicNumber:GameShareImage.kt$230</ID>
+    <ID>MagicNumber:GameShareImage.kt$242</ID>
+    <ID>MagicNumber:GameShareImage.kt$24f</ID>
+    <ID>MagicNumber:GameShareImage.kt$26f</ID>
+    <ID>MagicNumber:GameShareImage.kt$2_000</ID>
+    <ID>MagicNumber:GameShareImage.kt$3</ID>
+    <ID>MagicNumber:GameShareImage.kt$4</ID>
+    <ID>MagicNumber:GameShareImage.kt$42f</ID>
+    <ID>MagicNumber:GameShareImage.kt$48f</ID>
+    <ID>MagicNumber:GameShareImage.kt$5_000</ID>
+    <ID>MagicNumber:GameShareImage.kt$6</ID>
+    <ID>MagicNumber:GameShareImage.kt$78</ID>
+    <ID>MagicNumber:GameShareImage.kt$98f</ID>
+    <ID>MagicNumber:GameViewModel.kt$1125899906842597L</ID>
+    <ID>MagicNumber:GameViewModel.kt$31</ID>
+    <ID>MagicNumber:GameViewModel.kt$GameViewModel$4</ID>
+    <ID>MagicNumber:GameViewModel.kt$GameViewModel$404</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$110</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$12L</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$130</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$145</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$14L</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$160</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$190</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$22L</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$28L</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$30L</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$34L</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$48L</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$60</ID>
+    <ID>MagicNumber:HapticFeedbackController.kt$AndroidHapticPerformer$70</ID>
+    <ID>MagicNumber:MainActivity.kt$4_000</ID>
+    <ID>MagicNumber:Models.kt$GameState$16</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.BERYLLIUM$4</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.BORON$5</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.CALCIUM$16</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.CALCIUM$20</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.CARBON$6</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.CHLORINE$15</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.CHLORINE$17</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.COPPER$18</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.COPPER$29</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.FLUORINE$9</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.GOLD$19</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.GOLD$79</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.IRON$17</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.IRON$26</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.LITHIUM$3</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.NEON$10</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.NITROGEN$7</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.OXYGEN$8</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.PHOSPHORUS$13</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.PHOSPHORUS$15</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.SILICON$12</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.SILICON$14</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.SODIUM$11</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.SULFUR$14</ID>
+    <ID>MagicNumber:Models.kt$QuantumElement.SULFUR$16</ID>
+    <ID>MagicNumber:Models.kt$Tile$3</ID>
+    <ID>MagicNumber:PeriodicPath.kt$LevelGoalTracker$3</ID>
+    <ID>MagicNumber:PeriodicPath.kt$PeriodicPathProgression$3</ID>
+    <ID>MagicNumber:PeriodicPath.kt$PeriodicPathProgression$4</ID>
+    <ID>MagicNumber:PeriodicPath.kt$PeriodicPathProgression$6</ID>
+    <ID>MagicNumber:ProfileRepository.kt$120</ID>
+    <ID>MagicNumber:QuantumControls.kt$0.56f</ID>
+    <ID>MagicNumber:QuantumControls.kt$0.975f</ID>
+    <ID>MagicNumber:QuantumControls.kt$0xFF061016</ID>
+    <ID>MagicNumber:QuantumControls.kt$4</ID>
+    <ID>MagicNumber:QuantumControls.kt$42f</ID>
+    <ID>MagicNumber:Theme.kt$0x6616203A</ID>
+    <ID>MagicNumber:Theme.kt$0xCC0B1228</ID>
+    <ID>MagicNumber:Theme.kt$0xF0E6F0FF</ID>
+    <ID>MagicNumber:Theme.kt$0xF2FFFFFF</ID>
+    <ID>MagicNumber:Theme.kt$0xFF001C22</ID>
+    <ID>MagicNumber:Theme.kt$0xFF0054A8</ID>
+    <ID>MagicNumber:Theme.kt$0xFF006B74</ID>
+    <ID>MagicNumber:Theme.kt$0xFF059669</ID>
+    <ID>MagicNumber:Theme.kt$0xFF070A14</ID>
+    <ID>MagicNumber:Theme.kt$0xFF071A30</ID>
+    <ID>MagicNumber:Theme.kt$0xFF0891B2</ID>
+    <ID>MagicNumber:Theme.kt$0xFF0E7490</ID>
+    <ID>MagicNumber:Theme.kt$0xFF101626</ID>
+    <ID>MagicNumber:Theme.kt$0xFF102D3C</ID>
+    <ID>MagicNumber:Theme.kt$0xFF123026</ID>
+    <ID>MagicNumber:Theme.kt$0xFF160E24</ID>
+    <ID>MagicNumber:Theme.kt$0xFF172033</ID>
+    <ID>MagicNumber:Theme.kt$0xFF183954</ID>
+    <ID>MagicNumber:Theme.kt$0xFF1D2740</ID>
+    <ID>MagicNumber:Theme.kt$0xFF1D4ED8</ID>
+    <ID>MagicNumber:Theme.kt$0xFF1D5DFF</ID>
+    <ID>MagicNumber:Theme.kt$0xFF241B3D</ID>
+    <ID>MagicNumber:Theme.kt$0xFF332716</ID>
+    <ID>MagicNumber:Theme.kt$0xFF4EF2E4</ID>
+    <ID>MagicNumber:Theme.kt$0xFF5330B9</ID>
+    <ID>MagicNumber:Theme.kt$0xFF53677C</ID>
+    <ID>MagicNumber:Theme.kt$0xFF56E0B5</ID>
+    <ID>MagicNumber:Theme.kt$0xFF5BA7FF</ID>
+    <ID>MagicNumber:Theme.kt$0xFF65A30D</ID>
+    <ID>MagicNumber:Theme.kt$0xFF6D28D9</ID>
+    <ID>MagicNumber:Theme.kt$0xFF72F7FF</ID>
+    <ID>MagicNumber:Theme.kt$0xFF765000</ID>
+    <ID>MagicNumber:Theme.kt$0xFF7885A8</ID>
+    <ID>MagicNumber:Theme.kt$0xFF7C3AED</ID>
+    <ID>MagicNumber:Theme.kt$0xFF7C83FF</ID>
+    <ID>MagicNumber:Theme.kt$0xFF7DFF8A</ID>
+    <ID>MagicNumber:Theme.kt$0xFF8EC5FF</ID>
+    <ID>MagicNumber:Theme.kt$0xFF9CA3AF</ID>
+    <ID>MagicNumber:Theme.kt$0xFFA00073</ID>
+    <ID>MagicNumber:Theme.kt$0xFFA16207</ID>
+    <ID>MagicNumber:Theme.kt$0xFFA980FF</ID>
+    <ID>MagicNumber:Theme.kt$0xFFB7C3E6</ID>
+    <ID>MagicNumber:Theme.kt$0xFFB7FF4A</ID>
+    <ID>MagicNumber:Theme.kt$0xFFB894FF</ID>
+    <ID>MagicNumber:Theme.kt$0xFFB8FF38</ID>
+    <ID>MagicNumber:Theme.kt$0xFFBE185D</ID>
+    <ID>MagicNumber:Theme.kt$0xFFC2293F</ID>
+    <ID>MagicNumber:Theme.kt$0xFFD5E4F7</ID>
+    <ID>MagicNumber:Theme.kt$0xFFD8F3FF</ID>
+    <ID>MagicNumber:Theme.kt$0xFFD97706</ID>
+    <ID>MagicNumber:Theme.kt$0xFFDC2626</ID>
+    <ID>MagicNumber:Theme.kt$0xFFE88CFF</ID>
+    <ID>MagicNumber:Theme.kt$0xFFE9F2FF</ID>
+    <ID>MagicNumber:Theme.kt$0xFFEA580C</ID>
+    <ID>MagicNumber:Theme.kt$0xFFF5F8FF</ID>
+    <ID>MagicNumber:Theme.kt$0xFFF6FAFF</ID>
+    <ID>MagicNumber:Theme.kt$0xFFF7FDFF</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFF3D8D</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFF4FD8</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFF5A36</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFF6B7A</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFF8A3D</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFF8F5A</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFF8FC7</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFFB74A</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFFC857</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFFD166</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFFD95A</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFFE45E</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFFF7D6</ID>
+    <ID>MagicNumber:Theme.kt$0xFFFFFFFF</ID>
+    <ID>MagicNumber:Theme.kt$1024</ID>
+    <ID>MagicNumber:Theme.kt$128</ID>
+    <ID>MagicNumber:Theme.kt$16</ID>
+    <ID>MagicNumber:Theme.kt$2048</ID>
+    <ID>MagicNumber:Theme.kt$256</ID>
+    <ID>MagicNumber:Theme.kt$32</ID>
+    <ID>MagicNumber:Theme.kt$4</ID>
+    <ID>MagicNumber:Theme.kt$512</ID>
+    <ID>MagicNumber:Theme.kt$64</ID>
+    <ID>MagicNumber:Theme.kt$8</ID>
+    <ID>MagicNumber:TutorialEngine.kt$TutorialEngine$16</ID>
+    <ID>MagicNumber:TutorialEngine.kt$TutorialEngine$2048</ID>
+    <ID>MagicNumber:TutorialEngine.kt$TutorialEngine$5</ID>
+    <ID>MatchingDeclarationName:FirebaseAnalyticsGateway.kt$OfflineAnalyticsGateway : AnalyticsGateway</ID>
+    <ID>MatchingDeclarationName:FirebaseRemoteConfigGateway.kt$OfflineRemoteConfigGateway : RemoteConfigGateway</ID>
+    <ID>MaxLineLength:AchievementEngineTest.kt$AchievementEngineTest$val state = GameState(cells = cells, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM, nextTileId = 10, usedUndo = true)</ID>
+    <ID>MaxLineLength:AchievementEvaluatorTest.kt$AchievementEvaluatorTest$val achievement = evaluation.achievements.single { it.achievement.id == AchievementCatalog.ENTANGLED_COLLAPSE_50 }</ID>
+    <ID>MaxLineLength:AchievementEvaluatorTest.kt$AchievementEvaluatorTest$val evaluation = AchievementEvaluator.evaluate(classic, quantum, DailyChallengeState(), stored, nowMillis = 999L)</ID>
+    <ID>MaxLineLength:AchievementsRepository.kt$AchievementCatalog$Achievement(BOTH_MODES, "achievement_both_modes_title", "achievement_both_modes_desc", 2, AchievementProgressType.BOOLEAN)</ID>
+    <ID>MaxLineLength:AchievementsRepository.kt$AchievementCatalog$Achievement(CLASSIC_FIRST_GAME, "achievement_classic_first_game_title", "achievement_classic_first_game_desc", 1, AchievementProgressType.BOOLEAN)</ID>
+    <ID>MaxLineLength:AchievementsRepository.kt$AchievementCatalog$Achievement(DAILY_STREAK_30, "achievement_daily_streak_30_title", "achievement_daily_streak_30_desc", 30, AchievementProgressType.CUMULATIVE)</ID>
+    <ID>MaxLineLength:AchievementsRepository.kt$AchievementCatalog$Achievement(DAILY_STREAK_5, "achievement_daily_streak_5_title", "achievement_daily_streak_5_desc", 5, AchievementProgressType.CUMULATIVE)</ID>
+    <ID>MaxLineLength:AchievementsRepository.kt$AchievementCatalog$Achievement(ENTANGLED_COLLAPSE_50, "achievement_entangled_collapse_50_title", "achievement_entangled_collapse_50_desc", 50, AchievementProgressType.CUMULATIVE)</ID>
+    <ID>MaxLineLength:AchievementsRepository.kt$AchievementCatalog$Achievement(HIGH_COLLAPSE_100, "achievement_high_collapse_100_title", "achievement_high_collapse_100_desc", 100, AchievementProgressType.CUMULATIVE)</ID>
+    <ID>MaxLineLength:AchievementsRepository.kt$AchievementCatalog$Achievement(LOW_COLLAPSE_100, "achievement_low_collapse_100_title", "achievement_low_collapse_100_desc", 100, AchievementProgressType.CUMULATIVE)</ID>
+    <ID>MaxLineLength:AchievementsRepository.kt$AchievementCatalog$Achievement(MERGES_1000, "achievement_merges_1000_title", "achievement_merges_1000_desc", 1_000, AchievementProgressType.CUMULATIVE)</ID>
+    <ID>MaxLineLength:AchievementsRepository.kt$AchievementCatalog$Achievement(QUANTUM_2048, "achievement_quantum_2048_title", "achievement_quantum_2048_desc", 2048, AchievementProgressType.BOOLEAN)</ID>
+    <ID>MaxLineLength:AchievementsRepository.kt$AchievementCatalog$Achievement(QUANTUM_FIRST_GAME, "achievement_quantum_first_game_title", "achievement_quantum_first_game_desc", 1, AchievementProgressType.BOOLEAN)</ID>
+    <ID>MaxLineLength:AchievementsRepository.kt$AchievementCatalog$Achievement(TILE_4096, "achievement_tile_4096_title", "achievement_tile_4096_desc", 4096, AchievementProgressType.BOOLEAN)</ID>
+    <ID>MaxLineLength:AchievementsRepository.kt$AchievementCatalog$Achievement(WIN_STREAK_5, "achievement_win_streak_5_title", "achievement_win_streak_5_desc", 5, AchievementProgressType.CUMULATIVE)</ID>
+    <ID>MaxLineLength:AppShell.kt$)</ID>
+    <ID>MaxLineLength:AppShell.kt$.</ID>
+    <ID>MaxLineLength:AppShell.kt$AchievementRow(stringResource(R.string.achievement_collapse_century), FusionRules.achievementCollapseCentury in unlocked)</ID>
+    <ID>MaxLineLength:AppShell.kt$AchievementRow(stringResource(R.string.achievement_no_undo_win), FusionRules.achievementNoUndoWin in unlocked)</ID>
+    <ID>MaxLineLength:AppShell.kt$AchievementRow(stringResource(R.string.achievement_resolved_2048), FusionRules.achievementResolved2048 in unlocked)</ID>
+    <ID>MaxLineLength:AppShell.kt$Card</ID>
+    <ID>MaxLineLength:AppShell.kt$Column</ID>
+    <ID>MaxLineLength:AppShell.kt$DailyChallengeStatus.COMPLETED</ID>
+    <ID>MaxLineLength:AppShell.kt$DataReadout(label = stringResource(R.string.stat_best_daily_score), value = bestDaily, accent = RadiantGold, modifier = Modifier.fillMaxWidth())</ID>
+    <ID>MaxLineLength:AppShell.kt$DataReadout(label = stringResource(R.string.stat_daily_best_today), value = dailyBest, accent = Cyan, modifier = Modifier.weight(1f))</ID>
+    <ID>MaxLineLength:AppShell.kt$DataReadout(label = stringResource(R.string.stat_today_date), value = date, accent = TextSecondary, modifier = Modifier.weight(1f))</ID>
+    <ID>MaxLineLength:AppShell.kt$Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD -&gt; DifficultyUnlock(true, stringResource(R.string.unlock_available))</ID>
+    <ID>MaxLineLength:AppShell.kt$DifficultyUnlock(FusionRules.achievementCollapseCentury in profile.unlockedAchievements, stringResource(R.string.unlock_hardcore))</ID>
+    <ID>MaxLineLength:AppShell.kt$DifficultyUnlock(FusionRules.achievementNoUndoWin in profile.unlockedAchievements, stringResource(R.string.unlock_puzzle))</ID>
+    <ID>MaxLineLength:AppShell.kt$DifficultyUnlock(FusionRules.achievementResolved2048 in profile.unlockedAchievements, stringResource(R.string.unlock_daily))</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(stringResource(R.string.tutorial_swipe_left), onClick = { onMerge(Direction.LEFT) }, enabled = !lesson.isCurrentStepComplete, modifier = Modifier.weight(1f).testTag("tutorial_merge_left"), accent = Cyan, filled = true)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(stringResource(R.string.tutorial_swipe_right), onClick = { onMerge(Direction.RIGHT) }, enabled = !lesson.isCurrentStepComplete, modifier = Modifier.weight(1f), accent = RadiantGold)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.about_game), onClick = onAbout, modifier = Modifier.fillMaxWidth().testTag("about_button"), accent = TextSecondary)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.achievements), onClick = onAchievements, modifier = Modifier.weight(1f), accent = RadiantGold, icon = "*")</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.back), onClick = { playMenu(audio, settings); onBack() }, modifier = Modifier.fillMaxWidth(), accent = Cyan)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.collection), onClick = onCollection, modifier = Modifier.weight(1f), accent = NeonPink, icon = "◇")</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.main_menu), onClick = onMainMenu, modifier = Modifier.fillMaxWidth().testTag("pause_main_menu"), accent = Electric)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.new_game), onClick = { confirmRestart = true }, modifier = Modifier.fillMaxWidth(), accent = RadiantGold)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.periodic_path), onClick = onPeriodicPath, modifier = Modifier.fillMaxWidth().testTag("periodic_path_button"), accent = Electric, filled = true)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.privacy_policy), onClick = onPrivacy, modifier = Modifier.fillMaxWidth(), accent = Electric)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.reset_collection), onClick = { playMenu(audio, settings); confirmResetCollection = true }, modifier = Modifier.fillMaxWidth(), accent = NeonPink)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.reset_profile), onClick = { playMenu(audio, settings); confirmResetProfile = true }, modifier = Modifier.fillMaxWidth().testTag("reset_profile"), accent = NeonPink)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.reset_progress, difficulty.name.lowercase()), onClick = { playMenu(audio, settings); confirmResetDifficulty = difficulty }, modifier = Modifier.fillMaxWidth(), accent = TextMuted)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.resume), onClick = onResume, modifier = Modifier.fillMaxWidth(), accent = Cyan, filled = true)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.settings), onClick = onSettings, modifier = Modifier.weight(1f), accent = RadiantGold, icon = "⚙")</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.statistics), onClick = onStatistics, modifier = Modifier.fillMaxWidth(), accent = Electric, icon = "▦")</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.tutorial), onClick = onTutorial, modifier = Modifier.weight(1f), accent = Cyan, icon = "?")</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.watch_for_daily_attempt), onClick = onRewardDaily, enabled = adGateway.isRewardedReady, modifier = Modifier.fillMaxWidth(), accent = NeonPink)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.watch_for_extra_undo), onClick = onRewardUndo, enabled = adGateway.isRewardedReady, modifier = Modifier.fillMaxWidth(), accent = Cyan)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonMenuButton(text = stringResource(R.string.watch_for_revive), onClick = onRewardRevive, enabled = adGateway.isRewardedReady, modifier = Modifier.fillMaxWidth(), accent = Electric)</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonPanel</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonPillButton(settings.language.shortLabel(), onClick = onLanguage, modifier = Modifier.testTag("quick_language"))</ID>
+    <ID>MaxLineLength:AppShell.kt$NeonPillButton(settings.themeMode.iconLabel(), onClick = onTheme, modifier = Modifier.padding(start = 8.dp).testTag("quick_theme"), accent = RadiantGold)</ID>
+    <ID>MaxLineLength:AppShell.kt$QuantumChipButton(text = level.label(), selected = botDifficulty == level, onClick = { onBot(level) }, modifier = Modifier.weight(1f).testTag("bot_${level.name.lowercase()}"), accent = actionAccent(level.ordinal))</ID>
+    <ID>MaxLineLength:AppShell.kt$QuantumChipButton(text = stringResource(R.string.bot), selected = opponent == DuelOpponent.BOT, onClick = { onOpponent(DuelOpponent.BOT) }, modifier = Modifier.weight(1f).testTag("duel_bot"), accent = Electric)</ID>
+    <ID>MaxLineLength:AppShell.kt$QuantumChipButton(text = stringResource(R.string.duel), selected = duel, onClick = { onSelect(true) }, modifier = Modifier.weight(1f).testTag("mode_duel"), accent = RadiantGold)</ID>
+    <ID>MaxLineLength:AppShell.kt$QuantumChipButton(text = stringResource(R.string.pass_play), selected = opponent == DuelOpponent.PASS_AND_PLAY, onClick = { onOpponent(DuelOpponent.PASS_AND_PLAY) }, modifier = Modifier.weight(1f).testTag("duel_pass"), accent = NeonPink)</ID>
+    <ID>MaxLineLength:AppShell.kt$QuantumChipButton(text = stringResource(R.string.solo), selected = !duel, onClick = { onSelect(false) }, modifier = Modifier.weight(1f), accent = Cyan)</ID>
+    <ID>MaxLineLength:AppShell.kt$Row</ID>
+    <ID>MaxLineLength:AppShell.kt$SettingsSlider(stringResource(R.string.master_volume), settings.masterVolume) { saveSettings(settings.copy(masterVolume = it), analytics, settingsRepository, scope) }</ID>
+    <ID>MaxLineLength:AppShell.kt$SettingsSlider(stringResource(R.string.music_volume), settings.musicVolume) { saveSettings(settings.copy(musicVolume = it), analytics, settingsRepository, scope) }</ID>
+    <ID>MaxLineLength:AppShell.kt$SettingsSlider(stringResource(R.string.sfx_volume), settings.sfxVolume) { saveSettings(settings.copy(sfxVolume = it), analytics, settingsRepository, scope) }</ID>
+    <ID>MaxLineLength:AppShell.kt$SettingsToggle(stringResource(R.string.haptics), settings.hapticsEnabled) { playMenu(audio, settings); saveSettings(settings.copy(hapticsEnabled = it), analytics, settingsRepository, scope) }</ID>
+    <ID>MaxLineLength:AppShell.kt$SettingsToggle(stringResource(R.string.music), settings.musicEnabled) { playMenu(audio, settings); saveSettings(settings.copy(musicEnabled = it), analytics, settingsRepository, scope) }</ID>
+    <ID>MaxLineLength:AppShell.kt$SettingsToggle(stringResource(R.string.reduced_motion), settings.reducedMotion) { playMenu(audio, settings); saveSettings(settings.copy(reducedMotion = it), analytics, settingsRepository, scope) }</ID>
+    <ID>MaxLineLength:AppShell.kt$SettingsToggle(stringResource(R.string.sound), settings.soundEnabled) { playMenu(audio, settings); saveSettings(settings.copy(soundEnabled = it), analytics, settingsRepository, scope) }</ID>
+    <ID>MaxLineLength:AppShell.kt$StatRow(stringResource(R.string.stat_daily_current_streak), formatNumber(dailyState.participationStreak))</ID>
+    <ID>MaxLineLength:AppShell.kt$StatRow(stringResource(R.string.stat_entangled_collapse_chain), formatNumber(stats.entangledCollapseChainCount))</ID>
+    <ID>MaxLineLength:AppShell.kt$Text("${completed}/${zone.levels.size} ${stringResource(R.string.periodic_levels_done_short)}", color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Black)</ID>
+    <ID>MaxLineLength:AppShell.kt$Text("+${mercy.assistMoveBonus} ${stringResource(R.string.moves_short)}", color = RadiantGold, fontSize = 9.sp, fontWeight = FontWeight.Black)</ID>
+    <ID>MaxLineLength:AppShell.kt$Text(difficulty.localizedLabel(), color = titleColor, fontWeight = FontWeight.Black, fontSize = 13.sp)</ID>
+    <ID>MaxLineLength:AppShell.kt$Text(entry.element.symbol, color = if (entry.discovered) Cyan else TextMuted, fontWeight = FontWeight.Black)</ID>
+    <ID>MaxLineLength:AppShell.kt$Text(entry.symbol, fontWeight = FontWeight.Black, color = if (entry.discovered) Color.White else TextMuted)</ID>
+    <ID>MaxLineLength:AppShell.kt$Text(label, color = if (checked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Black, fontSize = 14.sp, letterSpacing = 0.3.sp)</ID>
+    <ID>MaxLineLength:AppShell.kt$Text(label.uppercase(), color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.8.sp)</ID>
+    <ID>MaxLineLength:AppShell.kt$Text(stringResource(R.string.compound_codex), color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Black)</ID>
+    <ID>MaxLineLength:AppShell.kt$Text(stringResource(R.string.notice), color = Cyan, fontSize = 16.sp, fontWeight = FontWeight.Black, modifier = Modifier.testTag("notice_link"))</ID>
+    <ID>MaxLineLength:AppShell.kt$TutorialStep.SUPERPOSITION -&gt; Text(stringResource(R.string.tutorial_tap_tile), color = Cyan, fontWeight = FontWeight.Bold, fontSize = 13.sp)</ID>
+    <ID>MaxLineLength:AppShell.kt$completion?.let { "★".repeat(it.bestStars) } ?: if (unlocked) stringResource(R.string.periodic_ready) else stringResource(R.string.periodic_locked)</ID>
+    <ID>MaxLineLength:AppShell.kt$drawCircle(Cyan.copy(alpha = 0.22f), radius = 2.2f, center = androidx.compose.ui.geometry.Offset(size.width * 0.18f, size.height * 0.26f))</ID>
+    <ID>MaxLineLength:AppShell.kt$drawCircle(NeonPink.copy(alpha = 0.20f), radius = 1.8f, center = androidx.compose.ui.geometry.Offset(size.width * 0.92f, size.height * 0.72f))</ID>
+    <ID>MaxLineLength:AppShell.kt$if (entry.discovered) "${entry.englishName} / ${entry.persianName} x${entry.discoveryCount}" else stringResource(R.string.none)</ID>
+    <ID>MaxLineLength:AppShell.kt$if (label.isNotEmpty()) Text(label, color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp, textAlign = TextAlign.Center)</ID>
+    <ID>MaxLineLength:AppShell.kt$if (locked) stringResource(R.string.periodic_locked) else if (hasSave) stringResource(R.string.saved_size, size) else stringResource(R.string.board_size, size)</ID>
+    <ID>MaxLineLength:AppShell.kt$onContinue = { saved -&gt; playSelect(audio, settings); nav.navigate(Routes.savedGame(saved.difficulty, saved.size)) }</ID>
+    <ID>MaxLineLength:AppShell.kt$private</ID>
+    <ID>MaxLineLength:AppShell.kt$saveSettings(settings.copy(language = settings.language.next()), analytics, settingsRepository, scope)</ID>
+    <ID>MaxLineLength:AppShell.kt$saveSettings(settings.copy(themeMode = settings.themeMode.next()), analytics, settingsRepository, scope)</ID>
+    <ID>MaxLineLength:AppShell.kt$size = androidx.compose.ui.geometry.Size(size.width * 0.48f, size.height * (0.18f + index * 0.04f))</ID>
+    <ID>MaxLineLength:AppShell.kt$stringResource(R.string.achievement_progress_value, formatNumber(progress.current), formatNumber(progress.achievement.target))</ID>
+    <ID>MaxLineLength:AppShell.kt$text = lesson.board.cells.firstNotNullOfOrNull { it?.superpositionValues?.getOrNull(index) }?.toString() ?: "?"</ID>
+    <ID>MaxLineLength:AppShell.kt$topLeft = androidx.compose.ui.geometry.Offset(center.x - size.width * 0.24f, center.y - size.height * (0.09f + index * 0.02f))</ID>
+    <ID>MaxLineLength:AppShell.kt$val bodyColor = if (locked) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f) else MaterialTheme.colorScheme.onSurfaceVariant</ID>
+    <ID>MaxLineLength:AppShell.kt$val continueSave = menuState.preferredContinue?.let { SavedGameKey(it.difficulty, it.size) } ?: SavedGameKey(Difficulty.QUANTUM, 4)</ID>
+    <ID>MaxLineLength:AppShell.kt$val dailyState by dailyChallengeRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.DailyChallengeState())</ID>
+    <ID>MaxLineLength:AppShell.kt$val menuState = MainMenuState(saves.map { com.battleheim.quantum2048.domain.SavedGameRef(it.difficulty, it.size) }.toSet())</ID>
+    <ID>MaxLineLength:AppShell.kt$val profile by profileRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.ProfileState())</ID>
+    <ID>MaxLineLength:AppShell.kt$val settings by settingsRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.AppSettings())</ID>
+    <ID>MaxLineLength:AppShell.kt$val state by dailyChallengeRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.DailyChallengeState())</ID>
+    <ID>MaxLineLength:AudioManager.kt$AndroidGameAudio$play(if (rng.nextBoolean()) Sound.MOVE else Sound.MOVE_ALT, volume = 0.55f, rate = 0.96f + rng.nextFloat() * 0.1f)</ID>
+    <ID>MaxLineLength:BillingRepository.kt$EntitlementState$ProductIds.COSMETIC_NEON_PACK -&gt; copy(ownedCosmeticPacks = ownedCosmeticPacks + productId, lastUpdatedMillis = nowMillis)</ID>
+    <ID>MaxLineLength:BillingRepository.kt$EntitlementState$RewardEntitlement.DAILY_ATTEMPT -&gt; copy(rewardedDailyAttemptCredits = maxOf(0, rewardedDailyAttemptCredits - 1), lastUpdatedMillis = nowMillis)</ID>
+    <ID>MaxLineLength:BillingRepository.kt$EntitlementState$RewardEntitlement.DAILY_ATTEMPT -&gt; copy(rewardedDailyAttemptCredits = rewardedDailyAttemptCredits + 1, lastUpdatedMillis = nowMillis)</ID>
+    <ID>MaxLineLength:BillingRepository.kt$EntitlementState$RewardEntitlement.EXTRA_UNDO -&gt; copy(rewardedExtraUndoCredits = maxOf(0, rewardedExtraUndoCredits - 1), lastUpdatedMillis = nowMillis)</ID>
+    <ID>MaxLineLength:BillingRepository.kt$EntitlementState$RewardEntitlement.EXTRA_UNDO -&gt; copy(rewardedExtraUndoCredits = rewardedExtraUndoCredits + 1, lastUpdatedMillis = nowMillis)</ID>
+    <ID>MaxLineLength:BillingRepository.kt$EntitlementState$RewardEntitlement.REVIVE -&gt; copy(rewardedReviveCredits = maxOf(0, rewardedReviveCredits - 1), lastUpdatedMillis = nowMillis)</ID>
+    <ID>MaxLineLength:BillingRepository.kt$EntitlementState$RewardEntitlement.REVIVE -&gt; copy(rewardedReviveCredits = rewardedReviveCredits + 1, lastUpdatedMillis = nowMillis)</ID>
+    <ID>MaxLineLength:BoardScannerTest.kt$BoardScannerTest$private fun hydrogen(id: Long)</ID>
+    <ID>MaxLineLength:BotEngine.kt$BotScoring$GameEngine(SeededRandomProvider(direction.ordinal.toLong() + state.moveCount * 31L)).move(state, direction).state</ID>
+    <ID>MaxLineLength:BotEngine.kt$BotScoring$b != null &amp;&amp; ((a.kind == TileKind.ELECTRON &amp;&amp; b.kind == TileKind.PROTON) || (a.kind == TileKind.PROTON &amp;&amp; b.kind == TileKind.ELECTRON))</ID>
+    <ID>MaxLineLength:BotEngine.kt$BotScoring$return statusPenalty + empty * 120 + maxValue * 2 + cornerBonus + reactionPotential * 60 + entanglementPotential * 30 + state.score.toInt()</ID>
+    <ID>MaxLineLength:BotEngine.kt$DuelEngine$if</ID>
+    <ID>MaxLineLength:BotEngine.kt$DuelEngine$val activeLost = state.activeBoard.status == GameStatus.LOST || BotScoring.validMoves(state.activeBoard).isEmpty()</ID>
+    <ID>MaxLineLength:Chemistry.kt$ChemistryDictionary$if (compound.scoreValue &lt;= 520) CompoundRecipeLevel.MEDIUM else if (compound.scoreValue &lt;= 760) CompoundRecipeLevel.HARD else CompoundRecipeLevel.QUANTUM</ID>
+    <ID>MaxLineLength:Chemistry.kt$ChemistryDictionary$inputs = atomicNumbers.mapNotNull { atomicNumber -&gt; QuantumElement.entries.firstOrNull { it.atomicNumber == atomicNumber } }</ID>
+    <ID>MaxLineLength:CollectionRepository.kt$CollectionRepository$suspend fun record(compound: Compound, difficulty: Difficulty, discoveredAtMillis: Long = System.currentTimeMillis())</ID>
+    <ID>MaxLineLength:CollectionRepository.kt$CollectionState$return copy(entries = (entries.filterNot { it.compoundSymbol == compound.symbol } + updated).sortedBy { it.compoundSymbol })</ID>
+    <ID>MaxLineLength:DataStoreGameRepository.kt$DataStoreGameRepository$Difficulty.MEDIUM, Difficulty.HARD, Difficulty.ZEN, Difficulty.HARDCORE, Difficulty.PUZZLE, Difficulty.DAILY -&gt; null</ID>
+    <ID>MaxLineLength:DataStoreGameRepository.kt$DataStoreGameRepository$it[key(state.difficulty, state.size)] = json.encodeToString(Snapshot(state = state.copy(mode = state.difficulty.mode)))</ID>
+    <ID>MaxLineLength:DataStoreGameRepository.kt$DataStoreGameRepository$override</ID>
+    <ID>MaxLineLength:DataStoreGameRepository.kt$DataStoreGameRepository$prefs[key(difficulty)]?.decodeState() ?: prefs[key(mode)]?.decodeState()?.copy(difficulty = difficulty, mode = difficulty.mode)</ID>
+    <ID>MaxLineLength:DataStoreGameRepository.kt$DataStoreGameRepository$private fun key(difficulty: Difficulty, size: Int)</ID>
+    <ID>MaxLineLength:DuelBotTest.kt$DuelBotTest$DuelConfig(difficulty = Difficulty.HARDCORE, opponent = DuelOpponent.PASS_AND_PLAY, sandboxUnlocksQuantum = false)</ID>
+    <ID>MaxLineLength:DuelBotTest.kt$DuelBotTest$DuelConfig(difficulty = Difficulty.QUANTUM, opponent = DuelOpponent.BOT, botDifficulty = BotDifficulty.QUANTUM_HARD, boardSize = 8)</ID>
+    <ID>MaxLineLength:EnergyOverflowEngineTest.kt$EnergyOverflowEngineTest$val state = GameState(cells = cells, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM, energy = 30, nextTileId = 10)</ID>
+    <ID>MaxLineLength:EnergyOverflowEngineTest.kt$EnergyOverflowEngineTest$val state = GameState(cells = cells, score = 10, mode = GameMode.CLASSIC, difficulty = Difficulty.EASY, energy = 0, nextTileId = 10)</ID>
+    <ID>MaxLineLength:EnergyOverflowEngineTest.kt$EnergyOverflowEngineTest$val state = GameState(cells = cells, score = 10, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM, energy = 98, nextTileId = 10)</ID>
+    <ID>MaxLineLength:EntanglementEngineTest.kt$EntanglementEngineTest$val engine = GameEngine(ScriptedRandom(ints = mutableListOf(0, 0), doubles = mutableListOf(0.0, 0.0)), entanglementEnabled = false)</ID>
+    <ID>MaxLineLength:EntanglementEngineTest.kt$EntanglementEngineTest$val engine = GameEngine(ScriptedRandom(ints = mutableListOf(0, 0), doubles = mutableListOf(0.0, 0.0)), entanglementEnabled = true)</ID>
+    <ID>MaxLineLength:FusionRules.kt$FusionRules$if</ID>
+    <ID>MaxLineLength:FusionRules.kt$FusionRules$if (tile.superpositionValues.isNotEmpty()) tile.superpositionValues.joinToString(" | ") else stableDisplaySymbol(tile)</ID>
+    <ID>MaxLineLength:FusionRules.kt$FusionRules$state.difficulty == Difficulty.PUZZLE &amp;&amp; state.cells.filterNotNull().any { gameValueOf(it) &gt;= puzzleTargetValue }</ID>
+    <ID>MaxLineLength:FusionRulesTest.kt$FusionRulesTest$val proton = GameEngine(FixedRandom()).spawn(GameState(mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM))</ID>
+    <ID>MaxLineLength:FusionRulesTest.kt$FusionRulesTest$val state = GameState(cells = cells, score = 900, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM, nextTileId = 10)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$animation = MoveAnimation(tile.id, sourceIndex, sourceIndex, if (choiceIndex == 0) MoveAnimationKind.COLLAPSE_LOW else MoveAnimationKind.COLLAPSE_HIGH)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$dailyBestScore = if (normalizedState.difficulty == Difficulty.DAILY) maxOf(normalizedState.dailyBestScore, nextScore) else normalizedState.dailyBestScore</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$dailyBestScore = if (state.difficulty == Difficulty.DAILY) maxOf(state.dailyBestScore, score) else state.dailyBestScore</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if (!entanglementEnabled || QuantumBalance.entanglementCollapseEnergyPolicy == EntanglementEnergyPolicy.SINGLE_COST) return 0</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if (!state.hasAcknowledgedWin &amp;&amp; state.cells.any { it != null &amp;&amp; FusionRules.gameValueOf(it) &gt;= 2048 }) return GameStatus.WON</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if (c + 1 &lt; state.size &amp;&amp; mergeProduct(tile, state.cells[r * state.size + c + 1]!!, state.difficulty) != null) return GameStatus.PLAYING</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if (partner.superpositionValues.isEmpty()) return EntangledCollapseUpdate(cells, state.entangledPairs - pair, 0, null)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if (r + 1 &lt; state.size &amp;&amp; mergeProduct(tile, state.cells[(r + 1) * state.size + c]!!, state.difficulty) != null) return GameStatus.PLAYING</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if (state.difficulty.mode != GameMode.QUANTUM) return CompoundResult.Failure(state, CompoundFailure.LAB_DISABLED)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if (state.difficulty.mode != GameMode.QUANTUM) return ObserverResult.Failure(state, ObserverFailure.LAB_DISABLED)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if (state.difficulty.mode != GameMode.QUANTUM) return SuperpositionResult.Failure(state, SuperpositionFailure.LAB_DISABLED)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if (state.energy &lt; FusionRules.observerPreviewEnergyCost) return ObserverResult.Failure(state, ObserverFailure.INSUFFICIENT_SCORE)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if (state.energy &lt; FusionRules.tunnelingEnergyCost) return TunnelResult.Failure(state, TunnelFailure.INSUFFICIENT_SCORE)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if (state.status != GameStatus.PLAYING) return SuperpositionResult.Failure(state, SuperpositionFailure.GAME_NOT_ACTIVE)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if (tile.superpositionValues.isEmpty()) return SuperpositionResult.Failure(state, SuperpositionFailure.NOT_SUPERPOSITION)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$if (tileIds.distinct().size != tileIds.size || tileIds.size &lt; 2) return CompoundResult.Failure(state, CompoundFailure.INVALID_TILE)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$private</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$return MoveResult(next, true, totalGainedScore, mergeCount, reactionCount, entanglementCollapseCount, overflowBonus, scan.synthesizedCompound, animations)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$state.copy(totalWinEnergy = state.totalWinEnergy + state.energy, winEnergySamples = state.winEnergySamples + 1)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$status = evaluate(state.copy(cells = cells, score = nextScore, bestScore = maxOf(state.bestScore, nextScore)))</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$val</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$val cost = FusionRules.superpositionCollapseEnergyCosts[choiceIndex] + entangledPartnerCost(state, tile, choiceIndex)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$val gainedEnergy = if (normalizedState.mode == GameMode.QUANTUM) FusionRules.energyGainForMergeCount(mergeCount) else 0</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$val nextEnergy = if (normalizedState.mode == GameMode.QUANTUM) minOf(FusionRules.maxEnergyFor(normalizedState.difficulty), normalizedState.energy + gainedEnergy) else normalizedState.energy</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$val overflowBonus = if (normalizedState.mode == GameMode.QUANTUM) FusionRules.overflowScoreBonus(normalizedState.energy, gainedEnergy, normalizedState.difficulty) else 0</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$val pair = state.entangledPairs.firstOrNull { it.firstTileId == tile.id || it.secondTileId == tile.id } ?: return 0</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$val partner = cells.getOrNull(partnerIndex) ?: return EntangledCollapseUpdate(cells, state.entangledPairs - pair, 0, null)</ID>
+    <ID>MaxLineLength:GameEngine.kt$GameEngine$val tile = state.cells[sourceIndex] ?: return SuperpositionResult.Failure(state, SuperpositionFailure.TILE_NOT_FOUND)</ID>
+    <ID>MaxLineLength:GameEngineTest.kt$GameEngineTest$@Test fun classic_and_quantum_modes_are_independent_state()</ID>
+    <ID>MaxLineLength:GameEngineTest.kt$GameEngineTest$@Test fun detects_loss_on_full_board()</ID>
+    <ID>MaxLineLength:GameEngineTest.kt$GameEngineTest$@Test fun detects_win_and_can_continue()</ID>
+    <ID>MaxLineLength:GameEngineTest.kt$GameEngineTest$@Test fun down_merges_columns()</ID>
+    <ID>MaxLineLength:GameEngineTest.kt$GameEngineTest$@Test fun fixed_random_controls_spawn_value()</ID>
+    <ID>MaxLineLength:GameEngineTest.kt$GameEngineTest$@Test fun invalid_move_does_not_spawn()</ID>
+    <ID>MaxLineLength:GameEngineTest.kt$GameEngineTest$@Test fun left_compacts_merges_once_and_scores()</ID>
+    <ID>MaxLineLength:GameEngineTest.kt$GameEngineTest$@Test fun right_moves_in_correct_direction()</ID>
+    <ID>MaxLineLength:GameEngineTest.kt$GameEngineTest$@Test fun up_merges_columns()</ID>
+    <ID>MaxLineLength:GameEngineTest.kt$GameEngineTest$@Test fun valid_move_spawns_exactly_one_tile()</ID>
+    <ID>MaxLineLength:GameEngineTest.kt$GameEngineTest$FixedRandom : RandomProvider</ID>
+    <ID>MaxLineLength:GameEngineTest.kt$GameEngineTest$private fun state(vararg values: Int?, score: Long = 0)</ID>
+    <ID>MaxLineLength:GameScreen.kt$"${game.difficulty.localizedLabel()} / ${if (game.mode == GameMode.QUANTUM) stringResource(R.string.synthesis_lab) else stringResource(R.string.classic_board)}"</ID>
+    <ID>MaxLineLength:GameScreen.kt$.</ID>
+    <ID>MaxLineLength:GameScreen.kt$Board(ui.game, ui.labTileIds, ui.tunnelingTileId, ui.observerPreview, ui.animations, settings.reducedMotion, ui.isBoardShaking, vm::swipe, vm::sendToCompoundLab, vm::tapBoardCell, vm::observeTile)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Column</ID>
+    <ID>MaxLineLength:GameScreen.kt$QuantumActionButton(text = stringResource(R.string.new_game), onClick = vm::newGame, modifier = Modifier.weight(1f), accent = RadiantGold, filled = true, icon = "+")</ID>
+    <ID>MaxLineLength:GameScreen.kt$QuantumActionButton(text = stringResource(R.string.undo), onClick = vm::undo, enabled = ui.canUndo, modifier = Modifier.weight(1f), accent = Cyan, icon = "↶")</ID>
+    <ID>MaxLineLength:GameScreen.kt$QuantumChipButton(text = stringResource(R.string.clear), selected = labels.isNotEmpty(), onClick = clear, enabled = labels.isNotEmpty(), accent = NeonPink)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Row</ID>
+    <ID>MaxLineLength:GameScreen.kt$Scaffold</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text("${formatNumber(goal.current)}/${formatNumber(goal.target)}", color = if (goal.complete) RadiantGold else accent, fontSize = 11.sp, fontWeight = FontWeight.Black)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(formatNumber(FusionRules.gameValueOf(tile)), color = Cyan, fontSize = valueSize, fontWeight = FontWeight.Black)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(formatNumber(FusionRules.rankOf(tile)), modifier = Modifier.align(Alignment.Start), color = TextSecondary, fontSize = rankSize, fontWeight = FontWeight.Bold)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(formatNumber(tile.value), fontSize = if (tile.value &lt; 1000) 26.sp else 20.sp, fontWeight = FontWeight.Black, color = classicTileTextColor(tile.value))</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(goal.label, color = if (goal.complete) Cyan else TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(if (labels.isEmpty()) stringResource(R.string.lab_empty) else labels.joinToString(" + "), color = TextSecondary, fontSize = 12.sp)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(if (opponent == DuelOpponent.BOT) stringResource(R.string.duel_vs_bot) else stringResource(R.string.pass_and_play), color = TextSecondary, fontSize = 12.sp)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(if (status == GameStatus.WON) stringResource(R.string.win_body) else stringResource(R.string.lose_body), color = Color.White)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(level.title.uppercase(), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.9.sp)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(observerValue?.let { formatNumber(it) } ?: FusionRules.displaySymbol(tile), fontSize = symbolSize, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(stringResource(R.string.best_element_line, bestElement?.symbol ?: stringResource(R.string.none)), color = TextSecondary)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(stringResource(R.string.daily_best_line, formatNumber(game.dailyBestScore)), color = TextSecondary, fontSize = 11.sp)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(stringResource(R.string.empty_count, board.cells.count { it == null }), color = Cyan, fontWeight = FontWeight.Bold)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(stringResource(R.string.fusion_guide), color = difficultyAccent(difficulty), fontWeight = FontWeight.Bold, fontSize = 12.sp)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(stringResource(R.string.hud_energy, formatNumber(capped)), color = Cyan, fontSize = 12.sp, fontWeight = FontWeight.Black)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(stringResource(R.string.score_moves, formatNumber(board.score), formatNumber(board.moveCount)), color = TextSecondary, fontSize = 12.sp)</ID>
+    <ID>MaxLineLength:GameScreen.kt$Text(winner?.let { stringResource(R.string.player_wins, it.label()) } ?: stringResource(R.string.player_turn, current.label()), fontWeight = FontWeight.Black)</ID>
+    <ID>MaxLineLength:GameScreen.kt$animation?.kind == MoveAnimationKind.COLLAPSE_HIGH -&gt; Modifier.border(3.dp, RadiantGold, RoundedCornerShape(14.dp))</ID>
+    <ID>MaxLineLength:GameScreen.kt$animation?.kind == MoveAnimationKind.COLLAPSE_LOW -&gt; Modifier.border(2.dp, Color(0xFF56E0B5), RoundedCornerShape(14.dp))</ID>
+    <ID>MaxLineLength:GameScreen.kt$confirmText = if (status == GameStatus.WON) stringResource(R.string.continue_game) else stringResource(R.string.new_game)</ID>
+    <ID>MaxLineLength:GameScreen.kt$drawCircle(Color.White.copy(alpha = 0.72f), radius = 1.7f, center = androidx.compose.ui.geometry.Offset(x, y))</ID>
+    <ID>MaxLineLength:GameScreen.kt$duel?.let { DuelHeader(it.currentPlayer, it.config.opponent, turnSecondsLeft, it.winner, vm::passDuelTurn) }</ID>
+    <ID>MaxLineLength:GameScreen.kt$if (boardSize &lt; 8) tile.element?.let { Text(elementFamily(it), color = TextSecondary, fontSize = familySize, textAlign = TextAlign.Center) }</ID>
+    <ID>MaxLineLength:GameScreen.kt$if (game.difficulty == Difficulty.DAILY) Text(stringResource(R.string.daily_best_line, formatNumber(game.dailyBestScore)), color = TextSecondary)</ID>
+    <ID>MaxLineLength:GameScreen.kt$if (level.status == LevelRunStatus.COMPLETE) stringResource(R.string.level_complete_stars, level.stars) else stringResource(R.string.level_failed)</ID>
+    <ID>MaxLineLength:GameScreen.kt$intense = animation?.kind == MoveAnimationKind.REACTION || animation?.kind == MoveAnimationKind.COLLAPSE_HIGH</ID>
+    <ID>MaxLineLength:GameScreen.kt$level.movesRemaining?.let { stringResource(R.string.moves_left, formatNumber(it)) } ?: stringResource(R.string.moves_unlimited)</ID>
+    <ID>MaxLineLength:GameScreen.kt$onTap = { if (tunnelingActive || mode == GameMode.CLASSIC) onTap() else onDragToLab(tile.id) }</ID>
+    <ID>MaxLineLength:GameScreen.kt$private</ID>
+    <ID>MaxLineLength:GameScreen.kt$text = stringResource(R.string.superposition_choice, formatNumber(value), formatNumber(FusionRules.superpositionCollapseEnergyCosts[index]))</ID>
+    <ID>MaxLineLength:GameScreen.kt$text = stringResource(if (ui.tunnelingTileId == null) R.string.tunnel else R.string.cancel_tunnel)</ID>
+    <ID>MaxLineLength:GameScreen.kt$tile?.isHighlightedForSynthesis == true -&gt; Modifier.border(3.dp, Electric, RoundedCornerShape(14.dp))</ID>
+    <ID>MaxLineLength:GameScreen.kt$tile?.kind == TileKind.ELEMENT -&gt; Modifier.border(if (selectedForLab) 2.dp else 1.dp, if (selectedForLab) Cyan else Color.White.copy(alpha = 0.22f), RoundedCornerShape(14.dp))</ID>
+    <ID>MaxLineLength:GameScreen.kt$title = if (status == GameStatus.WON) stringResource(R.string.target_reached) else stringResource(R.string.game_over)</ID>
+    <ID>MaxLineLength:GameScreen.kt$topLeft = androidx.compose.ui.geometry.Offset(centerX - size.width * 0.42f, centerY - 46f - index * 12f)</ID>
+    <ID>MaxLineLength:GameScreen.kt$val progress = if (goal.target &lt;= 0) 0f else (goal.current.toFloat() / goal.target.toFloat()).coerceIn(0f, 1f)</ID>
+    <ID>MaxLineLength:GameShareImage.kt$Row</ID>
+    <ID>MaxLineLength:GameShareImage.kt$Text(formatNumber(score), color = Color.White, fontSize = 86.sp, fontWeight = FontWeight.Black, lineHeight = 88.sp)</ID>
+    <ID>MaxLineLength:GameShareImage.kt$Text(stringResource(R.string.share_final_score), color = TextMuted, fontSize = 18.sp, fontWeight = FontWeight.Black)</ID>
+    <ID>MaxLineLength:GameShareImage.kt$Text(stringResource(R.string.share_highest_element, highestLabel), color = RadiantGold, fontSize = 25.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)</ID>
+    <ID>MaxLineLength:GameShareImage.kt$Text(stringResource(R.string.share_run_report), color = TextSecondary, fontSize = 22.sp, fontWeight = FontWeight.Bold)</ID>
+    <ID>MaxLineLength:GameShareImage.kt$drawCircle(NeonPink.copy(alpha = 0.15f), radius = 360f, center = Offset(size.width * 0.12f, size.height * 0.72f))</ID>
+    <ID>MaxLineLength:GameShareImage.kt$typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)</ID>
+    <ID>MaxLineLength:GameShareImage.kt$val label = if (tile.element != null) FusionRules.displaySymbol(tile) else FusionRules.gameValueOf(tile).toString()</ID>
+    <ID>MaxLineLength:GameSoundPlayerTest.kt$GameSoundPlayerTest$val controller = HapticFeedbackController(FakeSoundSettingsProvider(settings), performer, TestScope(StandardTestDispatcher(testScheduler)))</ID>
+    <ID>MaxLineLength:GameSoundPlayerTest.kt$GameSoundPlayerTest$val player = GameSoundPlayer(FakeSoundSettingsProvider(settings), playback, TestScope(StandardTestDispatcher(testScheduler)))</ID>
+    <ID>MaxLineLength:GameViewModel.kt$GameViewModel$LevelRunStatus.COMPLETE -&gt; PeriodicPathProgression.recordCompletion(catalog ?: return@launch, progress, level, state)</ID>
+    <ID>MaxLineLength:GameViewModel.kt$GameViewModel$_ui.value = _ui.value.copy(game = restored, canUndo = false, labTileIds = emptyList(), tunnelingTileId = null, superpositionTileId = null, observerPreview = null, message = message(R.string.msg_move_undone), level = evaluateActiveLevel(restored))</ID>
+    <ID>MaxLineLength:GameViewModel.kt$GameViewModel$_ui.value = _ui.value.copy(labTileIds = selected.takeLast(maxInputs), message = message(R.string.msg_lab_sample, selected.size, maxInputs))</ID>
+    <ID>MaxLineLength:GameViewModel.kt$GameViewModel$level = LevelGoalTracker.evaluate(level, game, mercy).copy(zoneTitle = catalog.zoneFor(level.id)?.title ?: level.zoneId)</ID>
+    <ID>MaxLineLength:GameViewModel.kt$GameViewModel$message = if (choiceIndex == 0) message(R.string.msg_low_collapse_stabilized) else message(R.string.msg_high_collapse_stabilized)</ID>
+    <ID>MaxLineLength:GameViewModel.kt$GameViewModel$message = if (selected == null) message(R.string.msg_tunnel_prompt) else message(R.string.msg_tunnel_cancelled)</ID>
+    <ID>MaxLineLength:GameViewModel.kt$GameViewModel$nextLevel?.status == LevelRunStatus.COMPLETE -&gt; message(R.string.msg_periodic_path_cleared, nextLevel.stars)</ID>
+    <ID>MaxLineLength:GameViewModel.kt$GameViewModel$result.state.cells.mapNotNull { it?.element }.maxByOrNull { it.rank }?.let(analytics::logFusionPerformed)</ID>
+    <ID>MaxLineLength:GameViewModel.kt$GameViewModel$result.synthesizedCompound != null -&gt; message(R.string.msg_auto_synthesized, result.synthesizedCompound.symbol)</ID>
+    <ID>MaxLineLength:GameViewModel.kt$GameViewModel$suspend fun hasSave(difficulty: Difficulty, size: Int): Boolean</ID>
+    <ID>MaxLineLength:LocaleFormat.kt$date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(LocalContext.current.resources.configuration.locales[0]))</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$val settings by app.settingsRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.AppSettings())</ID>
+    <ID>MaxLineLength:Models.kt$SuperpositionFailure</ID>
+    <ID>MaxLineLength:ObserverEffectEngineTest.kt$ObserverEffectEngineTest$val state = GameState(cells = cells, energy = FusionRules.observerPreviewEnergyCost - 1, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM)</ID>
+    <ID>MaxLineLength:ObserverEffectEngineTest.kt$ObserverEffectEngineTest$val state = GameState(cells = cells, score = 100, energy = 30, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM)</ID>
+    <ID>MaxLineLength:PeriodicPath.kt$LevelGoalTracker$LevelGoalType.CLEAR_ELEMENT -&gt; if (state.moveCount &gt; 0 &amp;&amp; state.cells.none { it?.element == goal.element }) 1 else 0</ID>
+    <ID>MaxLineLength:PeriodicPath.kt$LevelGoalTracker$val withinThreeStarLimit = level.starRules.threeStarMoveLimit == null || state.moveCount &lt;= level.starRules.threeStarMoveLimit</ID>
+    <ID>MaxLineLength:PeriodicPath.kt$PeriodicPathProgression$fun</ID>
+    <ID>MaxLineLength:ProfileStateTest.kt$ProfileStateTest$val profile = ProfileState(lowCollapseCount = 3, highCollapseCount = 1, totalWinEnergy = 90, winEnergySamples = 3)</ID>
+    <ID>MaxLineLength:ProgressResetRepositoryTest.kt$ProgressResetRepositoryTest$LocalProgressResetRepository(game, collection, profile, social, statistics, levels, daily, achievements).resetAllProgress()</ID>
+    <ID>MaxLineLength:ProgressResetRepositoryTest.kt$ProgressResetRepositoryTest.FakeStatisticsRepository$override suspend fun recordCollapse(mode: com.battleheim.quantum2048.engine.GameMode, lowValue: Boolean, manual: Boolean)</ID>
+    <ID>MaxLineLength:ProgressResetRepositoryTest.kt$ProgressResetRepositoryTest.FakeStatisticsRepository$override suspend fun recordEntangledCollapse(mode: com.battleheim.quantum2048.engine.GameMode, count: Int)</ID>
+    <ID>MaxLineLength:ProgressResetRepositoryTest.kt$ProgressResetRepositoryTest.FakeStatisticsRepository$override suspend fun recordMerge(mode: com.battleheim.quantum2048.engine.GameMode, count: Int, state: GameState)</ID>
+    <ID>MaxLineLength:QuantumControls.kt$QuantumActionButton(text = confirmText, onClick = onConfirm, modifier = Modifier.weight(1f), accent = accent, filled = true)</ID>
+    <ID>MaxLineLength:QuantumControls.kt$QuantumActionButton(text = it, onClick = onDismiss, modifier = Modifier.weight(1f), accent = TextSecondary)</ID>
+    <ID>MaxLineLength:QuantumControls.kt$Text(text, fontSize = 15.sp, fontWeight = FontWeight.Black, letterSpacing = 0.35.sp, textAlign = TextAlign.Center)</ID>
+    <ID>MaxLineLength:QuantumControls.kt$Text(title.uppercase(), color = MaterialTheme.colorScheme.onSurface, fontSize = 17.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)</ID>
+    <ID>MaxLineLength:QuantumControls.kt$val scale by animateFloatAsState(if (pressed) 0.975f else 1f, spring(stiffness = 520f), label = "quantum_button_scale")</ID>
+    <ID>MaxLineLength:SnapshotTest.kt$SnapshotTest$val old = """{"schemaVersion":1,"state":{"size":4,"cells":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],"score":7,"bestScore":9,"status":"PLAYING","mode":"CLASSIC","hasAcknowledgedWin":false,"moveCount":1,"nextTileId":3}}"""</ID>
+    <ID>MaxLineLength:SnapshotTest.kt$SnapshotTest$val old = """{"schemaVersion":1,"state":{"size":4,"cells":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],"score":7,"bestScore":9,"status":"PLAYING","mode":"QUANTUM","hasAcknowledgedWin":false,"moveCount":1,"nextTileId":3}}"""</ID>
+    <ID>MaxLineLength:SnapshotTest.kt$SnapshotTest$val old = """{"schemaVersion":3,"state":{"size":4,"cells":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],"score":7,"bestScore":9,"status":"PLAYING","mode":"CLASSIC","difficulty":"EASY","hasAcknowledgedWin":false,"moveCount":1,"nextTileId":3}}"""</ID>
+    <ID>MaxLineLength:SnapshotTest.kt$SnapshotTest$val old = """{"schemaVersion":3,"state":{"size":4,"cells":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],"score":7,"bestScore":9,"status":"PLAYING","mode":"QUANTUM","difficulty":"QUANTUM","hasAcknowledgedWin":false,"moveCount":1,"nextTileId":3}}"""</ID>
+    <ID>MaxLineLength:SnapshotTest.kt$SnapshotTest$val old = """{"schemaVersion":3,"state":{"size":4,"cells":[{"id":1,"value":1,"kind":"ELECTRON","element":null},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],"score":7,"bestScore":9,"status":"PLAYING","mode":"QUANTUM","difficulty":"QUANTUM","hasAcknowledgedWin":false,"moveCount":1,"nextTileId":3}}"""</ID>
+    <ID>MaxLineLength:SnapshotTest.kt$SnapshotTest$val old = """{"schemaVersion":3,"state":{"size":4,"cells":[{"id":1,"value":1,"kind":"PROTON","element":null},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],"score":7,"bestScore":9,"status":"PLAYING","mode":"QUANTUM","difficulty":"QUANTUM","hasAcknowledgedWin":false,"moveCount":1,"nextTileId":3}}"""</ID>
+    <ID>MaxLineLength:SnapshotTest.kt$SnapshotTest$val state = GameState(cells = listOf(Tile(1, 2)) + List(15) { null }, score = 12, bestScore = 64, mode = GameMode.QUANTUM, nextTileId = 2)</ID>
+    <ID>MaxLineLength:SoundSettingsProviderTest.kt$SoundSettingsProviderTest$assertEquals(SoundHapticSettings(soundEnabled = false, hapticsEnabled = true), provider.observeSoundSettings().first())</ID>
+    <ID>MaxLineLength:SoundSettingsProviderTest.kt$SoundSettingsProviderTest$assertEquals(SoundHapticSettings(soundEnabled = true, hapticsEnabled = false), provider.observeSoundSettings().first())</ID>
+    <ID>MaxLineLength:StatisticsEngineTest.kt$StatisticsEngineTest$val state = GameState(cells = cells, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM, energy = 44, nextTileId = 10)</ID>
+    <ID>MaxLineLength:StatisticsEngineTest.kt$StatisticsEngineTest$val state = GameState(cells = cells, score = 500, energy = 100, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM)</ID>
+    <ID>MaxLineLength:SuperpositionChainEngineTest.kt$SuperpositionChainEngineTest$return GameState(cells = cells, score = 500, energy = 100, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM)</ID>
+    <ID>MaxLineLength:SuperpositionChainEngineTest.kt$SuperpositionChainEngineTest$val result = GameEngine(ScriptedRandom()).collapseSuperposition(state, 1, index) as SuperpositionResult.Success</ID>
+    <ID>MaxLineLength:SuperpositionChainEngineTest.kt$SuperpositionChainEngineTest$val state = GameState(cells = cells, energy = FusionRules.superpositionCollapseEnergyCosts[0] - 1, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM)</ID>
+    <ID>MaxLineLength:SuperpositionChainEngineTest.kt$SuperpositionChainEngineTest$val state = GameState(cells = cells, score = 500, energy = 100, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM)</ID>
+    <ID>MaxLineLength:Theme.kt$QuantumElement.HYDROGEN, QuantumElement.CARBON, QuantumElement.NITROGEN, QuantumElement.OXYGEN, QuantumElement.FLUORINE, QuantumElement.PHOSPHORUS, QuantumElement.SULFUR, QuantumElement.CHLORINE -&gt; "Nonmetal"</ID>
+    <ID>MaxLineLength:Theme.kt$QuantumElement.LITHIUM, QuantumElement.SODIUM, QuantumElement.IRON, QuantumElement.COPPER, QuantumElement.GOLD -&gt; "Metal"</ID>
+    <ID>MaxLineLength:Theme.kt$androidx.compose.runtime</ID>
+    <ID>MaxLineLength:TunnelingEngineTest.kt$TunnelingEngineTest$val state = GameState(cells = cells, energy = FusionRules.tunnelingEnergyCost - 1, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM)</ID>
+    <ID>MaxLineLength:TunnelingEngineTest.kt$TunnelingEngineTest$val state = GameState(cells = cells, score = 500, energy = 100, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM)</ID>
+    <ID>MaxLineLength:TunnelingEngineTest.kt$TunnelingEngineTest$val state = GameState(cells = listOf(Tile(1, 2)) + List(15) { null }, score = 500, mode = GameMode.CLASSIC, difficulty = Difficulty.EASY)</ID>
+    <ID>MaxLineLength:TutorialEngineTest.kt$TutorialEngineTest$val mergeStep = TutorialLessonState(step = TutorialStep.MERGE_ENERGY, board = TutorialEngine.sampleBoard(TutorialStep.MERGE_ENERGY))</ID>
+    <ID>NestedBlockDepth:GameEngine.kt$GameEngine$fun move(state: GameState, direction: Direction): MoveResult</ID>
+    <ID>ReturnCount:AudioManager.kt$AndroidGameAudio$private fun play(sound: Sound, volume: Float, rate: Float = 1f)</ID>
+    <ID>ReturnCount:BotEngine.kt$DuelEngine$fun botMoveIfNeeded(state: DuelState): Pair&lt;DuelState, MoveResult?&gt;</ID>
+    <ID>ReturnCount:BotEngine.kt$DuelEngine$fun move(state: DuelState, direction: Direction): Pair&lt;DuelState, MoveResult&gt;</ID>
+    <ID>ReturnCount:FusionRules.kt$FusionRules$fun mergeProduct(a: Tile, b: Tile): FusionProduct?</ID>
+    <ID>ReturnCount:FusionRules.kt$FusionRules$private fun elementSpawnChanceFor(state: GameState, emptyRatio: Double, cells: List&lt;Tile&gt;): Double</ID>
+    <ID>ReturnCount:FusionRules.kt$FusionRules$private fun protonInjectionProduct(a: Tile, b: Tile): FusionProduct?</ID>
+    <ID>ReturnCount:GameEngine.kt$GameEngine$fun collapseSuperposition(state: GameState, tileId: Long, choiceIndex: Int): SuperpositionResult</ID>
+    <ID>ReturnCount:GameEngine.kt$GameEngine$fun combineCompound(state: GameState, tileIds: List&lt;Long&gt;): CompoundResult</ID>
+    <ID>ReturnCount:GameEngine.kt$GameEngine$fun move(state: GameState, direction: Direction): MoveResult</ID>
+    <ID>ReturnCount:GameEngine.kt$GameEngine$fun newGame(difficulty: Difficulty, size: Int = 4): GameState</ID>
+    <ID>ReturnCount:GameEngine.kt$GameEngine$fun observeSuperposition(state: GameState, tileId: Long): ObserverResult</ID>
+    <ID>ReturnCount:GameEngine.kt$GameEngine$fun scanBoard(state: GameState): BoardScanResult</ID>
+    <ID>ReturnCount:GameEngine.kt$GameEngine$fun tunnel(state: GameState, tileId: Long, destinationIndex: Int): TunnelResult</ID>
+    <ID>ReturnCount:GameEngine.kt$GameEngine$private fun collapseEntangledPartner( state: GameState, cells: MutableList&lt;Tile?&gt;, tile: Tile, choiceIndex: Int, ): EntangledCollapseUpdate</ID>
+    <ID>ReturnCount:GameEngine.kt$GameEngine$private fun entangledPartnerCost(state: GameState, tile: Tile, choiceIndex: Int): Int</ID>
+    <ID>ReturnCount:GameEngine.kt$GameEngine$private fun evaluate(state: GameState): GameStatus</ID>
+    <ID>ReturnCount:GameEngine.kt$GameEngine$private fun maybeEntangle(cells: MutableList&lt;Tile?&gt;, state: GameState, spawnedIndex: Int, groupId: Long): EntanglementSpawnUpdate</ID>
+    <ID>ReturnCount:GameViewModel.kt$GameViewModel$fun sendToCompoundLab(tileId: Long)</ID>
+    <ID>ReturnCount:GameViewModel.kt$GameViewModel$fun tapBoardCell(index: Int)</ID>
+    <ID>ReturnCount:GameViewModel.kt$GameViewModel$private fun shouldTriggerQuantumUnlock(before: GameState, after: GameState): Boolean</ID>
+    <ID>ReturnCount:GameViewModel.kt$GameViewModel$private suspend fun recordDailyResultIfTerminal(state: GameState)</ID>
+    <ID>ReturnCount:SocialRepository.kt$private fun DailyStreakState.record(date: String): DailyStreakState</ID>
+    <ID>ReturnCount:TutorialEngine.kt$TutorialEngine$fun collapseSelected(state: TutorialLessonState, choiceIndex: Int): TutorialLessonState</ID>
+    <ID>ReturnCount:TutorialEngine.kt$TutorialEngine$fun merge(state: TutorialLessonState, direction: Direction): TutorialLessonState</ID>
+    <ID>ReturnCount:TutorialEngine.kt$TutorialEngine$fun selectTile(state: TutorialLessonState, tileId: Long): TutorialLessonState</ID>
+    <ID>SpreadOperator:GameMessage.kt$GameMessage$(resId, *args.toTypedArray())</ID>
+    <ID>TooManyFunctions:AppShell.kt$com.battleheim.quantum2048.ui.AppShell.kt</ID>
+    <ID>TooManyFunctions:AudioManager.kt$AndroidGameAudio : GameAudio</ID>
+    <ID>TooManyFunctions:AudioManager.kt$GameAudio</ID>
+    <ID>TooManyFunctions:AudioManager.kt$SilentGameAudio : GameAudio</ID>
+    <ID>TooManyFunctions:DataStoreGameRepository.kt$DataStoreGameRepository : GameRepository</ID>
+    <ID>TooManyFunctions:FirebaseAnalyticsGateway.kt$OfflineAnalyticsGateway : AnalyticsGateway</ID>
+    <ID>TooManyFunctions:FusionRules.kt$FusionRules</ID>
+    <ID>TooManyFunctions:GameEngine.kt$GameEngine</ID>
+    <ID>TooManyFunctions:GameScreen.kt$com.battleheim.quantum2048.ui.GameScreen.kt</ID>
+    <ID>TooManyFunctions:GameShareImage.kt$com.battleheim.quantum2048.ui.GameShareImage.kt</ID>
+    <ID>TooManyFunctions:GameViewModel.kt$GameViewModel : ViewModel</ID>
+    <ID>UnusedPrivateMember:AppShell.kt$@Composable private fun ProfileDataHeader(date: String, dailyBest: String, bestDaily: String)</ID>
+    <ID>WildcardImport:GameEngineTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:SnapshotTest.kt$import com.battleheim.quantum2048.engine.*</ID>
+    <ID>WildcardImport:UndoBufferTest.kt$import org.junit.Assert.*</ID>
+  </CurrentIssues>
+</SmellBaseline>
