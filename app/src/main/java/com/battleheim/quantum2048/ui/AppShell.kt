@@ -8,29 +8,32 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -48,33 +51,43 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.battleheim.quantum2048.R
+import com.battleheim.quantum2048.BuildConfig
 import com.battleheim.quantum2048.ads.AdGateway
 import com.battleheim.quantum2048.ads.NoOpAdGateway
 import com.battleheim.quantum2048.ads.RewardPlacement
 import com.battleheim.quantum2048.analytics.AnalyticsGateway
 import com.battleheim.quantum2048.analytics.NoOpAnalyticsGateway
+import com.battleheim.quantum2048.audio.AndroidHapticPerformer
+import com.battleheim.quantum2048.audio.AppSoundSettingsProvider
+import com.battleheim.quantum2048.audio.GameAudioSoundPlaybackEngine
+import com.battleheim.quantum2048.audio.GameAudio
+import com.battleheim.quantum2048.audio.GameSoundPlayer
+import com.battleheim.quantum2048.audio.HapticFeedbackController
 import com.battleheim.quantum2048.audio.ToneGameAudio
 import com.battleheim.quantum2048.designsystem.BoardGlass
 import com.battleheim.quantum2048.designsystem.Cyan
@@ -88,9 +101,13 @@ import com.battleheim.quantum2048.designsystem.TextMuted
 import com.battleheim.quantum2048.designsystem.TextSecondary
 import com.battleheim.quantum2048.designsystem.Void
 import com.battleheim.quantum2048.designsystem.difficultyAccent
-import com.battleheim.quantum2048.designsystem.difficultySurface
 import com.battleheim.quantum2048.domain.CollectionRepository
+import com.battleheim.quantum2048.domain.elementCodex
+import com.battleheim.quantum2048.domain.AchievementProgress
+import com.battleheim.quantum2048.domain.AchievementsRepository
 import com.battleheim.quantum2048.domain.BillingRepository
+import com.battleheim.quantum2048.domain.DailyChallengeRepository
+import com.battleheim.quantum2048.domain.DailyChallengeStatus
 import com.battleheim.quantum2048.domain.EntitlementState
 import com.battleheim.quantum2048.domain.GameRepository
 import com.battleheim.quantum2048.domain.AppLanguage
@@ -100,35 +117,50 @@ import com.battleheim.quantum2048.domain.LevelCatalog
 import com.battleheim.quantum2048.domain.LevelCatalogRepository
 import com.battleheim.quantum2048.domain.LevelDefinition
 import com.battleheim.quantum2048.domain.LevelProgressRepository
+import com.battleheim.quantum2048.domain.MainGameModeRoute
+import com.battleheim.quantum2048.domain.MainMenuState
+import com.battleheim.quantum2048.domain.LocalProgressResetRepository
 import com.battleheim.quantum2048.domain.PlayerProgress
+import com.battleheim.quantum2048.domain.ProgressResetRepository
 import com.battleheim.quantum2048.domain.ProfileRepository
 import com.battleheim.quantum2048.domain.ProductIds
 import com.battleheim.quantum2048.domain.RewardEntitlement
 import com.battleheim.quantum2048.domain.SettingsRepository
 import com.battleheim.quantum2048.domain.SocialRepository
+import com.battleheim.quantum2048.domain.StatisticsRepository
 import com.battleheim.quantum2048.engine.Difficulty
+import com.battleheim.quantum2048.engine.DailyChallengeSeedProvider
+import com.battleheim.quantum2048.engine.Direction
 import com.battleheim.quantum2048.engine.FusionRules
 import com.battleheim.quantum2048.engine.GameEngine
+import com.battleheim.quantum2048.engine.GameMode
 import com.battleheim.quantum2048.engine.BotDifficulty
 import com.battleheim.quantum2048.engine.DuelOpponent
+import com.battleheim.quantum2048.engine.TutorialEngine
+import com.battleheim.quantum2048.engine.TutorialLessonState
+import com.battleheim.quantum2048.engine.TutorialStep
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
-import java.time.LocalDate
 
 private object Routes {
-    const val MainMenu = "main_menu"
+    const val MainMenu = "menu"
     const val LevelSelect = "level_select"
     const val Collection = "collection"
-    const val Statistics = "statistics"
+    const val Achievements = "achievements"
+    const val Statistics = "stats"
+    const val DailyChallenge = "daily_challenge"
+    const val About = "about"
+    const val PrivacyPolicy = "privacy-policy"
     const val PeriodicPath = "periodic_path"
     const val PeriodicGame = "periodic_level/{levelId}"
     const val Tutorial = "tutorial"
     const val Settings = "settings"
-    const val Game = "game/{difficulty}/{size}"
+    const val Game = "game/{mode}"
+    const val SavedGame = "game_saved/{difficulty}/{size}"
     const val DuelGame = "duel/{difficulty}"
     const val Pause = "pause"
 
-    fun game(difficulty: Difficulty, size: Int) = "game/${difficulty.name}/$size"
+    fun game(mode: MainGameModeRoute) = "game/${mode.routeValue}"
+    fun savedGame(difficulty: Difficulty, size: Int) = "game_saved/${difficulty.name}/$size"
     fun duel(difficulty: Difficulty) = "duel/${difficulty.name}"
     fun periodicGame(levelId: String) = "periodic_level/$levelId"
 }
@@ -140,6 +172,9 @@ fun QuantumAppShell(
     profileRepository: ProfileRepository,
     settingsRepository: SettingsRepository,
     socialRepository: SocialRepository,
+    statisticsRepository: StatisticsRepository,
+    dailyChallengeRepository: DailyChallengeRepository,
+    achievementsRepository: AchievementsRepository,
     billingRepository: BillingRepository,
     levelCatalogRepository: LevelCatalogRepository,
     levelProgressRepository: LevelProgressRepository,
@@ -148,6 +183,17 @@ fun QuantumAppShell(
     engine: GameEngine,
 ) {
     val nav = rememberNavController()
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val audio = remember(context) { ToneGameAudio(context) }
+    val eventScope = rememberCoroutineScope()
+    val soundSettingsProvider = remember(settingsRepository) { AppSoundSettingsProvider(settingsRepository.observe()) }
+    val gameSoundPlayer = remember(audio, soundSettingsProvider, eventScope) {
+        GameSoundPlayer(soundSettingsProvider, GameAudioSoundPlaybackEngine(audio), eventScope)
+    }
+    val hapticFeedbackController = remember(context, soundSettingsProvider, eventScope) {
+        HapticFeedbackController(soundSettingsProvider, AndroidHapticPerformer(context), eventScope)
+    }
     val gameViewModel: GameViewModel = viewModel {
         GameViewModel(
             repository = gameRepository,
@@ -156,17 +202,33 @@ fun QuantumAppShell(
             socialRepository = socialRepository,
             levelCatalogRepository = levelCatalogRepository,
             levelProgressRepository = levelProgressRepository,
+            statisticsRepository = statisticsRepository,
+            dailyChallengeRepository = dailyChallengeRepository,
+            achievementsRepository = achievementsRepository,
             engine = engine,
             analytics = analytics,
+            soundEvents = gameSoundPlayer,
+            hapticEvents = hapticFeedbackController,
         )
     }
     val ui by gameViewModel.ui.collectAsState()
     val settings by settingsRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.AppSettings())
-    val context = LocalContext.current
-    val audio = remember(context) { ToneGameAudio(context) }
     var tutorialPrompted by remember { mutableStateOf(false) }
-    var showSplash by remember { mutableStateOf(true) }
-    DisposableEffect(Unit) { onDispose { audio.release() } }
+    DisposableEffect(lifecycleOwner, audio) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> audio.ambientStop()
+                Lifecycle.Event.ON_STOP -> audio.ambientStop()
+                Lifecycle.Event.ON_DESTROY -> audio.release()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            audio.release()
+        }
+    }
     LaunchedEffect(settings) {
         audio.applySettings(settings)
     }
@@ -175,22 +237,12 @@ fun QuantumAppShell(
             if (ui.duel == null && ui.game.moveCount == 0) audio.menuMusic() else audio.gameMusic()
         }
     }
-    LaunchedEffect(Unit) {
-        delay(SPLASH_MS)
-        showSplash = false
-    }
-    LaunchedEffect(ui.loading, ui.game.tutorialCompleted) {
-        if (!showSplash && !ui.loading && !ui.game.tutorialCompleted && !tutorialPrompted) {
-            tutorialPrompted = true
-            nav.navigate(Routes.Tutorial)
+    LaunchedEffect(ui.game.entangledPairs.size, settings.entanglementIntroSeen) {
+        if (ui.game.entangledPairs.isNotEmpty() && !settings.entanglementIntroSeen) {
+            gameViewModel.showEntanglementIntro()
+            settingsRepository.save(settings.copy(entanglementIntroSeen = true))
         }
     }
-
-    if (showSplash) {
-        SplashScreen()
-        return
-    }
-
     NavHost(
         navController = nav,
         startDestination = Routes.MainMenu,
@@ -206,10 +258,15 @@ fun QuantumAppShell(
                 settingsRepository = settingsRepository,
                 analytics = analytics,
                 audio = audio,
-                onContinue = { saved -> playSelect(audio, settings); nav.navigate(Routes.game(saved.difficulty, saved.size)) },
+                onContinue = { saved -> playSelect(audio, settings); nav.navigate(Routes.savedGame(saved.difficulty, saved.size)) },
+                onNewClassic = { playSelect(audio, settings); nav.navigate(Routes.game(MainGameModeRoute.CLASSIC)) },
+                onNewQuantum = { playSelect(audio, settings); nav.navigate(Routes.game(MainGameModeRoute.QUANTUM)) },
                 onNewGame = { playSelect(audio, settings); nav.navigate(Routes.LevelSelect) },
                 onCollection = { playMenu(audio, settings); nav.navigate(Routes.Collection) },
+                onAchievements = { playMenu(audio, settings); nav.navigate(Routes.Achievements) },
                 onStatistics = { playMenu(audio, settings); nav.navigate(Routes.Statistics) },
+                onDailyChallenge = { playSelect(audio, settings); nav.navigate(Routes.DailyChallenge) },
+                onAbout = { playMenu(audio, settings); nav.navigate(Routes.About) },
                 onPeriodicPath = { playSelect(audio, settings); nav.navigate(Routes.PeriodicPath) },
                 onTutorial = { playMenu(audio, settings); nav.navigate(Routes.Tutorial) },
                 onSettings = { playMenu(audio, settings); nav.navigate(Routes.Settings) },
@@ -231,7 +288,7 @@ fun QuantumAppShell(
             route = Routes.PeriodicGame,
             arguments = listOf(navArgument("levelId") { type = NavType.StringType }),
         ) {
-            GameScreen(vm = gameViewModel, settings = settings, audio = audio, onPause = { nav.navigate(Routes.Pause) })
+            GameScreen(vm = gameViewModel, settings = settings, audio = audio, adGateway = adGateway, onPause = { nav.navigate(Routes.Pause) })
         }
         composable(Routes.LevelSelect) {
             LevelSelectScreen(
@@ -244,7 +301,7 @@ fun QuantumAppShell(
                         nav.navigate(Routes.duel(difficulty))
                     } else {
                         gameViewModel.newGame(difficulty, size)
-                        nav.navigate(Routes.game(difficulty, size))
+                        nav.navigate(Routes.savedGame(difficulty, size))
                     }
                 },
             )
@@ -253,10 +310,27 @@ fun QuantumAppShell(
             route = Routes.DuelGame,
             arguments = listOf(navArgument("difficulty") { type = NavType.StringType }),
         ) {
-            GameScreen(vm = gameViewModel, settings = settings, audio = audio, onPause = { nav.navigate(Routes.Pause) })
+            GameScreen(vm = gameViewModel, settings = settings, audio = audio, adGateway = adGateway, onPause = { nav.navigate(Routes.Pause) })
         }
         composable(
             route = Routes.Game,
+            arguments = listOf(
+                navArgument("mode") { type = NavType.StringType },
+            ),
+        ) { backStack ->
+            val mode = MainGameModeRoute.fromRoute(backStack.arguments?.getString("mode"))
+            LaunchedEffect(mode) {
+                gameViewModel.newGame(mode.difficulty, 4)
+                if (mode == MainGameModeRoute.QUANTUM && !settings.tutorialCompleted && !tutorialPrompted) {
+                    tutorialPrompted = true
+                    nav.navigate(Routes.Tutorial)
+                }
+            }
+            BackHandler { nav.popBackStack(Routes.MainMenu, inclusive = false) }
+            GameScreen(vm = gameViewModel, settings = settings, audio = audio, adGateway = adGateway, onPause = { nav.navigate(Routes.Pause) })
+        }
+        composable(
+            route = Routes.SavedGame,
             arguments = listOf(
                 navArgument("difficulty") { type = NavType.StringType },
                 navArgument("size") { type = NavType.IntType },
@@ -265,7 +339,8 @@ fun QuantumAppShell(
             val difficulty = Difficulty.valueOf(backStack.arguments?.getString("difficulty") ?: Difficulty.QUANTUM.name)
             val size = backStack.arguments?.getInt("size") ?: 4
             LaunchedEffect(difficulty, size) { gameViewModel.loadDifficulty(difficulty, size) }
-            GameScreen(vm = gameViewModel, settings = settings, audio = audio, onPause = { nav.navigate(Routes.Pause) })
+            BackHandler { nav.popBackStack(Routes.MainMenu, inclusive = false) }
+            GameScreen(vm = gameViewModel, settings = settings, audio = audio, adGateway = adGateway, onPause = { nav.navigate(Routes.Pause) })
         }
         composable(Routes.Pause) {
             PauseScreen(
@@ -279,14 +354,42 @@ fun QuantumAppShell(
         composable(Routes.Collection) {
             CollectionScreen(collectionRepository, profileRepository, onBack = { nav.popBackStack() })
         }
+        composable(Routes.Achievements) {
+            AchievementsScreen(achievementsRepository, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.DailyChallenge) {
+            DailyChallengeScreen(
+                dailyChallengeRepository = dailyChallengeRepository,
+                onBack = { nav.popBackStack() },
+                onStart = { date ->
+                    playSelect(audio, settings)
+                    eventScope.launch { dailyChallengeRepository.markStarted(date) }
+                    gameViewModel.startDailyChallenge(date)
+                    nav.navigate(Routes.savedGame(Difficulty.DAILY, 4))
+                },
+                onContinue = {
+                    playSelect(audio, settings)
+                    nav.navigate(Routes.savedGame(Difficulty.DAILY, 4))
+                },
+            )
+        }
         composable(Routes.Statistics) {
-            StatisticsScreen(profileRepository, socialRepository, onBack = { nav.popBackStack() })
+            StatisticsScreen(statisticsRepository, dailyChallengeRepository, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.About) {
+            AboutScreen(
+                onPrivacy = { nav.navigate(Routes.PrivacyPolicy) },
+                onBack = { nav.popBackStack() },
+            )
+        }
+        composable(Routes.PrivacyPolicy) {
+            PrivacyPolicyScreen(onBack = { nav.popBackStack() })
         }
         composable(Routes.Tutorial) {
+            val scope = rememberCoroutineScope()
             TutorialScreen(
-                vm = gameViewModel,
                 onDone = {
-                    gameViewModel.completeTutorial()
+                    scope.launch { settingsRepository.save(settings.copy(tutorialCompleted = true)) }
                     nav.popBackStack()
                 },
             )
@@ -298,12 +401,25 @@ fun QuantumAppShell(
                 profileRepository = profileRepository,
                 socialRepository = socialRepository,
                 billingRepository = billingRepository,
+                progressResetRepository = LocalProgressResetRepository(
+                    gameRepository = gameRepository,
+                    collectionRepository = collectionRepository,
+                    profileRepository = profileRepository,
+                    socialRepository = socialRepository,
+                    statisticsRepository = statisticsRepository,
+                    levelProgressRepository = levelProgressRepository,
+                    dailyChallengeRepository = dailyChallengeRepository,
+                    achievementsRepository = achievementsRepository,
+                ),
                 settings = settings,
                 entitlements = billingRepository.observe().collectAsState(initial = EntitlementState()).value,
                 adGateway = adGateway,
                 audio = audio,
                 vm = gameViewModel,
                 analytics = analytics,
+                onTutorial = {
+                    nav.navigate(Routes.Tutorial)
+                },
                 onBack = { nav.popBackStack() },
             )
         }
@@ -311,16 +427,21 @@ fun QuantumAppShell(
 }
 
 @Composable
-private fun MainMenuScreen(
+internal fun MainMenuScreen(
     vm: GameViewModel,
     settings: AppSettings,
     settingsRepository: SettingsRepository,
     analytics: AnalyticsGateway,
-    audio: ToneGameAudio,
+    audio: GameAudio,
     onContinue: (SavedGameKey) -> Unit,
+    onNewClassic: () -> Unit,
+    onNewQuantum: () -> Unit,
     onNewGame: () -> Unit,
     onCollection: () -> Unit,
+    onAchievements: () -> Unit,
     onStatistics: () -> Unit,
+    onDailyChallenge: () -> Unit,
+    onAbout: () -> Unit,
     onPeriodicPath: () -> Unit,
     onTutorial: () -> Unit,
     onSettings: () -> Unit,
@@ -331,7 +452,8 @@ private fun MainMenuScreen(
     LaunchedEffect(settings.musicEnabled) {
         if (settings.musicEnabled) audio.menuMusic()
     }
-    val continueSave = saves.lastOrNull() ?: SavedGameKey(Difficulty.QUANTUM, 4)
+    val menuState = MainMenuState(saves.map { com.battleheim.quantum2048.domain.SavedGameRef(it.difficulty, it.size) }.toSet())
+    val continueSave = menuState.preferredContinue?.let { SavedGameKey(it.difficulty, it.size) } ?: SavedGameKey(Difficulty.QUANTUM, 4)
 
     MenuScaffold {
         QuickSettingsRow(
@@ -350,34 +472,78 @@ private fun MainMenuScreen(
             },
         )
         MainMenuHero()
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            RefreshSavesButton(
-                onClick = { playMenu(audio, settings); scope.launch { saves = vm.savedGames() } },
+        if (menuState.canContinue) {
+            NeonMenuButton(
+                text = stringResource(R.string.continue_game),
+                onClick = { onContinue(continueSave) },
+                modifier = Modifier.fillMaxWidth().testTag("continue_button"),
+                accent = Cyan,
+                filled = true,
             )
         }
-        NeonMenuButton(
-            text = stringResource(R.string.continue_game),
-            onClick = { onContinue(continueSave) },
-            enabled = saves.isNotEmpty(),
-            modifier = Modifier.fillMaxWidth().testTag("continue_button"),
-            accent = Cyan,
-            filled = true,
-        )
         NeonMenuButton(
             text = stringResource(R.string.new_game),
             onClick = onNewGame,
             modifier = Modifier.fillMaxWidth().testTag("new_game_button"),
             accent = RadiantGold,
-            filled = true,
+            filled = !menuState.canContinue,
+            icon = "+",
         )
-        NeonMenuButton(text = stringResource(R.string.periodic_path), onClick = onPeriodicPath, modifier = Modifier.fillMaxWidth().testTag("periodic_path_button"), accent = Electric, filled = true)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            NeonMenuButton(text = stringResource(R.string.collection), onClick = onCollection, modifier = Modifier.weight(1f), accent = NeonPink, icon = "◇")
-            NeonMenuButton(text = stringResource(R.string.statistics), onClick = onStatistics, modifier = Modifier.weight(1f), accent = Electric, icon = "▦")
+            NeonMenuButton(
+                text = stringResource(R.string.start_classic),
+                onClick = onNewClassic,
+                modifier = Modifier.weight(1f).testTag("start_classic_button"),
+                accent = Cyan,
+            )
+            NeonMenuButton(
+                text = stringResource(R.string.start_quantum),
+                onClick = onNewQuantum,
+                modifier = Modifier.weight(1f).testTag("start_quantum_button"),
+                accent = RadiantGold,
+            )
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            NeonMenuButton(text = stringResource(R.string.tutorial), onClick = onTutorial, modifier = Modifier.weight(1f), accent = Cyan, icon = "?")
-            NeonMenuButton(text = stringResource(R.string.settings), onClick = onSettings, modifier = Modifier.weight(1f), accent = RadiantGold, icon = "⚙")
+            SecondaryMenuButton(text = stringResource(R.string.daily_challenge), onClick = onDailyChallenge, modifier = Modifier.weight(1f).testTag("daily_challenge_button"), accent = RadiantGold, icon = "!")
+            SecondaryMenuButton(text = stringResource(R.string.periodic_path), onClick = onPeriodicPath, modifier = Modifier.weight(1f).testTag("periodic_path_button"), accent = Electric, icon = "P")
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SecondaryMenuButton(text = stringResource(R.string.collection), onClick = onCollection, modifier = Modifier.weight(1f), accent = NeonPink, icon = "C")
+            SecondaryMenuButton(text = stringResource(R.string.statistics), onClick = onStatistics, modifier = Modifier.weight(1f), accent = Electric, icon = "S")
+            SecondaryMenuButton(text = stringResource(R.string.settings), onClick = onSettings, modifier = Modifier.weight(1f), accent = RadiantGold, icon = "*")
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SecondaryMenuButton(text = stringResource(R.string.achievements), onClick = onAchievements, modifier = Modifier.weight(1f), accent = RadiantGold, icon = "A")
+            SecondaryMenuButton(text = stringResource(R.string.tutorial), onClick = onTutorial, modifier = Modifier.weight(1f), accent = Cyan, icon = "?")
+            SecondaryMenuButton(text = stringResource(R.string.about_game), onClick = onAbout, modifier = Modifier.weight(1f).testTag("about_button"), accent = TextSecondary, icon = "i")
+        }
+    }
+}
+
+@Composable
+private fun SecondaryMenuButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    accent: Color = Cyan,
+    icon: String,
+) {
+    val shape = RoundedCornerShape(16.dp)
+    Button(
+        onClick = onClick,
+        shape = shape,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+            contentColor = accent,
+        ),
+        modifier = modifier
+            .height(50.dp)
+            .border(1.dp, accent.copy(alpha = 0.46f), shape),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp),
+    ) {
+        Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            Text(icon, fontSize = 12.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(end = 5.dp))
+            Text(text, fontSize = 11.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center, lineHeight = 12.sp)
         }
     }
 }
@@ -399,7 +565,7 @@ private fun MainMenuHero() {
                 shape,
             )
             .border(1.25.dp, Cyan.copy(alpha = 0.58f), shape)
-            .padding(18.dp),
+            .padding(12.dp),
     ) {
         Canvas(Modifier.fillMaxSize()) {
             val center = androidx.compose.ui.geometry.Offset(size.width * 0.78f, size.height * 0.36f)
@@ -417,7 +583,7 @@ private fun MainMenuHero() {
             drawCircle(Cyan.copy(alpha = 0.22f), radius = 2.2f, center = androidx.compose.ui.geometry.Offset(size.width * 0.18f, size.height * 0.26f))
             drawCircle(NeonPink.copy(alpha = 0.20f), radius = 1.8f, center = androidx.compose.ui.geometry.Offset(size.width * 0.92f, size.height * 0.72f))
         }
-        Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 "QUANTUM 2048",
                 color = Cyan,
@@ -428,10 +594,10 @@ private fun MainMenuHero() {
             Text(
                 stringResource(R.string.app_title),
                 color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 35.sp,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 0.2.sp,
-                lineHeight = 38.sp,
+                lineHeight = 30.sp,
             )
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
                 Box(
@@ -455,43 +621,6 @@ private fun MainMenuHero() {
                     .background(Brush.horizontalGradient(listOf(Cyan, Electric, NeonPink.copy(alpha = 0.65f), Color.Transparent)), RoundedCornerShape(2.dp)),
             )
         }
-    }
-}
-
-@Composable
-private fun RefreshSavesButton(onClick: () -> Unit) {
-    val shape = RoundedCornerShape(18.dp)
-    Button(
-        onClick = onClick,
-        shape = shape,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
-            contentColor = Electric,
-        ),
-        modifier = Modifier
-            .size(48.dp)
-            .background(
-                Brush.radialGradient(
-                    listOf(Electric.copy(alpha = 0.22f), Color.Transparent),
-                ),
-                shape,
-            )
-            .border(1.15.dp, Electric.copy(alpha = 0.70f), shape),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
-    ) {
-        Text("↻", fontSize = 22.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
-    }
-}
-
-@Composable
-private fun SplashScreen() {
-    Box(Modifier.fillMaxSize().background(Color(0xFFFF9800)), contentAlignment = Alignment.Center) {
-        Image(
-            painter = painterResource(R.drawable.splash_logo),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-        )
     }
 }
 
@@ -609,61 +738,73 @@ private fun QuickSettingsRow(settings: AppSettings, onLanguage: () -> Unit, onTh
 }
 
 @Composable
-private fun TutorialScreen(vm: GameViewModel, onDone: () -> Unit) {
-    var step by remember { mutableStateOf(0) }
-    var completedAction by remember(step) { mutableStateOf(false) }
-    val titles = listOf(
-        R.string.tutorial_step_move,
-        R.string.tutorial_step_quantum,
-        R.string.tutorial_step_collapse,
-        R.string.tutorial_step_energy,
-        R.string.tutorial_step_auto,
-        R.string.tutorial_step_undo,
-        R.string.tutorial_step_new_features,
-    )
-    val boards = listOf(
-        listOf("2", "2", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
-        listOf("e-", "p+", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
-        listOf("1 | 2 | 4", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
-        listOf("2e-", "2e-", "p+", "p+", "", "", "", "", "", "", "", "", "", "", "", ""),
-        listOf("?", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
-        listOf("4", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
-        listOf("E", "T", "D", "", "", "", "", "", "", "", "", "", "", "", "", ""),
-    )
+internal fun TutorialScreen(onDone: () -> Unit, initialLesson: TutorialLessonState = TutorialEngine.start()) {
+    var lesson by remember { mutableStateOf(initialLesson) }
+    val title = when (lesson.step) {
+        TutorialStep.SWIPE -> R.string.tutorial_step_swipe
+        TutorialStep.FUSION_MERGE -> R.string.tutorial_step_fusion_merge
+        TutorialStep.COLLAPSE -> R.string.tutorial_step_manual_collapse
+    }
+    val body = when (lesson.step) {
+        TutorialStep.SWIPE -> R.string.tutorial_body_swipe
+        TutorialStep.FUSION_MERGE -> R.string.tutorial_body_fusion_merge
+        TutorialStep.COLLAPSE -> R.string.tutorial_body_manual_collapse
+    }
     MenuScaffold {
-        SectionTitle(stringResource(R.string.tutorial), stringResource(titles[step]))
-        TutorialBoard(boards[step])
-        Text(stringResource(R.string.tutorial_body), color = TextSecondary, fontSize = 13.sp)
-        Button(onClick = { completedAction = true }, modifier = Modifier.fillMaxWidth().testTag("tutorial_action")) {
-            Text(stringResource(R.string.tutorial_action))
+        SectionTitle(stringResource(R.string.tutorial), stringResource(title))
+        TutorialBoard(
+            lesson = lesson,
+            onTile = { lesson = TutorialEngine.selectTile(lesson, it) },
+        )
+        if (lesson.step == TutorialStep.COLLAPSE) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                StatRow(stringResource(R.string.hud_energy, ""), formatNumber(lesson.board.energy), Modifier.weight(1f))
+                FusionRules.superpositionCollapseEnergyCosts.take(2).forEachIndexed { index, cost ->
+                    StatRow(stringResource(R.string.tutorial_collapse_choice_label, index + 1), formatNumber(cost), Modifier.weight(1f))
+                }
+            }
+        } else {
+            TutorialEnergyPanel(lesson)
         }
+        Text(stringResource(body), color = TextSecondary, fontSize = 13.sp)
+        TutorialInteractionControls(
+            lesson = lesson,
+            onCollapse = { lesson = TutorialEngine.collapseSelected(lesson, it) },
+            onMerge = { lesson = TutorialEngine.merge(lesson, it) },
+        )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = onDone, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.skip)) }
+            OutlinedButton(onClick = { lesson = TutorialEngine.skip(lesson) }, enabled = !lesson.isCurrentStepComplete, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.skip)) }
             Button(
                 onClick = {
-                    if (step == titles.lastIndex) onDone() else {
-                        step++
-                        completedAction = false
-                    }
+                    if (lesson.step == TutorialStep.entries.last()) onDone() else lesson = TutorialEngine.next(lesson)
                 },
-                enabled = completedAction,
+                enabled = lesson.isCurrentStepComplete,
                 modifier = Modifier.weight(1f).testTag("tutorial_next"),
-            ) { Text(stringResource(if (step == titles.lastIndex) R.string.finish else R.string.next)) }
+            ) { Text(stringResource(if (lesson.step == TutorialStep.entries.last()) R.string.finish else R.string.next)) }
         }
     }
 }
 
 @Composable
-private fun TutorialBoard(cells: List<String>) {
-    Column(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(8.dp)).padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+private fun TutorialBoard(lesson: TutorialLessonState, onTile: (Long) -> Unit) {
+    Column(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(8.dp)).padding(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         repeat(4) { row ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 repeat(4) { column ->
-                    val label = cells[row * 4 + column]
+                    val tile = lesson.board.cells[row * 4 + column]
+                    val selected = tile?.id == lesson.selectedTileId
+                    val label = tile?.tutorialLabel().orEmpty()
                     Box(
-                        Modifier.weight(1f).size(56.dp).background(if (label.isEmpty()) Color(0xFF171D38) else PanelRaised, RoundedCornerShape(8.dp)).border(1.dp, Cyan.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
+                        Modifier
+                            .weight(1f)
+                            .size(48.dp)
+                            .background(if (tile == null) Color(0xFF171D38) else PanelRaised, RoundedCornerShape(8.dp))
+                            .border(1.dp, if (selected) RadiantGold else Cyan.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                            .clickable(enabled = tile?.superpositionValues?.isNotEmpty() == true) { onTile(tile!!.id) }
+                            .testTag("tutorial_cell_${row}_${column}"),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        if (label.isNotEmpty()) Text(label, modifier = Modifier.padding(8.dp), color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp)
+                        if (label.isNotEmpty()) Text(label, color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp, textAlign = TextAlign.Center)
                     }
                 }
             }
@@ -672,44 +813,307 @@ private fun TutorialBoard(cells: List<String>) {
 }
 
 @Composable
-private fun StatisticsScreen(profileRepository: ProfileRepository, socialRepository: SocialRepository, onBack: () -> Unit) {
-    val profile by profileRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.ProfileState())
-    val social by socialRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.SocialState())
-    val today = LocalDate.now()
+private fun TutorialEnergyPanel(lesson: TutorialLessonState) {
+    NeonPanel(title = stringResource(R.string.tutorial_energy_panel), accent = Electric) {
+        StatRow(stringResource(R.string.hud_energy, ""), formatNumber(lesson.board.energy))
+        if (lesson.step == TutorialStep.COLLAPSE) {
+            FusionRules.superpositionCollapseEnergyCosts.forEachIndexed { index, cost ->
+                StatRow(stringResource(R.string.tutorial_collapse_choice_label, index + 1), formatNumber(cost))
+            }
+        }
+    }
+}
+
+@Composable
+private fun TutorialInteractionControls(
+    lesson: TutorialLessonState,
+    onCollapse: (Int) -> Unit,
+    onMerge: (Direction) -> Unit,
+) {
+    when (lesson.step) {
+        TutorialStep.SWIPE -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            NeonMenuButton(stringResource(R.string.tutorial_swipe_left), onClick = { onMerge(Direction.LEFT) }, enabled = !lesson.isCurrentStepComplete, modifier = Modifier.weight(1f).testTag("tutorial_swipe_left"), accent = Cyan, filled = true)
+            NeonMenuButton(stringResource(R.string.tutorial_swipe_right), onClick = { onMerge(Direction.RIGHT) }, enabled = !lesson.isCurrentStepComplete, modifier = Modifier.weight(1f), accent = RadiantGold)
+        }
+        TutorialStep.FUSION_MERGE -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            NeonMenuButton(stringResource(R.string.tutorial_swipe_left), onClick = { onMerge(Direction.LEFT) }, enabled = !lesson.isCurrentStepComplete, modifier = Modifier.weight(1f).testTag("tutorial_merge_left"), accent = Cyan, filled = true)
+            NeonMenuButton(stringResource(R.string.tutorial_swipe_right), onClick = { onMerge(Direction.RIGHT) }, enabled = !lesson.isCurrentStepComplete, modifier = Modifier.weight(1f), accent = RadiantGold)
+        }
+        TutorialStep.COLLAPSE -> {
+            if (lesson.selectedTileId == null) Text(stringResource(R.string.tutorial_tap_tile), color = Cyan, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FusionRules.superpositionCollapseEnergyCosts.forEachIndexed { index, _ ->
+                NeonMenuButton(
+                    text = lesson.board.cells.firstNotNullOfOrNull { it?.superpositionValues?.getOrNull(index) }?.toString() ?: "?",
+                    onClick = { onCollapse(index) },
+                    enabled = lesson.selectedTileId != null && !lesson.isCurrentStepComplete,
+                    modifier = Modifier.weight(1f).testTag("tutorial_collapse_$index"),
+                    accent = if (index == 0) Cyan else RadiantGold,
+                )
+            }
+        }
+        }
+    }
+}
+
+private fun com.battleheim.quantum2048.engine.Tile.tutorialLabel(): String =
+    if (superpositionValues.isNotEmpty()) superpositionValues.joinToString(" | ") else when (kind) {
+        com.battleheim.quantum2048.engine.TileKind.ELECTRON -> "${value}e-"
+        com.battleheim.quantum2048.engine.TileKind.PROTON -> "${value}p+"
+        com.battleheim.quantum2048.engine.TileKind.ELEMENT -> element?.symbol.orEmpty()
+        com.battleheim.quantum2048.engine.TileKind.CLASSIC -> value.toString()
+    }
+
+@Composable
+private fun AchievementsScreen(achievementsRepository: AchievementsRepository, onBack: () -> Unit) {
+    val achievements by achievementsRepository.observeAchievements().collectAsState(initial = emptyList())
     MenuScaffold {
-        SectionTitle(stringResource(R.string.statistics), stringResource(R.string.profile))
-        ProfileDataHeader(
-            date = formatDate(today),
-            dailyBest = formatNumber(profile.dailyBestScore(today.toString())),
-            bestDaily = formatNumber(profile.bestDailyScore),
-        )
-        NeonPanel(title = stringResource(R.string.statistics), accent = Electric) {
-            StatRow(stringResource(R.string.stat_daily_challenge_count), formatNumber(profile.dailyChallengeCount))
-            StatRow(stringResource(R.string.stat_daily_current_streak), formatNumber(social.dailyStreak.currentStreak))
-            StatRow(stringResource(R.string.stat_daily_best_streak), formatNumber(social.dailyStreak.bestStreak))
-            StatRow(stringResource(R.string.stat_best_duel_streak), formatNumber(social.duelRecord.bestWinStreak))
-            StatRow(stringResource(R.string.stat_leaderboard_entries), formatNumber(social.leaderboards.size))
-            StatRow(stringResource(R.string.stat_collapse_ratio), formatPercent(profile.collapseLowRatio))
-            StatRow(stringResource(R.string.stat_average_win_energy), formatDecimal(profile.averageWinEnergy))
-            StatRow(stringResource(R.string.stat_chain_merges), formatNumber(profile.totalChainMergeCount))
+        SectionTitle(stringResource(R.string.achievements), stringResource(R.string.achievements_progress_subtitle))
+        if (achievements.isEmpty()) {
+            NeonPanel(title = stringResource(R.string.achievements), accent = RadiantGold) {
+                Text(stringResource(R.string.loading), color = TextSecondary, fontSize = 13.sp)
+            }
+        } else {
+            achievements.forEach { progress ->
+                AchievementCard(progress)
+            }
         }
         NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
     }
 }
 
 @Composable
-private fun StatRow(label: String, value: String) {
+private fun AchievementCard(progress: AchievementProgress) {
+    val done = progress.isCompleted
+    NeonPanel(
+        title = stringResource(progress.achievement.titleKey.stringRes()),
+        accent = if (done) RadiantGold else Electric,
+    ) {
+        Text(stringResource(progress.achievement.descriptionKey.stringRes()), color = TextSecondary, fontSize = 13.sp)
+        LinearProgressIndicator(
+            progress = { progress.ratio },
+            modifier = Modifier.fillMaxWidth().height(8.dp),
+            color = if (done) RadiantGold else Cyan,
+            trackColor = Color.White.copy(alpha = 0.10f),
+        )
+        StatRow(
+            stringResource(if (done) R.string.achievement_completed else R.string.achievement_progress),
+            stringResource(R.string.achievement_progress_value, formatNumber(progress.current), formatNumber(progress.achievement.target)),
+        )
+    }
+}
+
+private fun String.stringRes(): Int = when (this) {
+    "achievement_low_collapse_100_title" -> R.string.achievement_low_collapse_100_title
+    "achievement_low_collapse_100_desc" -> R.string.achievement_low_collapse_100_desc
+    "achievement_high_collapse_100_title" -> R.string.achievement_high_collapse_100_title
+    "achievement_high_collapse_100_desc" -> R.string.achievement_high_collapse_100_desc
+    "achievement_quantum_2048_title" -> R.string.achievement_quantum_2048_title
+    "achievement_quantum_2048_desc" -> R.string.achievement_quantum_2048_desc
+    "achievement_tile_4096_title" -> R.string.achievement_tile_4096_title
+    "achievement_tile_4096_desc" -> R.string.achievement_tile_4096_desc
+    "achievement_daily_streak_5_title" -> R.string.achievement_daily_streak_5_title
+    "achievement_daily_streak_5_desc" -> R.string.achievement_daily_streak_5_desc
+    "achievement_daily_streak_30_title" -> R.string.achievement_daily_streak_30_title
+    "achievement_daily_streak_30_desc" -> R.string.achievement_daily_streak_30_desc
+    "achievement_classic_first_game_title" -> R.string.achievement_classic_first_game_title
+    "achievement_classic_first_game_desc" -> R.string.achievement_classic_first_game_desc
+    "achievement_quantum_first_game_title" -> R.string.achievement_quantum_first_game_title
+    "achievement_quantum_first_game_desc" -> R.string.achievement_quantum_first_game_desc
+    "achievement_merges_1000_title" -> R.string.achievement_merges_1000_title
+    "achievement_merges_1000_desc" -> R.string.achievement_merges_1000_desc
+    "achievement_win_streak_5_title" -> R.string.achievement_win_streak_5_title
+    "achievement_win_streak_5_desc" -> R.string.achievement_win_streak_5_desc
+    "achievement_both_modes_title" -> R.string.achievement_both_modes_title
+    "achievement_both_modes_desc" -> R.string.achievement_both_modes_desc
+    "achievement_entangled_collapse_50_title" -> R.string.achievement_entangled_collapse_50_title
+    "achievement_entangled_collapse_50_desc" -> R.string.achievement_entangled_collapse_50_desc
+    else -> R.string.achievements
+}
+
+@Composable
+private fun DailyChallengeScreen(
+    dailyChallengeRepository: DailyChallengeRepository,
+    onBack: () -> Unit,
+    onStart: (String) -> Unit,
+    onContinue: () -> Unit,
+) {
+    val today = remember { DailyChallengeSeedProvider.todayUtc() }
+    val state by dailyChallengeRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.DailyChallengeState())
+    val status = state.statusFor(today)
+    val todayResult = state.resultFor(today)
+    MenuScaffold {
+        SectionTitle(stringResource(R.string.daily_challenge), stringResource(R.string.daily_challenge_subtitle))
+        NeonPanel(title = stringResource(R.string.daily_today), accent = RadiantGold) {
+            StatRow(stringResource(R.string.stat_today_date), today)
+            StatRow(
+                stringResource(R.string.daily_status),
+                stringResource(
+                    when (status) {
+                        DailyChallengeStatus.AVAILABLE -> R.string.daily_status_available
+                        DailyChallengeStatus.IN_PROGRESS -> R.string.daily_status_in_progress
+                        DailyChallengeStatus.COMPLETED -> R.string.daily_status_completed
+                    },
+                ),
+            )
+            if (todayResult != null) {
+                StatRow(stringResource(R.string.daily_score_today), formatNumber(todayResult.score))
+            }
+            StatRow(stringResource(R.string.daily_personal_best), formatNumber(state.bestScore))
+            StatRow(stringResource(R.string.daily_average_score), formatNumber(state.averageScore))
+        }
+        when (status) {
+            DailyChallengeStatus.AVAILABLE -> NeonMenuButton(
+                text = stringResource(R.string.daily_start),
+                onClick = { onStart(today) },
+                modifier = Modifier.fillMaxWidth(),
+                accent = RadiantGold,
+                filled = true,
+            )
+            DailyChallengeStatus.IN_PROGRESS -> NeonMenuButton(
+                text = stringResource(R.string.daily_continue),
+                onClick = onContinue,
+                modifier = Modifier.fillMaxWidth(),
+                accent = Cyan,
+                filled = true,
+            )
+            DailyChallengeStatus.COMPLETED -> NeonPanel(title = stringResource(R.string.daily_locked_title), accent = Electric) {
+                Text(stringResource(R.string.daily_locked_body), color = TextSecondary, fontSize = 13.sp)
+            }
+        }
+        DailyHistoryPanel(state)
+        NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+    }
+}
+
+@Composable
+private fun DailyHistoryPanel(state: com.battleheim.quantum2048.domain.DailyChallengeState) {
+    NeonPanel(title = stringResource(R.string.daily_recent_history), accent = Electric) {
+        if (state.recentResults.isEmpty()) {
+            Text(stringResource(R.string.daily_history_empty), color = TextSecondary, fontSize = 13.sp)
+        } else {
+            state.recentResults.forEach { result ->
+                StatRow(result.date, formatNumber(result.score))
+            }
+        }
+    }
+}
+
+@Composable
+internal fun StatisticsScreen(
+    statisticsRepository: StatisticsRepository,
+    dailyChallengeRepository: DailyChallengeRepository,
+    onBack: () -> Unit,
+) {
+    var selectedMode by remember { mutableStateOf(GameMode.CLASSIC) }
+    val stats by statisticsRepository.observeStatistics(selectedMode).collectAsState(
+        initial = com.battleheim.quantum2048.domain.StatsSnapshot(selectedMode),
+    )
+    val dailyState by dailyChallengeRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.DailyChallengeState())
+    MenuScaffold {
+        SectionTitle(stringResource(R.string.statistics), stringResource(R.string.stats_by_mode))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            NeonMenuButton(
+                text = stringResource(R.string.classic),
+                onClick = { selectedMode = GameMode.CLASSIC },
+                modifier = Modifier.weight(1f).testTag("stats_classic"),
+                accent = Cyan,
+                filled = selectedMode == GameMode.CLASSIC,
+            )
+            NeonMenuButton(
+                text = stringResource(R.string.quantum),
+                onClick = { selectedMode = GameMode.QUANTUM },
+                modifier = Modifier.weight(1f).testTag("stats_quantum"),
+                accent = RadiantGold,
+                filled = selectedMode == GameMode.QUANTUM,
+            )
+        }
+        if (stats.isEmpty) {
+            NeonPanel(title = stringResource(R.string.statistics), accent = Electric) {
+                Text(stringResource(R.string.stats_empty), color = TextSecondary, fontSize = 13.sp)
+            }
+        } else {
+            NeonPanel(title = stringResource(if (selectedMode == GameMode.CLASSIC) R.string.classic else R.string.quantum), accent = Electric) {
+                listOf(
+                    stringResource(R.string.stat_highest_tile) to formatNumber(stats.highestTile),
+                    stringResource(R.string.stat_high_score) to formatNumber(stats.highScore),
+                    stringResource(R.string.stat_games_played) to formatNumber(stats.gamesPlayed),
+                    stringResource(R.string.stat_total_merges) to formatNumber(stats.totalMerges),
+                    stringResource(R.string.stat_longest_merge_chain) to formatNumber(stats.longestMergeChain),
+                    stringResource(R.string.stat_longest_win_streak) to formatNumber(stats.longestWinStreak),
+                ).chunked(2).forEach { row ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        row.forEach { (label, value) -> StatRow(label, value, Modifier.weight(1f)) }
+                    }
+                }
+                if (selectedMode == GameMode.QUANTUM) {
+                    StatRow(stringResource(R.string.stat_manual_collapse_low), formatNumber(stats.manualCollapseLow))
+                    StatRow(stringResource(R.string.stat_manual_collapse_high), formatNumber(stats.manualCollapseHigh))
+                    StatRow(stringResource(R.string.stat_auto_collapse), formatNumber(stats.autoCollapseCount))
+                    StatRow(stringResource(R.string.stat_entangled_collapse_chain), formatNumber(stats.entangledCollapseChainCount))
+                }
+            }
+        }
+        NeonPanel(title = stringResource(R.string.daily_challenge), accent = RadiantGold) {
+            if (dailyState.results.isEmpty()) {
+                Text(stringResource(R.string.daily_history_empty), color = TextSecondary, fontSize = 13.sp)
+            } else {
+                StatRow(stringResource(R.string.stat_daily_challenge_count), formatNumber(dailyState.results.size))
+                StatRow(stringResource(R.string.stat_best_daily_score), formatNumber(dailyState.bestScore))
+                StatRow(stringResource(R.string.stat_daily_current_streak), formatNumber(dailyState.participationStreak))
+            }
+        }
+        NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+    }
+}
+
+@Composable
+private fun AboutScreen(onPrivacy: () -> Unit, onBack: () -> Unit) {
+    MenuScaffold(modifier = Modifier.testTag("about_screen")) {
+        SectionTitle(stringResource(R.string.about_game), stringResource(R.string.app_title))
+        NeonPanel(title = stringResource(R.string.about_version), accent = Cyan) {
+            StatRow(stringResource(R.string.app_name), BuildConfig.VERSION_NAME)
+            StatRow(stringResource(R.string.about_studio), stringResource(R.string.studio_name))
+        }
+        NeonPanel(title = stringResource(R.string.notice), accent = RadiantGold) {
+            Text(stringResource(R.string.notice_body), color = TextSecondary, fontSize = 13.sp)
+            Text(stringResource(R.string.notice), color = Cyan, fontSize = 16.sp, fontWeight = FontWeight.Black, modifier = Modifier.testTag("notice_link"))
+        }
+        NeonMenuButton(text = stringResource(R.string.privacy_policy), onClick = onPrivacy, modifier = Modifier.fillMaxWidth(), accent = Electric)
+        NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+    }
+}
+
+@Composable
+private fun PrivacyPolicyScreen(onBack: () -> Unit) {
+    MenuScaffold {
+        SectionTitle(stringResource(R.string.privacy_policy), stringResource(R.string.privacy_policy_subtitle))
+        NeonPanel(title = stringResource(R.string.privacy_policy_offline_title), accent = Cyan) {
+            Text(stringResource(R.string.privacy_policy_offline_body), color = TextSecondary, fontSize = 13.sp)
+        }
+        NeonPanel(title = stringResource(R.string.privacy_policy_local_title), accent = RadiantGold) {
+            Text(stringResource(R.string.privacy_policy_local_body), color = TextSecondary, fontSize = 13.sp)
+        }
+        NeonPanel(title = stringResource(R.string.privacy_policy_ads_title), accent = Electric) {
+            Text(stringResource(R.string.privacy_policy_ads_body), color = TextSecondary, fontSize = 13.sp)
+        }
+        NeonMenuButton(text = stringResource(R.string.back), onClick = onBack, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+    }
+}
+
+@Composable
+private fun StatRow(label: String, value: String, modifier: Modifier = Modifier) {
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
-            .background(Color.White.copy(alpha = 0.045f), RoundedCornerShape(10.dp))
-            .border(1.dp, Cyan.copy(alpha = 0.16f), RoundedCornerShape(10.dp))
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f), RoundedCornerShape(10.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f), RoundedCornerShape(10.dp))
+            .padding(horizontal = 8.dp, vertical = 7.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-        Text(value, color = Cyan, fontSize = 17.sp, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text(value, color = MaterialTheme.colorScheme.primary, fontSize = 14.sp, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
     }
 }
 
@@ -762,12 +1166,15 @@ private fun LevelSelectScreen(
         Difficulty.entries.chunked(2).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 row.forEach { difficulty ->
-                    val locked = !duel && difficulty.mode != com.battleheim.quantum2048.engine.GameMode.CLASSIC && !profile.isQuantumUnlocked
+                    val unlock = unlockRequirementFor(difficulty, profile)
+                    val locked = !duel && !unlock.unlocked
                     DifficultyCard(
                         difficulty = difficulty,
                         size = selectedSize,
                         hasSave = SavedGameKey(difficulty, selectedSize) in saves,
                         description = difficultyDescription(difficulty),
+                        mission = missionFor(difficulty),
+                        unlockText = unlock.text,
                         locked = locked,
                         onClick = { onSelect(difficulty, selectedSize, duel, opponent, botDifficulty) },
                         modifier = Modifier.weight(1f),
@@ -835,69 +1242,198 @@ private fun DifficultyCard(
     size: Int,
     hasSave: Boolean,
     description: String,
+    mission: String,
+    unlockText: String,
     locked: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val accent = difficultyAccent(difficulty)
+    val titleColor = MaterialTheme.colorScheme.onSurface
+    val bodyColor = if (locked) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f) else MaterialTheme.colorScheme.onSurfaceVariant
+    val cardBrush = if (locked) {
+        Brush.linearGradient(
+            listOf(
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f),
+                MaterialTheme.colorScheme.surface.copy(alpha = 0.82f),
+            ),
+        )
+    } else {
+        Brush.linearGradient(
+            listOf(
+                accent.copy(alpha = 0.16f),
+                MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f),
+            ),
+        )
+    }
     Card(
         onClick = { if (!locked) onClick() },
-        colors = CardDefaults.cardColors(containerColor = difficultySurface(difficulty)),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         shape = RoundedCornerShape(8.dp),
         modifier = modifier
             .graphicsLayer { alpha = if (locked) 0.52f else 1f }
-            .border(1.dp, if (locked) TextMuted.copy(alpha = 0.55f) else difficultyAccent(difficulty), RoundedCornerShape(8.dp))
+            .background(cardBrush, RoundedCornerShape(8.dp))
+            .border(1.dp, if (locked) TextMuted.copy(alpha = 0.55f) else accent, RoundedCornerShape(8.dp))
+            .defaultMinSize(minHeight = 132.dp)
             .testTag("level_${difficulty.name.lowercase()}"),
     ) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Box(Modifier.size(14.dp).background(difficultyAccent(difficulty), RoundedCornerShape(3.dp)))
-                    Text(difficulty.localizedLabel(), fontWeight = FontWeight.Black)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(12.dp).background(accent, RoundedCornerShape(3.dp)))
+                    Text(difficulty.localizedLabel(), color = titleColor, fontWeight = FontWeight.Black, fontSize = 13.sp)
                 }
                 Text(
-                    if (locked) "LOCKED" else if (hasSave) stringResource(R.string.saved_size, size) else stringResource(R.string.board_size, size),
-                    color = if (locked) TextMuted else difficultyAccent(difficulty),
-                    fontSize = 12.sp,
+                    if (locked) stringResource(R.string.periodic_locked) else if (hasSave) stringResource(R.string.saved_size, size) else stringResource(R.string.board_size, size),
+                    color = if (locked) TextMuted else accent,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                 )
             }
             Text(
-                if (locked) "Reach tile 256 in Classic to unlock Quantum modes." else description,
-                color = if (locked) TextMuted else TextSecondary,
-                fontSize = 11.sp,
-                lineHeight = 14.sp,
+                if (locked) unlockText else description,
+                color = bodyColor,
+                fontSize = 10.sp,
+                lineHeight = 13.sp,
+            )
+            Text(
+                mission,
+                color = if (locked) TextMuted else accent,
+                fontSize = 10.sp,
+                lineHeight = 13.sp,
+                fontWeight = FontWeight.Bold,
             )
         }
     }
 }
 
+private data class DifficultyUnlock(val unlocked: Boolean, val text: String)
+
 @Composable
-private fun CollectionScreen(repository: CollectionRepository, profileRepository: ProfileRepository, onBack: () -> Unit) {
+private fun unlockRequirementFor(
+    difficulty: Difficulty,
+    profile: com.battleheim.quantum2048.domain.ProfileState,
+): DifficultyUnlock = when (difficulty) {
+    Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD -> DifficultyUnlock(true, stringResource(R.string.unlock_available))
+    Difficulty.QUANTUM, Difficulty.ZEN ->
+        DifficultyUnlock(profile.isQuantumUnlocked, stringResource(R.string.unlock_quantum_lab))
+    Difficulty.HARDCORE ->
+        DifficultyUnlock(FusionRules.achievementCollapseCentury in profile.unlockedAchievements, stringResource(R.string.unlock_hardcore))
+    Difficulty.PUZZLE ->
+        DifficultyUnlock(FusionRules.achievementNoUndoWin in profile.unlockedAchievements, stringResource(R.string.unlock_puzzle))
+    Difficulty.DAILY ->
+        DifficultyUnlock(FusionRules.achievementResolved2048 in profile.unlockedAchievements, stringResource(R.string.unlock_daily))
+}
+
+@Composable
+private fun missionFor(difficulty: Difficulty): String = when (difficulty) {
+    Difficulty.EASY -> stringResource(R.string.mission_easy)
+    Difficulty.MEDIUM -> stringResource(R.string.mission_medium)
+    Difficulty.HARD -> stringResource(R.string.mission_hard)
+    Difficulty.QUANTUM -> stringResource(R.string.mission_quantum)
+    Difficulty.ZEN -> stringResource(R.string.mission_zen)
+    Difficulty.HARDCORE -> stringResource(R.string.mission_hardcore)
+    Difficulty.PUZZLE -> stringResource(R.string.mission_puzzle)
+    Difficulty.DAILY -> stringResource(R.string.mission_daily)
+}
+
+@Composable
+internal fun CollectionScreen(repository: CollectionRepository, profileRepository: ProfileRepository, onBack: () -> Unit) {
     val state by repository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.CollectionState())
     val profile by profileRepository.observe().collectAsState(initial = com.battleheim.quantum2048.domain.ProfileState())
     val codex = state.codex(FusionRules.compoundRecipes)
+    val elementCodex = state.elementCodex()
+    var selectedElement by remember { mutableStateOf<com.battleheim.quantum2048.domain.ElementCodexEntry?>(null) }
+    val discoveredCount = elementCodex.count { it.discovered }
+    val totalCount = elementCodex.size.coerceAtLeast(1)
     MenuScaffold {
         SectionTitle(stringResource(R.string.collection), stringResource(R.string.fusion_lab))
-        AchievementList(profile.unlockedAchievements)
-        codex.forEach { entry ->
-            Card(colors = CardDefaults.cardColors(containerColor = if (entry.discovered) PanelRaised else Panel), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(12.dp)) {
-                    Text(entry.symbol, fontWeight = FontWeight.Black, color = if (entry.discovered) Color.White else TextMuted)
-                    Text(
-                        if (entry.discovered) "${entry.englishName} / ${entry.persianName} x${entry.discoveryCount}" else stringResource(R.string.none),
-                        color = if (entry.discovered) TextSecondary else TextMuted,
-                        fontSize = 12.sp,
-                    )
-                }
+        NeonPanel(title = stringResource(R.string.element_codex), accent = Cyan) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("$discoveredCount/$totalCount", color = Cyan, fontSize = 22.sp, fontWeight = FontWeight.Black)
+                Text(stringResource(R.string.collection), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
+            LinearProgressIndicator(
+                progress = { discoveredCount.toFloat() / totalCount },
+                color = Cyan,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.fillMaxWidth().height(8.dp),
+            )
+            ElementCodexGrid(elementCodex, onSelect = { selectedElement = it })
         }
+        CompactAchievementList(profile.unlockedAchievements)
         OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.back)) }
+    }
+    selectedElement?.let { entry ->
+        ElementDetailDialog(entry = entry, onDismiss = { selectedElement = null })
+    }
+}
+
+@Composable
+private fun CompactAchievementList(unlocked: Set<String>) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.achievements), fontWeight = FontWeight.Black, fontSize = 12.sp, modifier = Modifier.weight(1f))
+            Text("${listOf(FusionRules.achievementCollapseCentury, FusionRules.achievementResolved2048, FusionRules.achievementNoUndoWin).count { it in unlocked }}/3", color = Cyan, fontWeight = FontWeight.Black, fontSize = 13.sp)
+        }
+    }
+}
+
+@Composable
+private fun ElementCodexGrid(
+    entries: List<com.battleheim.quantum2048.domain.ElementCodexEntry>,
+    onSelect: (com.battleheim.quantum2048.domain.ElementCodexEntry) -> Unit,
+) {
+    entries.chunked(5).forEach { row ->
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            row.forEach { entry ->
+                ElementCodexCard(entry, onClick = { if (entry.discovered) onSelect(entry) }, modifier = Modifier.weight(1f))
+            }
+            repeat(5 - row.size) { Box(Modifier.weight(1f)) }
+        }
+    }
+}
+
+@Composable
+private fun ElementCodexCard(
+    entry: com.battleheim.quantum2048.domain.ElementCodexEntry,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val accent = if (entry.discovered) Cyan else MaterialTheme.colorScheme.outlineVariant
+    Card(
+        onClick = onClick,
+        enabled = entry.discovered,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (entry.discovered) 0.92f else 0.42f)),
+        shape = RoundedCornerShape(8.dp),
+        modifier = modifier.height(48.dp).border(1.dp, accent.copy(alpha = 0.58f), RoundedCornerShape(8.dp)),
+    ) {
+        Column(Modifier.fillMaxSize().padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text(if (entry.discovered) entry.element.symbol else "?${entry.element.atomicNumber}", color = accent, fontSize = 15.sp, fontWeight = FontWeight.Black)
+            Text(if (entry.discovered) entry.element.title else "${entry.element.atomicNumber}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 9.sp, textAlign = TextAlign.Center, maxLines = 1)
+        }
+    }
+}
+
+@Composable
+private fun ElementDetailDialog(entry: com.battleheim.quantum2048.domain.ElementCodexEntry, onDismiss: () -> Unit) {
+    QuantumDialog(
+        title = entry.element.title,
+        onDismiss = onDismiss,
+        accent = Cyan,
+        confirmText = stringResource(R.string.confirm),
+        onConfirm = onDismiss,
+    ) {
+        StatRow(entry.element.symbol, entry.element.atomicNumber.toString())
+        StatRow(stringResource(R.string.collection), entry.discoveryOrder?.let { "#$it" } ?: stringResource(R.string.none))
+        StatRow(stringResource(R.string.element_codex), entry.firstDiscoveredAtMillis?.takeIf { it > 1L }?.toString() ?: stringResource(R.string.none))
     }
 }
 
 @Composable
 private fun AchievementList(unlocked: Set<String>) {
-    Card(colors = CardDefaults.cardColors(containerColor = PanelRaised), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.achievements), fontWeight = FontWeight.Black)
             AchievementRow(stringResource(R.string.achievement_collapse_century), FusionRules.achievementCollapseCentury in unlocked)
@@ -918,57 +1454,53 @@ private fun AchievementRow(label: String, unlocked: Boolean) {
 }
 
 @Composable
-private fun SettingsScreen(
+internal fun SettingsScreen(
     settingsRepository: SettingsRepository,
     collectionRepository: CollectionRepository,
     profileRepository: ProfileRepository,
     socialRepository: SocialRepository,
     billingRepository: BillingRepository,
+    progressResetRepository: ProgressResetRepository,
     settings: AppSettings,
     entitlements: EntitlementState,
     adGateway: AdGateway,
-    audio: ToneGameAudio,
+    audio: GameAudio,
     vm: GameViewModel,
     analytics: AnalyticsGateway,
+    onTutorial: () -> Unit,
     onBack: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val ui by vm.ui.collectAsState()
     var confirmResetCollection by remember { mutableStateOf(false) }
     var confirmResetProfile by remember { mutableStateOf(false) }
     var confirmResetDifficulty by remember { mutableStateOf<Difficulty?>(null) }
+    var confirmResetProgress by remember { mutableStateOf(false) }
+    var confirmResetProgressFinal by remember { mutableStateOf(false) }
+    var irreversibleChecked by remember { mutableStateOf(false) }
+    var advancedSettings by remember { mutableStateOf(false) }
 
     MenuScaffold {
         SectionTitle(stringResource(R.string.settings), stringResource(R.string.fusion_lab))
-        NeonPanel(title = stringResource(R.string.settings), accent = Cyan) {
-            SettingsToggle(stringResource(R.string.sound), settings.soundEnabled) { playMenu(audio, settings); saveSettings(settings.copy(soundEnabled = it), analytics, settingsRepository, scope) }
-            SettingsToggle(stringResource(R.string.music), settings.musicEnabled) { playMenu(audio, settings); saveSettings(settings.copy(musicEnabled = it), analytics, settingsRepository, scope) }
-            SettingsSlider("Master", settings.masterVolume) { saveSettings(settings.copy(masterVolume = it), analytics, settingsRepository, scope) }
-            SettingsSlider("Music", settings.musicVolume) { saveSettings(settings.copy(musicVolume = it), analytics, settingsRepository, scope) }
-            SettingsSlider("SFX", settings.sfxVolume) { saveSettings(settings.copy(sfxVolume = it), analytics, settingsRepository, scope) }
-            SettingsToggle(stringResource(R.string.haptics), settings.hapticsEnabled) { playMenu(audio, settings); saveSettings(settings.copy(hapticsEnabled = it), analytics, settingsRepository, scope) }
-            SettingsToggle(stringResource(R.string.reduced_motion), settings.reducedMotion) { playMenu(audio, settings); saveSettings(settings.copy(reducedMotion = it), analytics, settingsRepository, scope) }
-        }
-        NeonPanel(title = stringResource(R.string.language_note), accent = Electric) {
-            NeonMenuButton(
-                text = stringResource(R.string.language_button, settings.language.displayLabel()),
-                onClick = {
-                    playMenu(audio, settings)
-                    saveSettings(settings.copy(language = settings.language.next()), analytics, settingsRepository, scope)
-                },
-                modifier = Modifier.fillMaxWidth().testTag("settings_language"),
-                accent = Electric,
-            )
-            NeonMenuButton(
-                text = stringResource(R.string.theme_button, settings.themeMode.displayLabel()),
-                onClick = {
-                    playMenu(audio, settings)
-                    saveSettings(settings.copy(themeMode = settings.themeMode.next()), analytics, settingsRepository, scope)
-                },
-                modifier = Modifier.fillMaxWidth().testTag("settings_theme"),
-                accent = RadiantGold,
-            )
-            Text(stringResource(R.string.language_note), color = TextSecondary, fontSize = 12.sp)
-        }
+        if (!advancedSettings) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                NeonMenuButton(text = stringResource(R.string.sound), onClick = { saveSettings(settings.copy(soundEnabled = !settings.soundEnabled), analytics, settingsRepository, scope) }, modifier = Modifier.weight(1f), accent = Cyan, filled = settings.soundEnabled)
+                NeonMenuButton(text = stringResource(R.string.music), onClick = { saveSettings(settings.copy(musicEnabled = !settings.musicEnabled), analytics, settingsRepository, scope) }, modifier = Modifier.weight(1f), accent = RadiantGold, filled = settings.musicEnabled)
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                NeonMenuButton(text = stringResource(R.string.haptics), onClick = { saveSettings(settings.copy(hapticsEnabled = !settings.hapticsEnabled), analytics, settingsRepository, scope) }, modifier = Modifier.weight(1f), accent = Electric, filled = settings.hapticsEnabled)
+                NeonMenuButton(text = stringResource(R.string.reduced_motion), onClick = { saveSettings(settings.copy(reducedMotion = !settings.reducedMotion), analytics, settingsRepository, scope) }, modifier = Modifier.weight(1f), accent = NeonPink, filled = settings.reducedMotion)
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                NeonMenuButton(text = stringResource(R.string.language_button, stringResource(settings.language.labelRes())), onClick = { playMenu(audio, settings); saveSettings(settings.copy(language = settings.language.next()), analytics, settingsRepository, scope) }, modifier = Modifier.weight(1f).testTag("settings_language"), accent = Electric)
+                NeonMenuButton(text = stringResource(R.string.theme_button, stringResource(settings.themeMode.labelRes())), onClick = { playMenu(audio, settings); saveSettings(settings.copy(themeMode = settings.themeMode.next()), analytics, settingsRepository, scope) }, modifier = Modifier.weight(1f).testTag("settings_theme"), accent = RadiantGold)
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                NeonMenuButton(text = stringResource(R.string.show_tutorial_again), onClick = { playMenu(audio, settings); saveSettings(settings.copy(tutorialCompleted = false), analytics, settingsRepository, scope); onTutorial() }, modifier = Modifier.weight(1f).testTag("reset_tutorial"), accent = Cyan)
+                NeonMenuButton(text = stringResource(R.string.reset_profile), onClick = { advancedSettings = true }, modifier = Modifier.weight(1f), accent = NeonPink)
+            }
+            NeonMenuButton(text = stringResource(R.string.back), onClick = { playMenu(audio, settings); onBack() }, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+        } else {
         MonetizationSection(
             entitlements = entitlements,
             adGateway = adGateway,
@@ -997,14 +1529,22 @@ private fun SettingsScreen(
             Difficulty.entries.forEach { difficulty ->
                 NeonMenuButton(text = stringResource(R.string.reset_progress, difficulty.name.lowercase()), onClick = { playMenu(audio, settings); confirmResetDifficulty = difficulty }, modifier = Modifier.fillMaxWidth(), accent = TextMuted)
             }
+            NeonMenuButton(
+                text = stringResource(R.string.reset_all_progress),
+                onClick = { playMenu(audio, settings); confirmResetProgress = true },
+                modifier = Modifier.fillMaxWidth().testTag("reset_all_progress"),
+                accent = NeonPink,
+                filled = true,
+            )
         }
-        NeonMenuButton(text = stringResource(R.string.back), onClick = { playMenu(audio, settings); onBack() }, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+        NeonMenuButton(text = stringResource(R.string.back), onClick = { advancedSettings = false }, modifier = Modifier.fillMaxWidth(), accent = Cyan)
+        }
     }
 
     if (confirmResetCollection) {
         ConfirmDialog(
-            title = "Reset collection?",
-            body = "Discovered compounds will be cleared.",
+            title = stringResource(R.string.reset_collection_title),
+            body = stringResource(R.string.reset_collection_body),
             onDismiss = { confirmResetCollection = false },
             onConfirm = {
                 scope.launch { collectionRepository.clear() }
@@ -1025,14 +1565,57 @@ private fun SettingsScreen(
     }
     confirmResetDifficulty?.let { difficulty ->
         ConfirmDialog(
-            title = "Reset ${difficulty.name.lowercase()}?",
-            body = "The active save for this level will be deleted.",
+            title = stringResource(R.string.reset_difficulty_title, difficulty.localizedLabel()),
+            body = stringResource(R.string.reset_difficulty_body),
             onDismiss = { confirmResetDifficulty = null },
             onConfirm = {
                 vm.resetDifficulty(difficulty)
                 confirmResetDifficulty = null
             },
         )
+    }
+    if (confirmResetProgress) {
+        ConfirmDialog(
+            title = stringResource(R.string.reset_all_progress_title),
+            body = stringResource(R.string.reset_all_progress_body),
+            onDismiss = { confirmResetProgress = false },
+            onConfirm = {
+                irreversibleChecked = false
+                confirmResetProgress = false
+                confirmResetProgressFinal = true
+            },
+        )
+    }
+    if (confirmResetProgressFinal) {
+        QuantumDialog(
+            title = stringResource(R.string.reset_all_progress_final_title),
+            onDismiss = {
+                irreversibleChecked = false
+                confirmResetProgressFinal = false
+            },
+            accent = NeonPink,
+            confirmText = stringResource(R.string.reset_all_progress_confirm),
+            onConfirm = {
+                if (irreversibleChecked) {
+                    scope.launch {
+                        progressResetRepository.resetAllProgress()
+                        vm.newGame(ui.game.difficulty, ui.game.size)
+                    }
+                    irreversibleChecked = false
+                    confirmResetProgressFinal = false
+                }
+            },
+            dismissText = stringResource(R.string.cancel),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = irreversibleChecked,
+                    onCheckedChange = { irreversibleChecked = it },
+                    modifier = Modifier.testTag("reset_all_progress_irreversible"),
+                )
+                Text(stringResource(R.string.reset_all_progress_irreversible), color = TextSecondary, fontSize = 13.sp)
+            }
+        }
     }
 }
 
@@ -1089,7 +1672,7 @@ private fun MonetizationSection(
     }
 }
 
-private fun playMenu(audio: ToneGameAudio, settings: AppSettings) {
+private fun playMenu(audio: GameAudio, settings: AppSettings) {
     if (settings.soundEnabled) audio.menu()
 }
 
@@ -1129,7 +1712,7 @@ private fun quantumPopExitTransition(): ExitTransition =
         targetOffsetX = { it / 8 },
     ) + fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMedium))
 
-private fun playSelect(audio: ToneGameAudio, settings: AppSettings) {
+private fun playSelect(audio: GameAudio, settings: AppSettings) {
     if (settings.soundEnabled) audio.select()
 }
 
@@ -1171,8 +1754,8 @@ private fun AppLanguage.next(): AppLanguage = when (this) {
 }
 
 private fun AppThemeMode.next(): AppThemeMode = when (this) {
-    AppThemeMode.DARK -> AppThemeMode.LIGHT
     AppThemeMode.LIGHT -> AppThemeMode.DARK
+    AppThemeMode.DARK -> AppThemeMode.LIGHT
 }
 
 private fun AppLanguage.shortLabel(): String = when (this) {
@@ -1180,9 +1763,9 @@ private fun AppLanguage.shortLabel(): String = when (this) {
     AppLanguage.PERSIAN -> "FA"
 }
 
-private fun AppLanguage.displayLabel(): String = when (this) {
-    AppLanguage.ENGLISH -> "English"
-    AppLanguage.PERSIAN -> "فارسی"
+private fun AppLanguage.labelRes(): Int = when (this) {
+    AppLanguage.ENGLISH -> R.string.language_english
+    AppLanguage.PERSIAN -> R.string.language_persian
 }
 
 private fun AppThemeMode.iconLabel(): String = when (this) {
@@ -1190,9 +1773,9 @@ private fun AppThemeMode.iconLabel(): String = when (this) {
     AppThemeMode.LIGHT -> "☀"
 }
 
-private fun AppThemeMode.displayLabel(): String = when (this) {
-    AppThemeMode.DARK -> "Dark"
-    AppThemeMode.LIGHT -> "Light"
+private fun AppThemeMode.labelRes(): Int = when (this) {
+    AppThemeMode.DARK -> R.string.theme_dark
+    AppThemeMode.LIGHT -> R.string.theme_light
 }
 
 @Composable
@@ -1262,7 +1845,9 @@ private fun ConfirmDialog(title: String, body: String, onDismiss: () -> Unit, on
 }
 
 @Composable
-private fun MenuScaffold(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+internal fun MenuScaffold(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    val measurementSink = LocalLayoutMeasurementSink.current
+    val density = LocalDensity.current
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Box(
             modifier
@@ -1281,10 +1866,15 @@ private fun MenuScaffold(modifier: Modifier = Modifier, content: @Composable Col
             SpaceLabBackdrop()
             Column(
                 Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp, vertical = 22.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+                    .fillMaxWidth()
+                    .wrapContentHeight(unbounded = true)
+                    .align(Alignment.TopCenter)
+                    .testTag("menu_content")
+                    .onGloballyPositioned { coordinates ->
+                        measurementSink?.invoke("menu_content", with(density) { coordinates.size.height.toDp().value })
+                    }
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 content()
             }
@@ -1299,7 +1889,7 @@ private fun SectionTitle(title: String, subtitle: String) {
         Box(
             Modifier
                 .padding(end = 12.dp)
-                .size(width = 4.dp, height = 82.dp)
+                .size(width = 4.dp, height = 56.dp)
                 .background(
                     Brush.verticalGradient(
                         listOf(
@@ -1311,20 +1901,20 @@ private fun SectionTitle(title: String, subtitle: String) {
                     RoundedCornerShape(12.dp),
                 ),
         )
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 title,
                 color = titleColor,
-                fontSize = 32.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 0.6.sp,
-                lineHeight = 34.sp,
+                lineHeight = 26.sp,
             )
             Text(
                 subtitle.uppercase(),
                 color = Cyan,
                 fontWeight = FontWeight.Black,
-                fontSize = 13.sp,
+                fontSize = 11.sp,
                 letterSpacing = 1.2.sp,
             )
             Box(
@@ -1356,8 +1946,8 @@ private fun NeonPanel(title: String, accent: Color = Cyan, content: @Composable 
                 shape,
             )
             .border(1.2.dp, accent.copy(alpha = 0.58f), shape)
-            .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp),
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -1437,7 +2027,7 @@ private fun NeonMenuButton(
         shape = shape,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (filled) accent else MaterialTheme.colorScheme.surface.copy(alpha = 0.76f),
-            contentColor = if (filled) Color(0xFF061016) else accent,
+            contentColor = if (filled) MaterialTheme.colorScheme.onPrimary else accent,
             disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.50f),
             disabledContentColor = TextMuted,
         ),
@@ -1499,5 +2089,3 @@ private fun difficultyDescription(difficulty: Difficulty): String = when (diffic
     Difficulty.PUZZLE -> stringResource(R.string.puzzle_description)
     Difficulty.DAILY -> stringResource(R.string.daily_description)
 }
-
-private const val SPLASH_MS = 2600L

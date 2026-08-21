@@ -1,7 +1,6 @@
 package com.battleheim.quantum2048.data
 
 import android.content.Context
-import android.content.res.Configuration
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -49,6 +48,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
                 else -> null
             }
             val theme = when (element?.get("themeMode")?.jsonPrimitive?.contentOrNull) {
+                "SYSTEM" -> AppThemeMode.DARK
                 "LIGHT" -> AppThemeMode.LIGHT
                 "DARK" -> AppThemeMode.DARK
                 else -> null
@@ -63,21 +63,22 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
                 reducedMotion = element?.get("reducedMotion")?.jsonPrimitive?.booleanOrNull ?: false,
                 language = language ?: context.defaultResolvedSettings().language,
                 themeMode = theme ?: context.defaultResolvedSettings().themeMode,
+                tutorialCompleted = element?.get("tutorialCompleted")?.jsonPrimitive?.booleanOrNull ?: false,
+                entanglementIntroSeen = element?.get("entanglementIntroSeen")?.jsonPrimitive?.booleanOrNull ?: false,
             )
         }.getOrNull()
 }
 
 @Serializable
 private data class SettingsSnapshot(
-    val schemaVersion: Int = 1,
+    val schemaVersion: Int = 3,
     val settings: AppSettings = AppSettings(),
 )
 
 private fun Context.defaultResolvedSettings(): AppSettings {
     val localeTag = resources.configuration.locales[0]?.language.orEmpty()
-    val night = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
     return AppSettings(
         language = if (localeTag == "fa") AppLanguage.PERSIAN else AppLanguage.ENGLISH,
-        themeMode = if (night == Configuration.UI_MODE_NIGHT_YES) AppThemeMode.DARK else AppThemeMode.LIGHT,
+        themeMode = AppThemeMode.DARK,
     )
 }

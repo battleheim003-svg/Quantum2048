@@ -14,10 +14,12 @@ data class AppSettings(
     val reducedMotion: Boolean = false,
     val language: AppLanguage = AppLanguage.ENGLISH,
     val themeMode: AppThemeMode = AppThemeMode.DARK,
+    val tutorialCompleted: Boolean = false,
+    val entanglementIntroSeen: Boolean = false,
 )
 
 @Serializable enum class AppLanguage { ENGLISH, PERSIAN }
-@Serializable enum class AppThemeMode { DARK, LIGHT }
+@Serializable enum class AppThemeMode { LIGHT, DARK }
 
 interface SettingsRepository {
     fun observe(): Flow<AppSettings>

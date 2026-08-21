@@ -1,6 +1,7 @@
 package com.battleheim.quantum2048.ui
 
 import android.content.Intent
+import android.content.ClipData
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -25,9 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -38,6 +37,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -53,17 +53,27 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.battleheim.quantum2048.audio.GameAudio
 import com.battleheim.quantum2048.audio.SilentGameAudio
+import com.battleheim.quantum2048.ads.AdGateway
+import com.battleheim.quantum2048.ads.NoOpAdGateway
+import com.battleheim.quantum2048.ads.RewardPlacement
 import com.battleheim.quantum2048.designsystem.Cyan
 import com.battleheim.quantum2048.designsystem.BoardGlass
 import com.battleheim.quantum2048.designsystem.Electric
@@ -78,8 +88,8 @@ import com.battleheim.quantum2048.designsystem.classicTileColor
 import com.battleheim.quantum2048.designsystem.classicTileTextColor
 import com.battleheim.quantum2048.designsystem.difficultyAccent
 import com.battleheim.quantum2048.designsystem.difficultySurface
-import com.battleheim.quantum2048.designsystem.elementColor
 import com.battleheim.quantum2048.designsystem.elementFamily
+import com.battleheim.quantum2048.designsystem.themedElementColor
 import com.battleheim.quantum2048.designsystem.tileKindColor
 import com.battleheim.quantum2048.domain.AppSettings
 import com.battleheim.quantum2048.domain.LevelRunStatus
@@ -111,12 +121,12 @@ fun GameScreen(
     vm: GameViewModel,
     settings: AppSettings = AppSettings(),
     audio: GameAudio = SilentGameAudio,
+    adGateway: AdGateway = NoOpAdGateway,
     onPause: () -> Unit = {},
 ) {
     val ui by vm.ui.collectAsState()
     val snackbar = remember { SnackbarHostState() }
-    val haptics = LocalHapticFeedback.current
-
+    val context = LocalContext.current
     LaunchedEffect(settings) {
         audio.applySettings(settings)
         audio.gameMusic()
@@ -125,44 +135,12 @@ fun GameScreen(
 
     LaunchedEffect(ui.message) {
         ui.message?.let {
-            snackbar.showSnackbar(it)
+            snackbar.showSnackbar(it.resolve(context))
             vm.consumeMessage()
         }
     }
     LaunchedEffect(ui.feedback) {
         val feedback = ui.feedback
-        when (feedback) {
-            GameFeedback.MOVE -> {
-                if (settings.soundEnabled) audio.move()
-            }
-            GameFeedback.MERGE -> {
-                if (settings.soundEnabled) audio.merge()
-            }
-            GameFeedback.REACTION -> {
-                if (settings.soundEnabled) audio.reaction()
-            }
-            GameFeedback.COMPOUND -> {
-                if (settings.soundEnabled) audio.synthesis()
-            }
-            GameFeedback.TUNNEL -> {
-                if (settings.soundEnabled) audio.tunnel()
-            }
-            GameFeedback.COLLAPSE_LOW -> {
-                if (settings.soundEnabled) audio.collapseLow()
-            }
-            GameFeedback.COLLAPSE_HIGH -> {
-                if (settings.soundEnabled) audio.collapseHigh()
-            }
-            GameFeedback.GAME_OVER -> {
-                if (settings.soundEnabled) {
-                    if (ui.game.status == GameStatus.WON) audio.win() else audio.gameOver()
-                }
-            }
-            null -> Unit
-        }
-        if (feedback != null && settings.hapticsEnabled) {
-            HapticFeedbackManager.perform(haptics, feedback.hapticPattern())
-        }
         if (feedback != null) vm.consumeFeedback()
     }
     LaunchedEffect(ui.isBoardShaking) {
@@ -197,14 +175,19 @@ fun GameScreen(
                     ),
                 ),
         ) {
+            val measurementSink = LocalLayoutMeasurementSink.current
+            val density = LocalDensity.current
             QuantumBackdrop(settings.reducedMotion)
             Column(
                 Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 18.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                    .testTag("game_screen_content")
+                    .onGloballyPositioned { coordinates ->
+                        measurementSink?.invoke("game_screen_content", with(density) { coordinates.size.height.toDp().value })
+                    }
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Header(ui.game, onPause)
                 ui.level?.let { LevelGoalHud(it) }
@@ -213,7 +196,24 @@ fun GameScreen(
                     FusionGuide(ui.game.difficulty)
                     CompoundLab(ui.game, ui.labTileIds, vm::clearCompoundLab)
                 }
-                Board(ui.game, ui.labTileIds, ui.tunnelingTileId, ui.observerPreview, ui.animations, settings.reducedMotion, ui.isBoardShaking, vm::swipe, vm::sendToCompoundLab, vm::tapBoardCell, vm::observeTile)
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Board(
+                        game = ui.game,
+                        labTileIds = ui.labTileIds,
+                        tunnelingTileId = ui.tunnelingTileId,
+                        observerPreview = ui.observerPreview,
+                        animations = ui.animations,
+                        reducedMotion = settings.reducedMotion,
+                        isBoardShaking = ui.isBoardShaking,
+                        onSwipe = vm::swipe,
+                        onTileDragToLab = vm::sendToCompoundLab,
+                        onCellTap = vm::tapBoardCell,
+                        onObserveTile = vm::observeTile,
+                        modifier = Modifier
+                            .fillMaxWidth(if (ui.game.mode == GameMode.QUANTUM) 0.80f else 0.88f)
+                            .align(Alignment.CenterHorizontally),
+                    )
+                }
                 duel?.let { OpponentBoardSummary(it.inactiveBoard, it.currentPlayer) }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     QuantumActionButton(text = stringResource(R.string.new_game), onClick = vm::newGame, modifier = Modifier.weight(1f), accent = RadiantGold, filled = true, icon = "+")
@@ -228,6 +228,17 @@ fun GameScreen(
                         filled = ui.tunnelingTileId != null,
                         icon = "⟐",
                     )
+                    if (ui.game.energy <= 0) {
+                        QuantumActionButton(
+                            text = stringResource(R.string.watch_for_energy_top_up),
+                            onClick = { adGateway.showRewarded(RewardPlacement.QUANTUM_ENERGY_TOP_UP) { vm.grantRewardedEnergy() } },
+                            enabled = adGateway.isRewardedReady,
+                            modifier = Modifier.fillMaxWidth(),
+                            accent = RadiantGold,
+                            filled = true,
+                            icon = "+",
+                        )
+                    }
                 }
                 Text(
                     if (ui.game.mode == GameMode.QUANTUM) {
@@ -241,7 +252,7 @@ fun GameScreen(
             }
         }
 
-        if (ui.game.status != GameStatus.PLAYING) {
+        if (ui.game.status != GameStatus.PLAYING && ui.game.difficulty != Difficulty.PUZZLE) {
             EndDialog(ui.game, vm::continueGame, vm::newGame, audio, settings)
         }
         ui.superpositionTileId?.let { tileId ->
@@ -272,23 +283,23 @@ private fun QuantumUnlockEffect(onDismiss: () -> Unit) {
             .background(
                 Brush.radialGradient(
                     listOf(
-                        Color.White.copy(alpha = flash.value),
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = flash.value),
                         Electric.copy(alpha = flash.value * 0.62f),
                         NeonPink.copy(alpha = flash.value * 0.36f),
-                        Color.Transparent,
+                        MaterialTheme.colorScheme.background.copy(alpha = 0f),
                     ),
                 ),
             ),
     )
     QuantumDialog(
-        title = "Quantum Anomaly Detected!",
+        title = stringResource(R.string.quantum_unlock_title),
         onDismiss = onDismiss,
         accent = RadiantGold,
-        confirmText = "Unlocked",
+        confirmText = stringResource(R.string.quantum_unlock_confirm),
         onConfirm = onDismiss,
     ) {
-        Text("New Mode Unlocked.", color = Color.White, fontWeight = FontWeight.Black)
-        Text("Quantum modes are now available from New Game.", color = TextSecondary, fontSize = 13.sp)
+        Text(stringResource(R.string.quantum_unlock_headline), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.quantum_unlock_body), color = TextSecondary, fontSize = 13.sp)
     }
 }
 
@@ -309,7 +320,7 @@ private fun LevelGoalHud(level: LevelRunUiState) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(level.title.uppercase(), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.9.sp)
+                    Text(level.title.uppercase(), color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.9.sp)
                     Text(level.zoneTitle, color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
                 Column(horizontalAlignment = Alignment.End) {
@@ -340,7 +351,7 @@ private fun LevelGoalHud(level: LevelRunUiState) {
                         Modifier
                             .fillMaxWidth()
                             .height(7.dp)
-                            .background(Color.Black.copy(alpha = 0.32f), RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.32f), RoundedCornerShape(8.dp))
                             .border(1.dp, accent.copy(alpha = 0.25f), RoundedCornerShape(8.dp)),
                     ) {
                         Box(
@@ -436,11 +447,11 @@ private fun OpponentBoardSummary(board: GameState, current: DuelPlayer) {
 
 @Composable
 private fun Header(game: GameState, onPause: () -> Unit) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(9.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(5.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             stringResource(R.string.app_name).uppercase(),
-            color = Color(0xFFD8FBFF),
-            fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Black,
             letterSpacing = 1.sp,
             textAlign = TextAlign.Center,
@@ -453,10 +464,10 @@ private fun Header(game: GameState, onPause: () -> Unit) {
                 .fillMaxWidth()
                 .border(1.dp, Cyan.copy(alpha = 0.42f), RoundedCornerShape(12.dp)),
         ) {
-            Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.padding(7.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     HudReadout(stringResource(R.string.hud_score), formatNumber(game.score), Cyan)
-                    HudReadout(stringResource(R.string.hud_high), formatNumber(game.bestScore), Color.White)
+                    HudReadout(stringResource(R.string.hud_high), formatNumber(game.bestScore), MaterialTheme.colorScheme.onSurface)
                     OutlinedButton(onClick = onPause) { Text(stringResource(R.string.pause)) }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -495,8 +506,8 @@ private fun HudReadout(label: String, value: String, accent: Color) {
         Text(label, color = accent, fontSize = 11.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
         Text(
             value,
-            color = Color.White,
-            fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 17.sp,
             fontWeight = FontWeight.Black,
             modifier = Modifier.graphicsLayer {
                 scaleX = valueScale.value
@@ -515,14 +526,14 @@ private fun EnergyMeter(energy: Int) {
             Modifier
                 .weight(1f)
                 .height(12.dp)
-                .background(Color.Black.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
                 .border(1.dp, Cyan.copy(alpha = 0.45f), RoundedCornerShape(8.dp)),
         ) {
             Box(
                 Modifier
                     .fillMaxHeight()
                     .fillMaxWidth((capped / 100f).coerceAtLeast(0.01f))
-                    .background(Brush.horizontalGradient(listOf(Electric, Cyan, Color.White.copy(alpha = 0.92f))), RoundedCornerShape(8.dp)),
+                    .background(Brush.horizontalGradient(listOf(Electric, Cyan, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.92f))), RoundedCornerShape(8.dp)),
             )
         }
     }
@@ -536,7 +547,7 @@ private fun FusionGuide(difficulty: Difficulty) {
         modifier = Modifier.border(1.dp, difficultyAccent(difficulty).copy(alpha = 0.55f), RoundedCornerShape(14.dp)),
     ) {
         Row(
-            Modifier.fillMaxWidth().padding(12.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 7.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -547,7 +558,7 @@ private fun FusionGuide(difficulty: Difficulty) {
 }
 
 @Composable
-private fun CompoundLab(game: GameState, labTileIds: List<Long>, clear: () -> Unit) {
+internal fun CompoundLab(game: GameState, labTileIds: List<Long>, clear: () -> Unit) {
     val labels = labTileIds.mapNotNull { id -> game.cells.firstOrNull { it?.id == id }?.element?.symbol }
     Surface(
         color = GlassPanel,
@@ -556,9 +567,9 @@ private fun CompoundLab(game: GameState, labTileIds: List<Long>, clear: () -> Un
             .fillMaxWidth()
             .border(1.dp, Cyan.copy(alpha = 0.45f), RoundedCornerShape(16.dp)),
     ) {
-        Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
-                Text("⟡ ${stringResource(R.string.compound_lab)}", fontWeight = FontWeight.Black, color = Color.White)
+                Text("⟡ ${stringResource(R.string.compound_lab)}", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
                 Text(if (labels.isEmpty()) stringResource(R.string.lab_empty) else labels.joinToString(" + "), color = TextSecondary, fontSize = 12.sp)
             }
             QuantumChipButton(text = stringResource(R.string.clear), selected = labels.isNotEmpty(), onClick = clear, enabled = labels.isNotEmpty(), accent = NeonPink)
@@ -579,6 +590,7 @@ private fun Board(
     onTileDragToLab: (Long) -> Unit,
     onCellTap: (Int) -> Unit,
     onObserveTile: (Long) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var dx by remember { mutableFloatStateOf(0f) }
     var dy by remember { mutableFloatStateOf(0f) }
@@ -586,16 +598,16 @@ private fun Board(
     val boardPadding = if (game.size >= 8) 5.dp else 8.dp
     val animationByTileId = animations.associateBy { it.tileId }
     BoxWithConstraints(
-        Modifier
-            .fillMaxWidth()
+        modifier
+            .testTag("game_board")
             .aspectRatio(1f)
             .shake(isShaking = isBoardShaking, reducedMotion = reducedMotion)
             .background(
                 Brush.linearGradient(
                     listOf(
-                        Color.White.copy(alpha = 0.08f),
-                        BoardGlass,
-                        Color.Black.copy(alpha = 0.36f),
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                        MaterialTheme.colorScheme.background.copy(alpha = 0.86f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.36f),
                     ),
                 ),
                 RoundedCornerShape(18.dp),
@@ -611,7 +623,7 @@ private fun Board(
                         dy += drag.y
                     },
                     onDragEnd = {
-                        if (maxOf(abs(dx), abs(dy)) > 36f) {
+                        if (maxOf(abs(dx), abs(dy)) > 24f) {
                             onSwipe(
                                 if (abs(dx) > abs(dy)) {
                                     if (dx > 0) Direction.RIGHT else Direction.LEFT
@@ -656,8 +668,8 @@ private fun Board(
                     Modifier
                         .offset { IntOffset((column * stepPx).roundToInt(), (row * stepPx).roundToInt()) }
                         .size(cellDp)
-                        .background(Color(0x6617203D), RoundedCornerShape(12.dp))
-                        .border(1.dp, Color.White.copy(alpha = 0.035f), RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f), RoundedCornerShape(12.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
                         .clickable(enabled = tunnelingTileId != null) { onCellTap(row * game.size + column) },
                 )
             }
@@ -680,7 +692,9 @@ private fun Board(
                     boardSize = game.size,
                     cellSize = cellDp,
                     stepPx = stepPx,
-                    modifier = Modifier.offset { IntOffset((column * stepPx).roundToInt(), (row * stepPx).roundToInt()) },
+                    modifier = Modifier
+                        .offset { IntOffset((column * stepPx).roundToInt(), (row * stepPx).roundToInt()) }
+                        .testTag("tile_$index"),
                     onDragToLab = onTileDragToLab,
                     onTap = { onCellTap(index) },
                     onLongPress = { onObserveTile(tile.id) },
@@ -808,16 +822,45 @@ private fun TileCell(
         }
     }
 
+    val isSuperposition = mode == GameMode.QUANTUM && tile?.superpositionValues?.isNotEmpty() == true
     val color = when {
-        tile == null -> Color(0xFF171D38)
-        mode == GameMode.QUANTUM && tile.kind == TileKind.ELEMENT -> elementColor(tile.element)
+        tile == null -> MaterialTheme.colorScheme.surfaceVariant
+        isSuperposition -> MaterialTheme.colorScheme.secondary
+        mode == GameMode.QUANTUM && tile.kind == TileKind.ELEMENT -> themedElementColor(tile.element)
         mode == GameMode.QUANTUM -> tileKindColor(tile.kind)
         else -> classicTileColor(tile.value)
     }
+    val tileDescription = tile?.let {
+        when {
+            it.superpositionValues.isNotEmpty() -> stringResource(
+                R.string.tile_superposition_description,
+                it.superpositionValues.joinToString(", "),
+            )
+            mode == GameMode.QUANTUM -> stringResource(
+                R.string.tile_quantum_description,
+                FusionRules.displaySymbol(it),
+                FusionRules.rankOf(it).toString(),
+                FusionRules.gameValueOf(it).toString(),
+            )
+            else -> stringResource(R.string.tile_classic_description, it.value.toString())
+        }
+    }
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val resolvedElementColor = themedElementColor(tile?.element)
 
     Box(
         modifier
             .size(cellSize)
+            .then(
+                if (tileDescription != null) {
+                    Modifier.semantics {
+                        contentDescription = tileDescription
+                        role = Role.Button
+                    }
+                } else {
+                    Modifier
+                },
+            )
             .graphicsLayer {
                 scaleX = scale.value
                 scaleY = scale.value
@@ -829,9 +872,9 @@ private fun TileCell(
             .background(
                 Brush.linearGradient(
                     listOf(
-                        Color.White.copy(alpha = if (tile?.kind == TileKind.ELEMENT) 0.26f else 0.14f),
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = if (tile?.kind == TileKind.ELEMENT) 0.26f else 0.14f),
                         color.copy(alpha = 0.92f),
-                        Color.Black.copy(alpha = 0.18f),
+                        MaterialTheme.colorScheme.background.copy(alpha = 0.18f),
                     ),
                 ),
                 RoundedCornerShape(14.dp),
@@ -839,12 +882,13 @@ private fun TileCell(
             .border(1.5.dp, color.copy(alpha = 0.92f), RoundedCornerShape(14.dp))
             .then(
                 when {
-                    animation?.kind == MoveAnimationKind.COLLAPSE_LOW -> Modifier.border(2.dp, Color(0xFF56E0B5), RoundedCornerShape(14.dp))
+                    animation?.kind == MoveAnimationKind.COLLAPSE_LOW -> Modifier.border(2.dp, MaterialTheme.colorScheme.secondary, RoundedCornerShape(14.dp))
                     animation?.kind == MoveAnimationKind.COLLAPSE_HIGH -> Modifier.border(3.dp, RadiantGold, RoundedCornerShape(14.dp))
                     tile?.isHighlightedForSynthesis == true -> Modifier.border(3.dp, Electric, RoundedCornerShape(14.dp))
                     selectedForTunnel -> Modifier.border(3.dp, RadiantGold, RoundedCornerShape(14.dp))
                     tile?.entanglementGroupId != null -> Modifier.border(2.dp, NeonPink, RoundedCornerShape(14.dp))
-                    tile?.kind == TileKind.ELEMENT -> Modifier.border(if (selectedForLab) 2.dp else 1.dp, if (selectedForLab) Cyan else Color.White.copy(alpha = 0.22f), RoundedCornerShape(14.dp))
+                    isSuperposition -> Modifier.border(2.dp, MaterialTheme.colorScheme.secondary, RoundedCornerShape(14.dp))
+                    tile?.kind == TileKind.ELEMENT -> Modifier.border(if (selectedForLab) 2.dp else 1.dp, if (selectedForLab) Cyan else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f), RoundedCornerShape(14.dp))
                     else -> Modifier
                 },
             )
@@ -882,16 +926,16 @@ private fun TileCell(
         if (burst.value > 0f && tile != null) {
             ParticleBurst(
                 progress = burst.value,
-                color = if (tile.kind == TileKind.ELEMENT) elementColor(tile.element) else color,
+                color = if (tile.kind == TileKind.ELEMENT) resolvedElementColor else color,
                 intense = animation?.kind == MoveAnimationKind.REACTION || animation?.kind == MoveAnimationKind.COLLAPSE_HIGH,
             )
         }
         if (tile?.kind == TileKind.ELEMENT) {
             Canvas(Modifier.fillMaxSize()) {
-                val glow = elementColor(tile.element).copy(alpha = 0.22f)
+                val glow = resolvedElementColor.copy(alpha = 0.22f)
                 drawCircle(glow, radius = size.minDimension * 0.54f)
                 drawLine(
-                    color = Color.White.copy(alpha = 0.26f),
+                    color = onSurface.copy(alpha = 0.26f),
                     start = androidx.compose.ui.geometry.Offset(size.width * 0.16f, size.height * 0.18f),
                     end = androidx.compose.ui.geometry.Offset(size.width * 0.72f, size.height * 0.12f),
                     strokeWidth = 1.4f,
@@ -902,21 +946,37 @@ private fun TileCell(
                         val angle = index * 1.04f
                         val x = size.width * 0.5f + cos(angle) * size.width * 0.28f
                         val y = size.height * 0.5f + sin(angle) * size.height * 0.24f
-                        drawCircle(Color.White.copy(alpha = 0.72f), radius = 1.7f, center = androidx.compose.ui.geometry.Offset(x, y))
+                        drawCircle(onSurface.copy(alpha = 0.72f), radius = 1.7f, center = androidx.compose.ui.geometry.Offset(x, y))
                     }
                 }
+            }
+        }
+        if (tile?.entanglementGroupId != null) {
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(5.dp)
+                    .size(18.dp)
+                    .background(NeonPink.copy(alpha = 0.92f), RoundedCornerShape(18.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f), RoundedCornerShape(18.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("∞", color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp, fontWeight = FontWeight.Black, lineHeight = 12.sp)
             }
         }
         when {
             tile == null -> Unit
             mode == GameMode.QUANTUM -> QuantumTileLabel(tile, boardSize, observerValue)
-            else -> Text(formatNumber(tile.value), fontSize = if (tile.value < 1000) 26.sp else 20.sp, fontWeight = FontWeight.Black, color = classicTileTextColor(tile.value))
+            else -> CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Text(formatNumber(tile.value), fontSize = if (tile.value < 1000) 26.sp else 20.sp, fontWeight = FontWeight.Black, color = classicTileTextColor(tile.value))
+            }
         }
     }
 }
 
 @Composable
 private fun ParticleBurst(progress: Float, color: Color, intense: Boolean) {
+    val onSurface = MaterialTheme.colorScheme.onSurface
     Canvas(Modifier.fillMaxSize()) {
         val center = androidx.compose.ui.geometry.Offset(size.width * 0.5f, size.height * 0.5f)
         val rayCount = if (intense) 18 else 12
@@ -942,7 +1002,7 @@ private fun ParticleBurst(progress: Float, color: Color, intense: Boolean) {
                 cap = StrokeCap.Round,
             )
             drawCircle(
-                color = Color.White.copy(alpha = alpha * 0.72f),
+                color = onSurface.copy(alpha = alpha * 0.72f),
                 radius = if (intense) 2.3f else 1.5f,
                 center = end,
             )
@@ -967,15 +1027,17 @@ private fun QuantumTileLabel(tile: Tile, boardSize: Int, observerValue: Int?) {
     val rankSize = if (boardSize >= 8) 7.sp else 9.sp
     val familySize = if (boardSize >= 8) 0.sp else 7.sp
     Column(Modifier.fillMaxWidth().padding(if (boardSize >= 8) 2.dp else 5.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Text(formatNumber(FusionRules.rankOf(tile)), modifier = Modifier.align(Alignment.Start), color = TextSecondary, fontSize = rankSize, fontWeight = FontWeight.Bold)
-        Text(observerValue?.let { formatNumber(it) } ?: FusionRules.displaySymbol(tile), fontSize = symbolSize, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center)
+        Text(observerValue?.let { formatNumber(it) } ?: FusionRules.displaySymbol(tile), fontSize = symbolSize, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.Center)
         Text(formatNumber(FusionRules.gameValueOf(tile)), color = Cyan, fontSize = valueSize, fontWeight = FontWeight.Black)
+        }
         if (boardSize < 8) tile.element?.let { Text(elementFamily(it), color = TextSecondary, fontSize = familySize, textAlign = TextAlign.Center) }
     }
 }
 
 @Composable
-private fun SuperpositionDialog(tile: Tile, onDismiss: () -> Unit, onCollapse: (Int) -> Unit) {
+internal fun SuperpositionDialog(tile: Tile, onDismiss: () -> Unit, onCollapse: (Int) -> Unit) {
     QuantumDialog(
         title = stringResource(R.string.superposition_title),
         onDismiss = onDismiss,
@@ -1009,6 +1071,7 @@ private fun DuelPlayer.opponent(): DuelPlayer = when (this) {
 private fun EndDialog(game: GameState, continueGame: () -> Unit, newGame: () -> Unit, audio: GameAudio, settings: AppSettings) {
     val status = game.status
     val context = LocalContext.current
+    val shareColors = ShareImageColors.from(MaterialTheme.colorScheme)
     val bestElement = game.cells.mapNotNull { it?.element }.maxByOrNull { it.rank }
     QuantumDialog(
         title = if (status == GameStatus.WON) stringResource(R.string.target_reached) else stringResource(R.string.game_over),
@@ -1017,7 +1080,7 @@ private fun EndDialog(game: GameState, continueGame: () -> Unit, newGame: () -> 
         confirmText = if (status == GameStatus.WON) stringResource(R.string.continue_game) else stringResource(R.string.new_game),
         onConfirm = if (status == GameStatus.WON) continueGame else newGame,
     ) {
-        Text(if (status == GameStatus.WON) stringResource(R.string.win_body) else stringResource(R.string.lose_body), color = Color.White)
+        Text(if (status == GameStatus.WON) stringResource(R.string.win_body) else stringResource(R.string.lose_body), color = MaterialTheme.colorScheme.onSurface)
         Text(stringResource(R.string.difficulty_line, game.difficulty.localizedLabel()), color = TextSecondary)
         Text(stringResource(R.string.score_line, formatNumber(game.score)), color = TextSecondary)
         if (game.difficulty == Difficulty.DAILY) Text(stringResource(R.string.daily_best_line, formatNumber(game.dailyBestScore)), color = TextSecondary)
@@ -1027,7 +1090,7 @@ private fun EndDialog(game: GameState, continueGame: () -> Unit, newGame: () -> 
             text = stringResource(R.string.share_result),
             onClick = {
                 if (settings.soundEnabled) audio.share()
-                shareGameResult(context, game)
+                shareGameResult(context, game, shareColors)
             },
             modifier = Modifier.fillMaxWidth(),
             accent = Electric,
@@ -1035,12 +1098,14 @@ private fun EndDialog(game: GameState, continueGame: () -> Unit, newGame: () -> 
     }
 }
 
-private fun shareGameResult(context: android.content.Context, game: GameState) {
-    val imageUri = createShareImageUri(context, game)
+private fun shareGameResult(context: android.content.Context, game: GameState, colors: ShareImageColors) {
+    val imageUri = createShareImageUri(context, game, colors)
     val sendIntent = Intent(Intent.ACTION_SEND).apply {
         type = "image/png"
         putExtra(Intent.EXTRA_STREAM, imageUri)
-        putExtra(Intent.EXTRA_TEXT, sharePromptFor(game))
+        putExtra(Intent.EXTRA_TEXT, sharePromptFor(context, game))
+        putExtra(Intent.EXTRA_TITLE, context.getString(R.string.share_result))
+        clipData = ClipData.newUri(context.contentResolver, context.getString(R.string.share_result), imageUri)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
     context.startActivity(

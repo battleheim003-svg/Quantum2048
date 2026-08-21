@@ -4,6 +4,7 @@ enum class RewardPlacement {
     EXTRA_UNDO,
     REVIVE_AFTER_GAME_OVER,
     DAILY_BONUS_ATTEMPT,
+    QUANTUM_ENERGY_TOP_UP,
 }
 
 enum class InterstitialPlacement {

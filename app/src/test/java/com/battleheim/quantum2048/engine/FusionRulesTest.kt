@@ -28,7 +28,7 @@ class FusionRulesTest {
             Tile(1, QuantumElement.HELIUM.atomicNumber, TileKind.ELEMENT, QuantumElement.HELIUM),
             Tile(2, QuantumElement.HELIUM.atomicNumber, TileKind.ELEMENT, QuantumElement.HELIUM),
         )!!
-        assertEquals(QuantumElement.BERYLLIUM, product.tiles.single().element)
+        assertEquals(QuantumElement.LITHIUM, product.tiles.single().element)
     }
 
     @Test fun ten_electrons_and_eleven_protons_make_neon_plus_one_proton() {
@@ -90,15 +90,42 @@ class FusionRulesTest {
         assertNull(FusionRules.mergeProduct(Tile(1, 2, TileKind.ELECTRON), Tile(2, 4, TileKind.ELECTRON)))
     }
 
-    @Test fun quantum_spawn_uses_proton_injection_chance() {
+    @Test fun quantum_spawn_balances_particles_instead_of_defaulting_to_electrons() {
         val proton = GameEngine(FixedRandom()).spawn(GameState(mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM))
         val electron = GameEngine(object : RandomProvider {
             override fun nextInt(bound: Int) = 0
-            override fun nextDouble() = FusionRules.protonInjectionSpawnChance + 0.01
+            override fun nextDouble() = 0.99
         }).spawn(GameState(mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM))
 
         assertEquals(TileKind.PROTON, proton.cells.filterNotNull().single().kind)
         assertEquals(1, proton.cells.filterNotNull().single().value)
         assertEquals(TileKind.ELECTRON, electron.cells.filterNotNull().single().kind)
+    }
+
+    @Test fun quantum_spawn_prefers_protons_when_electrons_dominate() {
+        val cells = MutableList<Tile?>(16) { null }.apply {
+            this[0] = Tile(1, 8, TileKind.ELECTRON)
+            this[1] = Tile(2, 4, TileKind.ELECTRON)
+            this[2] = Tile(3, 1, TileKind.PROTON)
+        }
+        val state = GameState(cells = cells, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM, nextTileId = 10)
+
+        val spawned = FusionRules.quantumSpawnTile(state, 0.52)
+
+        assertEquals(TileKind.PROTON, spawned.kind)
+    }
+
+    @Test fun quantum_spawn_can_seed_low_rank_elements_after_element_play_begins() {
+        val cells = MutableList<Tile?>(16) { null }.apply {
+            this[0] = Tile(1, QuantumElement.HELIUM.atomicNumber, TileKind.ELEMENT, QuantumElement.HELIUM)
+            this[1] = Tile(2, 4, TileKind.ELECTRON)
+            this[2] = Tile(3, 4, TileKind.PROTON)
+        }
+        val state = GameState(cells = cells, score = 900, mode = GameMode.QUANTUM, difficulty = Difficulty.QUANTUM, nextTileId = 10)
+
+        val spawned = FusionRules.quantumSpawnTile(state, 0.01)
+
+        assertEquals(TileKind.ELEMENT, spawned.kind)
+        assertEquals(QuantumElement.HELIUM, spawned.element)
     }
 }

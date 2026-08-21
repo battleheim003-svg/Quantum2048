@@ -5,6 +5,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
+    id("org.jlleitschuh.gradle.ktlint")
+    id("io.gitlab.arturbosch.detekt")
 }
 
 android {
@@ -13,18 +15,22 @@ android {
 
     signingConfigs {
         create("release") {
-            val storeFilePath = providers.gradleProperty("QUANTUM2048_RELEASE_STORE_FILE")
+            val storeFilePath =
+                providers.gradleProperty("QUANTUM2048_RELEASE_STORE_FILE")
                 .orElse(providers.environmentVariable("QUANTUM2048_RELEASE_STORE_FILE"))
                 .orNull
             if (!storeFilePath.isNullOrBlank()) {
                 storeFile = file(storeFilePath)
-                storePassword = providers.gradleProperty("QUANTUM2048_RELEASE_STORE_PASSWORD")
+                storePassword =
+                    providers.gradleProperty("QUANTUM2048_RELEASE_STORE_PASSWORD")
                     .orElse(providers.environmentVariable("QUANTUM2048_RELEASE_STORE_PASSWORD"))
                     .orNull
-                keyAlias = providers.gradleProperty("QUANTUM2048_RELEASE_KEY_ALIAS")
+                keyAlias =
+                    providers.gradleProperty("QUANTUM2048_RELEASE_KEY_ALIAS")
                     .orElse(providers.environmentVariable("QUANTUM2048_RELEASE_KEY_ALIAS"))
                     .orNull
-                keyPassword = providers.gradleProperty("QUANTUM2048_RELEASE_KEY_PASSWORD")
+                keyPassword =
+                    providers.gradleProperty("QUANTUM2048_RELEASE_KEY_PASSWORD")
                     .orElse(providers.environmentVariable("QUANTUM2048_RELEASE_KEY_PASSWORD"))
                     .orNull
             }
@@ -55,10 +61,25 @@ android {
             )
         }
     }
-    buildFeatures { compose = true; buildConfig = true }
-    compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
-    kotlinOptions { jvmTarget = "17" }
-    packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+    packaging {
+        resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
+    }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 tasks.withType<Test>().configureEach {
@@ -67,9 +88,20 @@ tasks.withType<Test>().configureEach {
     forkEvery = 25
 }
 
+ktlint {
+    android.set(true)
+    baseline.set(file("ktlint-baseline.xml"))
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    baseline = file("detekt-baseline.xml")
+}
+
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2025.01.00")
     implementation(composeBom)
+    testImplementation(composeBom)
     androidTestImplementation(composeBom)
     implementation("androidx.activity:activity-compose:1.10.1")
     implementation("androidx.compose.material3:material3")
@@ -84,6 +116,9 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    testImplementation("androidx.compose.ui:ui-test-manifest")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
